@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "strictNullChecks": true,
+    "noEmit": true,
+    "allowJs": true,
+    "jsx": "preserve",
+    "module": "esnext",
+    "target": "ESNext",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "lib": ["ESNext", "dom", "dom.iterable", "esnext"],
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "tsBuildInfoFile": "tsconfig.tsbuildinfo",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}
