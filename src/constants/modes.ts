@@ -3,11 +3,6 @@ import {
   OAIBuildMessageBasedParams,
   OAIBuildToolFunctionParams
 } from "@/oai/params"
-import {
-  OAIResponseFnArgsParser,
-  OAIResponseJSONStringParser,
-  OAIResponseToolArgsParser
-} from "@/oai/parser"
 
 export const MODE = {
   FUNCTIONS: "FUNCTIONS",
@@ -16,14 +11,6 @@ export const MODE = {
   MD_JSON: "MD_JSON",
   JSON_SCHEMA: "JSON_SCHEMA"
 } as const
-
-export const MODE_TO_PARSER = {
-  [MODE.FUNCTIONS]: OAIResponseFnArgsParser,
-  [MODE.TOOLS]: OAIResponseToolArgsParser,
-  [MODE.JSON]: OAIResponseJSONStringParser,
-  [MODE.MD_JSON]: OAIResponseJSONStringParser,
-  [MODE.JSON_SCHEMA]: OAIResponseJSONStringParser
-}
 
 export const MODE_TO_PARAMS = {
   [MODE.FUNCTIONS]: OAIBuildFunctionParams,

@@ -1,18 +1,20 @@
 {
   "name": "ai-ui",
-  "version": "0.0.3",
+  "version": "0.0.0",
   "description": "structured llm output for the browser",
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/instructor.js",
-  "module": "./dist/instructor.mjs",
-  "types": "./dist/instructor.d.ts",
+  "main": "./dist/aiui.client.js",
+  "module": "./dist/aiui.client.mjs",
+  "types": "./dist/aiui.client.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/instructor.mjs",
-      "require": "./dist/instructor.js"
+      "import": "./dist/aiui.client.mjs",
+      "require": "./dist/aiui.client.js"
     },
+    "./response-model": "./dist/response-model.mjs",
+    "./OAIStream": "./dist/oai/stream.mjs",
     "./*": "./dist/*.mjs"
   },
   "files": [

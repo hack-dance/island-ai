@@ -1,10 +1,14 @@
 import { z } from "zod"
 
+import { MODE } from "@/constants/modes"
+
 export type InstructorConfig = {
   debug?: boolean
 }
 
-export type ResponseModel<T extends z.AnyZodObject> = {
+export type Mode = keyof typeof MODE
+
+export type ResponseModel<T extends z.ZodTypeAny> = {
   schema: T
   name: string
   description?: string
@@ -20,8 +24,8 @@ export type CompletionParams = {
   messages: ChatCompletionMessageParam[]
 }
 
-export type InstructorChatCompletionParams<T extends z.AnyZodObject> = {
-  response_model: ResponseModel<T>
-  params: CompletionParams
-  completionPromise: (params: CompletionParams) => Promise<Promise<ReadableStream<Uint8Array>>>
+export type AIUICompletionParams<T extends z.AnyZodObject> = {
+  response_model: { schema: T }
+  data?: Record<string, unknown>
+  completionPromise: (data?: Record<string, unknown>) => Promise<ReadableStream<Uint8Array>>
 }

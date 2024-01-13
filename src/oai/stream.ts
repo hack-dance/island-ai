@@ -1,5 +1,10 @@
+import OpenAI from "openai"
+import { Stream } from "openai/streaming"
+
+import { OAIResponseParser } from "./parser"
+
 interface OaiStreamArgs {
-  res: ReadableStream<Uint8Array>
+  res: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
 }
 
 /**
@@ -10,21 +15,25 @@ interface OaiStreamArgs {
  * @returns {ReadableStream<string>} - The created ReadableStream.
  */
 export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
-  const encoder = new TextEncoder()
   let cancelGenerator: () => void
+  const encoder = new TextEncoder()
 
   async function* generateStream(res): AsyncGenerator<string> {
+    let cancel = false
     cancelGenerator = () => {
+      cancel = true
       return
     }
 
     for await (const part of res) {
-      if (part?.choices?.[0]?.finish_reason === "stop") {
-        cancelGenerator()
+      if (cancel) {
         break
       }
+      if (!OAIResponseParser(part)) {
+        continue
+      }
 
-      yield part
+      yield OAIResponseParser(part)
     }
   }
 
@@ -46,9 +55,15 @@ export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
   })
 }
 
-export async function* readableStreamToAsyncGenerator<T>(
+/**
+ * `readableStreamToAsyncGenerator` converts a ReadableStream to an AsyncGenerator.
+ *
+ * @param {ReadableStream<Uint8Array>} stream - The ReadableStream to convert.
+ * @returns {AsyncGenerator<unknown>} - The converted AsyncGenerator.
+ */
+export async function* readableStreamToAsyncGenerator(
   stream: ReadableStream<Uint8Array>
-): AsyncGenerator<Partial<T>, void, unknown> {
+): AsyncGenerator<unknown> {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
 
@@ -58,7 +73,6 @@ export async function* readableStreamToAsyncGenerator<T>(
     if (done) {
       break
     }
-
-    yield JSON.parse(decoder.decode(value)) as Partial<T>
+    yield JSON.parse(decoder.decode(value))
   }
 }

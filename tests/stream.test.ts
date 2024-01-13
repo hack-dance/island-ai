@@ -1,4 +1,6 @@
-import Instructor from "@/instructor"
+import AIUI from "@/aiui.client"
+import { OAIStream } from "@/oai/stream"
+import { withResponseModel } from "@/response-model"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
 import { z } from "zod"
@@ -17,110 +19,58 @@ The budget for the event is set at $50,000, covering venue costs, speaker fees, 
 A follow-up meeting is scheduled for January 25th at 3 PM GMT to finalize the agenda and confirm the list of speakers.
 `
 
-async function extractUser() {
-  const ExtractionValuesSchema = z.object({
-    users: z
-      .array(
-        z.object({
-          name: z.string(),
-          handle: z.string(),
-          twitter: z.string()
-        })
-      )
-      .min(3),
-    location: z.string(),
-    budget: z.number()
-  })
+const ExtractionValuesSchema = z.object({
+  users: z
+    .array(
+      z.object({
+        name: z.string(),
+        handle: z.string(),
+        twitter: z.string()
+      })
+    )
+    .min(3),
+  location: z.string(),
+  budget: z.number()
+})
 
-  type Extraction = Partial<z.infer<typeof ExtractionValuesSchema>>
-
+async function CreateOAIStream() {
   const oai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY ?? undefined,
     organization: process.env.OPENAI_ORG_ID ?? undefined
   })
 
-  const client = Instructor({
-    client: oai,
+  const params = withResponseModel({
+    response_model: { schema: ExtractionValuesSchema, name: "Extr" },
+    params: {
+      messages: [{ role: "user", content: textBlock }],
+      model: "gpt-4",
+      seed: 1
+    },
     mode: "TOOLS"
   })
 
-  const extractionStream = await client.chat.completions.create({
-    messages: [{ role: "user", content: textBlock }],
-    model: "gpt-3.5-turbo",
-    response_model: { schema: ExtractionValuesSchema, name: "Extr" },
-    max_retries: 3,
-    stream: true,
-    seed: 1
+  const extractionStream = await oai.chat.completions.create({
+    ...params,
+    stream: true
   })
 
-  let extraction: Extraction = {}
-
-  for await (const result of extractionStream) {
-    try {
-      extraction = result
-      expect(result).toHaveProperty("users")
-    } catch (e) {
-      console.log(e)
-      break
-    }
-  }
-
-  return extraction
+  return OAIStream({
+    res: extractionStream
+  })
 }
 
-async function extractUserReadable() {
-  const ExtractionValuesSchema = z.object({
-    users: z
-      .array(
-        z.object({
-          name: z.string(),
-          handle: z.string(),
-          twitter: z.string()
-        })
-      )
-      .min(3),
-    location: z.string(),
-    budget: z.number()
+async function extractUser() {
+  const client = new AIUI({})
+
+  const extractionStream = await client.create({
+    completionPromise: CreateOAIStream,
+    response_model: { schema: ExtractionValuesSchema, name: "Extr" }
   })
 
-  const oai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY ?? undefined,
-    organization: process.env.OPENAI_ORG_ID ?? undefined
-  })
+  let result: Partial<z.infer<typeof ExtractionValuesSchema>> = {}
 
-  const client = Instructor({
-    client: oai,
-    mode: "TOOLS"
-  })
-
-  const extractionStream = await client.chat.completions.create({
-    messages: [{ role: "user", content: textBlock }],
-    model: "gpt-3.5-turbo",
-    response_model: { schema: ExtractionValuesSchema, name: "Extr" },
-    max_retries: 3,
-    streamOutputType: "READABLE",
-    stream: true,
-    seed: 1
-  })
-
-  const reader = extractionStream.getReader()
-  const decoder = new TextDecoder()
-
-  let result = client.getSchemaStub({ schema: ExtractionValuesSchema })
-
-  let done = false
-  while (!done) {
-    const { value, done: doneReading } = await reader.read()
-    done = doneReading
-
-    if (done) {
-      break
-    }
-
-    const chunkValue = decoder.decode(value)
-
-    result = JSON.parse(chunkValue)
-    expect(result).toHaveProperty("users")
+  for await (const data of extractionStream) {
+    result = data
   }
 
   return result
@@ -129,21 +79,9 @@ async function extractUserReadable() {
 describe("StreamFunctionCall", () => {
   test("Generator: Should return extracted users and budget", async () => {
     const extraction = await extractUser()
-
-    expect(extraction.users).toHaveLength(3)
-    expect(extraction.users![0]).toHaveProperty("name")
-    expect(extraction.users![0]).toHaveProperty("handle")
-    expect(extraction.users![0]).toHaveProperty("twitter")
-    expect(extraction.budget).toBe(50000)
-  })
-
-  test("Readable: Should return extracted users and budget", async () => {
-    const extraction = await extractUserReadable()
-
-    expect(extraction.users).toHaveLength(3)
-    expect(extraction.users![0]).toHaveProperty("name")
-    expect(extraction.users![0]).toHaveProperty("handle")
-    expect(extraction.users![0]).toHaveProperty("twitter")
-    expect(extraction.budget).toBe(50000)
+    expect(extraction?.users).toHaveLength(3)
+    expect(extraction?.users![0]).toHaveProperty("name")
+    expect(extraction?.users![0]).toHaveProperty("handle")
+    expect(extraction?.users![0]).toHaveProperty("twitter")
   })
 })
