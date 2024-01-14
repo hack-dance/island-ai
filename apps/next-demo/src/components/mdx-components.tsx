@@ -2,10 +2,7 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 
-import { Video } from "./video"
-
 export const customComponents = {
-  Video,
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1 className={cn("font-blunt mt-2 mb-4 text-4xl tracking-widest", className)} {...props} />
   ),

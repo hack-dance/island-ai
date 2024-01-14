@@ -56,20 +56,20 @@ export const jsonToZod = (jsonString: string): AnyZodObject | Error => {
       }
       seen.push(obj)
 
-      const objectSchema = Object.entries(obj).reduce(
-        (acc, [key, value]) => {
-          const parsedValue = parse(value, seen)
-          if (parsedValue instanceof Error) {
-            return parsedValue
-          }
-          acc[key] = parsedValue
-          return acc
-        },
-        {} as { [key: string]: ZodTypeAny }
-      )
+      const objectSchema: { [key: string]: ZodTypeAny } = {}
+      let error: Error | null = null
 
-      if (Object.values(objectSchema).some(v => v instanceof Error)) {
-        return new Error("Error in object schema generation")
+      for (const [key, value] of Object.entries(obj)) {
+        const parsedValue = parse(value, seen)
+        if (parsedValue instanceof Error) {
+          error = parsedValue
+          break
+        }
+        objectSchema[key] = parsedValue
+      }
+
+      if (error) {
+        return error
       }
 
       return z.object(objectSchema)
@@ -81,13 +81,12 @@ export const jsonToZod = (jsonString: string): AnyZodObject | Error => {
   const result = parse(obj, [])
   if (result instanceof Error) {
     console.error("Error generating Zod schema:", result)
+    return result
   }
-  return result
-}
 
-// Example usage
-// const result = jsonToZod('{"users": [{"name": "John", "email": "john@example.com"}]}');
-// if (result instanceof Error) {
-//   console.error(result);
-// } else {
-//
+  if (result instanceof z.ZodObject) {
+    return result
+  }
+
+  return new Error("Invalid Zod schema generated")
+}

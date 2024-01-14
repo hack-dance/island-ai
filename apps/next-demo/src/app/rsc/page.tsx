@@ -6,11 +6,18 @@ import OpenAI from "openai"
 import { z } from "zod"
 
 const oai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? undefined,
-  organization: process.env.OPENAI_ORG_ID ?? undefined
+  apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
+  organization: process.env["OPENAI_ORG_ID"] ?? undefined
 })
 
-async function StreamRenderer({ data }) {
+type ChunkData = {
+  chunk: string | null
+  next: ChunkPromise | null
+}
+
+type ChunkPromise = Promise<ChunkData>
+
+async function StreamRenderer({ data }: { data: ChunkPromise }) {
   if (!data) return null
 
   const { chunk, next } = await data
@@ -27,7 +34,7 @@ async function StreamRenderer({ data }) {
   )
 }
 
-export async function handleDataStream() {
+async function handleDataStream() {
   const client = new AIUI({})
   const params = withResponseModel({
     response_model: {
@@ -64,9 +71,12 @@ export async function handleDataStream() {
     }
   })
 
-  let resolveNextChunk
+  let resolveNextChunk: (value: {
+    chunk: string | null
+    next: ChunkPromise | null
+  }) => void = () => {}
 
-  let nextChunkPromise = new Promise(resolve => {
+  let nextChunkPromise: ChunkPromise = new Promise(resolve => {
     resolveNextChunk = resolve
   })
 
@@ -85,14 +95,14 @@ export async function handleDataStream() {
       currentResolve({ chunk: storydiff, next: nextChunkPromise })
     }
 
-    resolveNextChunk({ chunk: null, title: null, next: null })
+    resolveNextChunk({ chunk: null, next: null })
   })()
 
   return nextChunkPromise
 }
 
 export default async function Page() {
-  const dataPromise = await handleDataStream()
+  const dataPromise = handleDataStream()
 
   return (
     <div className="flex flex-col h-full flex-1">
