@@ -28,10 +28,9 @@
     "node": ">=18"
   },
   "dependencies": {},
-  "packageManager": "bun@1.0.20",
+  "packageManager": "bun@1.0.22",
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "internal/*"
+    "packages/*"
   ]
 }
