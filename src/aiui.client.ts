@@ -1,18 +1,18 @@
 import { readableStreamToAsyncGenerator } from "@/oai/stream"
-import { AIUICompletionParams, InstructorConfig } from "@/types"
+import { AIUICompletionParams, ClientConfig } from "@/types"
 import { SchemaStream } from "schema-stream"
 import { z } from "zod"
 
 export default class AIUI {
   readonly debug: boolean = false
 
-  constructor({ debug = false }: InstructorConfig) {
+  constructor({ debug = false }: ClientConfig) {
     this.debug = debug
   }
 
   private log = (...args) => {
     if (this.debug) {
-      console.log("INSTRUCTOR DEBUG: ", ...args)
+      console.log("AIUI DEBUG: ", ...args)
     }
   }
 
@@ -84,7 +84,7 @@ export default class AIUI {
         unknown
       >
     } catch (error) {
-      console.error("Instructor: error making completion call")
+      console.error("Aiui: error making completion call")
       console.error(error)
       throw error
     }

@@ -6,7 +6,7 @@ import { MODE_TO_PARAMS } from "@/constants/modes"
 
 import { Mode, ResponseModel } from "./types"
 
-export function withResponseModel<T extends z.ZodTypeAny>({
+export function withResponseModel<T extends z.AnyZodObject>({
   response_model: { name, schema, description },
   params,
   mode

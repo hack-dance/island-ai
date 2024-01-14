@@ -2,13 +2,13 @@ import { z } from "zod"
 
 import { MODE } from "@/constants/modes"
 
-export type InstructorConfig = {
+export type ClientConfig = {
   debug?: boolean
 }
 
 export type Mode = keyof typeof MODE
 
-export type ResponseModel<T extends z.ZodTypeAny> = {
+export type ResponseModel<T extends z.AnyZodObject> = {
   schema: T
   name: string
   description?: string

@@ -12,7 +12,7 @@ env:
 
 jobs:
   release:
-    if: github.repository == 'instructor-ai/instructor-js'
+    if: github.repository == 'hack-dance/island-ai'
     permissions:
       contents: write
       pull-requests: write
