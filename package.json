@@ -1,6 +1,6 @@
 {
   "name": "@island-ai/client",
-  "version": "0.0.1--alpha.0",
+  "version": "0.0.1--alpha.1",
   "description": "Browser client for consuming streaming structured output",
   "publishConfig": {
     "access": "public"
