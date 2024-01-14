@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import AIUI from "@island-ai/client"
+import StructuredStreamClient from "@island-ai/client"
 import { OAIStream } from "@island-ai/client/OAIStream"
 import { withResponseModel } from "@island-ai/client/response-model"
 import OpenAI from "openai"
@@ -35,7 +35,7 @@ async function StreamRenderer({ data }: { data: ChunkPromise }) {
 }
 
 async function handleDataStream() {
-  const client = new AIUI({})
+  const client = new StructuredStreamClient({})
   const params = withResponseModel({
     response_model: {
       schema: z.object({
@@ -51,13 +51,13 @@ async function handleDataStream() {
     mode: "TOOLS"
   })
 
-  const stream = await oai.chat.completions.create({
-    ...params,
-    stream: true
-  })
-
   const extractionStream = await client.create({
     completionPromise: async () => {
+      const stream = await oai.chat.completions.create({
+        ...params,
+        stream: true
+      })
+
       return OAIStream({
         res: stream
       })

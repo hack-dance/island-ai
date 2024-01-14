@@ -37,7 +37,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hack-dance/aiui.git"
+    "url": "git+https://github.com/hack-dance/island-ai.git"
   },
   "keywords": [
     "llm",
@@ -48,9 +48,9 @@
   "author": "Dimitri Kennedy",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hack-dance/aiui/issues"
+    "url": "https://github.com/hack-dance/island-ai/issues"
   },
-  "homepage": "https://github.com/hack-dance/aiui#readme",
+  "homepage": "https://github.com/hack-dance/island-ai#readme",
   "dependencies": {
     "schema-stream": "2.0.1",
     "zod-to-json-schema": "^3.22.3",

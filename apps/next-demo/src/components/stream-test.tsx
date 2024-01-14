@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import AIUI from "@island-ai/client"
+import StructuredStreamClient from "@island-ai/client"
 import { Button } from "@repo/ui/components/ui/button"
 import {
   Card,
@@ -24,7 +24,7 @@ export function StreamTest() {
   const startStream = async ({ url }: { url: string }) => {
     setLoading(true)
 
-    const client = new AIUI({})
+    const client = new StructuredStreamClient({})
 
     const completion = async () => {
       const response = await fetch(url, {

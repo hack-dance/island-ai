@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import AIUI from "@island-ai/client"
+import StructuredStreamClient from "@island-ai/client"
 import { Button } from "@repo/ui/components/ui/button"
 import { Textarea } from "@repo/ui/components/ui/textarea"
 import { Loader2 } from "lucide-react"
@@ -39,7 +39,7 @@ export function ExtractTest() {
 
       if (!zodSchema || zodSchema instanceof Error) throw new Error("failed to parse schema")
 
-      const client = new AIUI({})
+      const client = new StructuredStreamClient({})
 
       const completion = async () => {
         const response = await fetch(url, {

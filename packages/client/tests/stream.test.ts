@@ -1,6 +1,6 @@
 import { OAIStream } from "@/oai/stream"
 import { withResponseModel } from "@/response-model"
-import AIUI from "@/structured-stream.client"
+import StructuredStreamClient from "@/structured-stream.client"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
 import { z } from "zod"
@@ -60,11 +60,11 @@ async function CreateOAIStream() {
 }
 
 async function extractUser() {
-  const client = new AIUI({})
+  const client = new StructuredStreamClient({})
 
   const extractionStream = await client.create({
     completionPromise: CreateOAIStream,
-    response_model: { schema: ExtractionValuesSchema, name: "Extr" }
+    response_model: { schema: ExtractionValuesSchema, name: "Extract" }
   })
 
   let result: Partial<z.infer<typeof ExtractionValuesSchema>> = {}
