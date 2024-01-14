@@ -36,6 +36,10 @@
     "clean": {
       "cache": false,
       "persistent": true
+    },
+    "type-check": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
