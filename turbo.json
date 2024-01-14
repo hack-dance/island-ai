@@ -9,16 +9,12 @@
     },
     "island-docs#build": {
       "env": [],
-      "dependsOn": [
-        "^@island-ai/client#build"
-      ],
+      "dependsOn": ["^@island-ai/client#build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "island-next-demos#build": {
       "env": [],
-      "dependsOn": [
-        "^@island-ai/client#build"
-      ],
+      "dependsOn": ["^@island-ai/client#build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "@island-ai/client#build": {

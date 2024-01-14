@@ -48,10 +48,6 @@ function CustomGridPlugin({ addComponents }) {
         "--span-x": "1",
         "--span-y": "3"
       },
-      "& > li.grid-item.two-two": {
-        "--span-x": "2",
-        "--span-y": "2"
-      },
       "& > li.grid-item.three-two": {
         "--span-x": "3",
         "--span-y": "2"
