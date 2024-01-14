@@ -1,6 +1,6 @@
-import AIUI from "@/aiui.client"
 import { OAIStream } from "@/oai/stream"
 import { withResponseModel } from "@/response-model"
+import AIUI from "@/structured-stream.client"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
 import { z } from "zod"
@@ -35,8 +35,8 @@ const ExtractionValuesSchema = z.object({
 
 async function CreateOAIStream() {
   const oai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY ?? undefined,
-    organization: process.env.OPENAI_ORG_ID ?? undefined
+    apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
+    organization: process.env["OPENAI_ORG_ID"] ?? undefined
   })
 
   const params = withResponseModel({

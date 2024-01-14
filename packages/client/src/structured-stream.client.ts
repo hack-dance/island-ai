@@ -1,9 +1,9 @@
 import { readableStreamToAsyncGenerator } from "@/oai/stream"
-import { AIUICompletionParams, ClientConfig, LogLevel } from "@/types"
+import { ClientConfig, LogLevel, StructredStreamCompletionParams } from "@/types"
 import { SchemaStream } from "schema-stream"
 import { z } from "zod"
 
-export default class AIUI {
+export default class StructuredStreamClient {
   readonly debug: boolean = false
 
   constructor({ debug = false }: ClientConfig) {
@@ -12,22 +12,22 @@ export default class AIUI {
 
   private log<T extends unknown[]>(level: LogLevel, ...args: T) {
     if (!this.debug && level === "debug") {
-      return // Skip debug logs if debug mode is off
+      return
     }
 
     const timestamp = new Date().toISOString()
     switch (level) {
       case "debug":
-        console.debug(`[AIUI-CLIENT:DEBUG] ${timestamp}:`, ...args)
+        console.debug(`[StructredStream-CLIENT:DEBUG] ${timestamp}:`, ...args)
         break
       case "info":
-        console.info(`[AIUI-CLIENT:INFO] ${timestamp}:`, ...args)
+        console.info(`[StructredStream-CLIENT:INFO] ${timestamp}:`, ...args)
         break
       case "warn":
-        console.warn(`[AIUI-CLIENT:WARN] ${timestamp}:`, ...args)
+        console.warn(`[StructredStream-CLIENT:WARN] ${timestamp}:`, ...args)
         break
       case "error":
-        console.error(`[AIUI-CLIENT:ERROR] ${timestamp}:`, ...args)
+        console.error(`[StructredStream-CLIENT:ERROR] ${timestamp}:`, ...args)
         break
     }
   }
@@ -36,7 +36,9 @@ export default class AIUI {
     completionPromise,
     data,
     response_model
-  }: AIUICompletionParams<T>): Promise<AsyncGenerator<Partial<z.infer<T>>, void, unknown>> {
+  }: StructredStreamCompletionParams<T>): Promise<
+    AsyncGenerator<Partial<z.infer<T>>, void, unknown>
+  > {
     let _activePath: (string | number | undefined)[] = []
     let _completedPaths: (string | number | undefined)[][] = []
 
@@ -109,7 +111,7 @@ export default class AIUI {
     }
   }
 
-  public async create<P extends AIUICompletionParams<z.AnyZodObject>>(
+  public async create<P extends StructredStreamCompletionParams<z.AnyZodObject>>(
     params: P
   ): Promise<AsyncGenerator<Partial<z.infer<P["response_model"]["schema"]>>, void, unknown>> {
     return this.chatCompletionStream(params)

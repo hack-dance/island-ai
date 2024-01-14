@@ -26,7 +26,7 @@ export type CompletionParams = {
   messages: ChatCompletionMessageParam[]
 }
 
-export type AIUICompletionParams<T extends z.AnyZodObject> = {
+export type StructredStreamCompletionParams<T extends z.AnyZodObject> = {
   response_model: { schema: T }
   data?: Record<string, unknown>
   completionPromise: (data?: Record<string, unknown>) => Promise<ReadableStream<Uint8Array>>

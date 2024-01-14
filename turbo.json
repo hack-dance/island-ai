@@ -10,7 +10,14 @@
     "island-docs#build": {
       "env": [],
       "dependsOn": [
-        "^build"
+        "^@island-ai/client#build"
+      ],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "island-next-demos#build": {
+      "env": [],
+      "dependsOn": [
+        "^@island-ai/client#build"
       ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
