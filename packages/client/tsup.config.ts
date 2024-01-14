@@ -4,7 +4,7 @@ export default defineConfig(options => {
   return {
     splitting: true,
     entry: ["src/**/*.{ts,tsx}"],
-    format: ["esm"],
+    format: ["esm", "cjs"],
     dts: true,
     minify: true,
     clean: true,
