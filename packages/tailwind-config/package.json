@@ -1,0 +1,25 @@
+{
+  "name": "@repo/tailwind-config",
+  "version": "0.0.1",
+  "private": true,
+  "files": [
+    "postcss.config.js",
+    "tailwind.config.js"
+  ],
+  "dependencies": {
+    "@radix-ui/colors": "^1.0.1",
+    "@tailwindcss/typography": "^0.5.9",
+    "tailwindcss-animate": "^1.0.5",
+    "postcss-100vh-fix": "^1.0.2",
+    "windy-radix-palette": "^0.6.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.13",
+    "postcss": "^8.4.25",
+    "tailwindcss": "^3.3.2",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3.2.2"
+  }
+}

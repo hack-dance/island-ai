@@ -6,7 +6,7 @@
   "editor.formatOnPaste": false,
   "editor.trimAutoWhitespace": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "always"
+    "source.fixAll.eslint": "explicit"
   },
   "[html]": {
     "editor.defaultFormatter": "GitHub.copilot"
@@ -19,6 +19,7 @@
     "editor.autoIndent": "advanced"
   },
   "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
     "editor.autoIndent": "advanced",
     "editor.tabSize": 2,
     "editor.formatOnSave": true,
@@ -27,6 +28,13 @@
   },
   "eslint.validate": ["javascript", "typescript", "typescriptreact"],
   "eslint.debug": true,
+  "eslint.workingDirectories": [
+    // Monorepo directories
+    {
+      "pattern": "./src/*"
+    }
+  ],
+  "github-actions.workflows.pinned.workflows": [".github/workflows/release.yml"],
   "typescript.tsdk": "./node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.validate.enable": true,
@@ -43,5 +51,12 @@
   },
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
-  }
+  },
+  "yaml.schemas": {
+    "openapi:v2": "file:///Users/beast/dev/image-gen/gcp/functions/chat/openapi.yaml",
+    "https://json.schemastore.org/workflows.json": "file:///Users/beast/dev/image-gen/infra/gcp/workflows/dataset-processing-workflow.yml"
+  },
+  "yaml.format.enable": true,
+  "yaml.schemaStore.enable": true,
+  "yaml.validate": true
 }

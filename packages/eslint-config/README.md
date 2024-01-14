@@ -1,0 +1,2 @@
+# `@repo/eslint-config`
+

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": ["NODE_ENV", "OPENAI_API_KEY", "OPENAI_ORG_ID"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "island-docs#build": {
+      "env": [],
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "@island-ai/client#build": {
+      "outputs": ["dist/**"]
+    },
+    "lint": {},
+    "test": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

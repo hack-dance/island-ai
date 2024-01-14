@@ -1,0 +1,39 @@
+{
+  "name": "@repo/constants",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "license": "MIT",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./types/api": "./dist/types/api.mjs"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tailwind-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@turbo/gen": "^1.10.12",
+    "@types/node": "^20.5.2",
+    "@types/eslint": "^8.44.7",
+    "@types/react": "^18.2.18",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.53.0",
+    "typescript": "^5.2.2",
+    "ramda": "^0.29.0",
+    "zod": "3.22.4"
+  },
+  "peerDependencies": {},
+  "dependencies": {
+    "tsup": "^8.0.1"
+  }
+}
