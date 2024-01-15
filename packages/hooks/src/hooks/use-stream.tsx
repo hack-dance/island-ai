@@ -21,7 +21,7 @@ export interface UseStreamProps {
 }
 
 /**
- * `useStream` is a custom React hook that manages a stream.
+ * `useStream` is a custom React hook that creates a fetch request to a stream endpoint and manages the state of that stream
  * It provides functionalities to start and stop the stream, and manages the loading state.
  *
  * @param {UseStreamProps} props - The props for the hook include optional callback

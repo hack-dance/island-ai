@@ -41,7 +41,6 @@ export interface UseJsonStreamProps<T extends z.ZodType<any, any>> extends UseSt
  *   loading,
  *   startStream,
  *   stopStream,
- *   json
  * } = useJsonStream({ onBeforeStart: ..., onReceive: ..., onStop: ..., schema: ... });
  * ```
  */
