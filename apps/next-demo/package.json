@@ -14,6 +14,7 @@
     "@next/mdx": "^13.4.19",
     "@next/eslint-plugin-next": "^14.0.2",
     "zod-stream": "workspace:*",
+    "stream-hooks": "workspace:*",
     "@repo/constants": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/tailwind-config": "workspace:*",

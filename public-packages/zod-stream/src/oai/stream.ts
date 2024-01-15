@@ -31,6 +31,7 @@ export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
       if (cancel) {
         break
       }
+
       if (!OAIResponseParser(part)) {
         continue
       }
@@ -75,6 +76,9 @@ export async function* readableStreamToAsyncGenerator(
     if (done) {
       break
     }
+
     yield JSON.parse(decoder.decode(value))
   }
+
+  return
 }

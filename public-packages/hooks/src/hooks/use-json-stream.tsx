@@ -47,10 +47,24 @@ export function useJsonStream<T extends z.AnyZodObject>({
 
   const [json, setJson] = useState<Partial<z.infer<T>>>(stubbedValue)
   const [loading, setLoading] = useState(false)
-  const { startStream: startStreamBase, stopStream } = useStream({
+  const { startStream: startStreamBase, stopStream: stopStreamBase } = useStream({
     onBeforeStart,
     onStop
   })
+
+  /**
+   * @function stopStream
+   * Stops the stream by aborting the fetch request.
+   *
+   * @example
+   * ```
+   * stopStream();
+   * ```
+   */
+  const stopStream = () => {
+    setLoading(false)
+    stopStreamBase()
+  }
 
   /**
    * @function startStream
@@ -77,6 +91,7 @@ export function useJsonStream<T extends z.AnyZodObject>({
         setJson(data)
       }
 
+      setLoading(false)
       onEnd && onEnd(json)
     } catch (err: any) {
       setLoading(false)
@@ -89,6 +104,8 @@ export function useJsonStream<T extends z.AnyZodObject>({
 
       stopStream()
       throw err
+    } finally {
+      setLoading(false)
     }
   }
 
