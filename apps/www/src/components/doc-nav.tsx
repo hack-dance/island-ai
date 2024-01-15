@@ -16,7 +16,11 @@ export function DocNav({ packageConfig }: { packageConfig: DocType }) {
                   <div key={doc.title}>
                     {doc?.titlePage ? (
                       <h4 className="mb-1 rounded-md px-2 text-sm font-semibold">
-                        <Link replace={false} className="hover:underline" href={`/${doc.slug}`}>
+                        <Link
+                          replace={false}
+                          className="hover:underline"
+                          href={`/docs/${doc.slug}`}
+                        >
                           {doc.title}
                         </Link>
                       </h4>
@@ -25,7 +29,7 @@ export function DocNav({ packageConfig }: { packageConfig: DocType }) {
                         replace={false}
                         scroll={false}
                         className="font-medium text-muted-foreground group flex w-full items-center rounded-md border border-transparent px-3 py-1 hover:underline"
-                        href={`/${doc.slug}`}
+                        href={`/docs/${doc.slug}`}
                       >
                         {doc.title}
                       </Link>

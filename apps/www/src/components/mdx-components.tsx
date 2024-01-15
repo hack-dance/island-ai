@@ -2,7 +2,10 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 
+import { Shell } from "./shell"
+
 export const customComponents = {
+  Shell: Shell,
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1
       className={cn("font-heading mt-2 mb-4 scroll-m-20 text-4xl font-bold", className)}

@@ -1,0 +1,87 @@
+# core
+**@island-ai/core** is a module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas.
+
+## [Installation](#install) <span id="install"/>
+
+with pnpm
+```bash
+$ pnpm add @island-ai/core zod openai
+```
+with npm
+```bash
+$ npm install @island-ai/core zod openai
+```
+with bun
+```bash
+$ bun add @island-ai/core zod openai
+```
+
+
+## [Basic Usage](#usage)  <span id="usage"/>
+<Shell />
+
+Creating an endpoint that calls OpenAI with a defined response model.
+
+`/api/get-stream`
+```typescript
+  import { OAIStream } from "@island-ai/core/OAIStream"
+  import { withResponseModel } from "@island-ai/core/response-model"
+
+  import OpenAI from "openai"
+  import { z } from "zod"
+
+  const oai = new OpenAI({
+    apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
+    organization: process.env["OPENAI_ORG_ID"] ?? undefined
+  })
+
+export async function POST(request: Request) {
+  const { messages } = await request.json()
+
+  const params = withResponseModel({
+    response_model: { schema: z.object({ content: z.string() }), name: "Content response" },
+    params: {
+      messages,
+      model: "gpt-4"
+    },
+    mode: "TOOLS"
+  })
+
+  const extractionStream = await oai.chat.completions.create({
+    ...params,
+    stream: true
+  })
+
+  return new Response(
+    OAIStream({
+      res: extractionStream
+    })
+  )
+}
+```
+
+
+Consuming the structured stream elsewhere, maybe in the browser.
+
+```typescript
+  const client = new StructuredStreamClient()
+    const stream = await client.create({
+      completionPromise: async () => {
+        const response = fetch("/api/get-stream", {
+          body: JSON.stringify({ messages: [] }),
+          method: "POST"
+        })
+
+        return response.body
+      },
+      response_model: { // should match model expected to be returned by the completion.
+        schema: z.object({
+          content: z.string()
+        })
+      }
+    })
+
+    for await (const chunk of extractionStream) {
+      console.log(chunk) // safe to parse partial json
+    }
+  ```

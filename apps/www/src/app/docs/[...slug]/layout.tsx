@@ -21,8 +21,8 @@ export default async function DocLayout({
 
   return (
     <>
-      <div className="flex lg:container h-full flex-1 w-full">
-        <aside className="top-[64px] pl-4 pt-6 min-w-[220px] h-full lg:sticky hidden lg:block">
+      <div className="flex  h-full flex-1 w-full">
+        <aside className="top-[64px] pl-4 pt-6 min-w-[280px] h-full lg:sticky hidden lg:block">
           <DocNav packageConfig={packageConfig} />
         </aside>
 
