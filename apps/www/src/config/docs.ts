@@ -132,66 +132,76 @@ export const docs: Record<string, DocType> = {
   },
   "stream-hooks": {
     title: "stream-hooks",
-    indexRoute: "/stream-hooks",
+    indexRoute: "stream-hooks/introduction",
     sections: [
       {
         title: "Getting started",
         pages: [
           {
-            title: "Install",
-            slug: "stream-hooks",
+            title: "Introduction",
+            slug: "stream-hooks/introduction",
             id: "stream-hooks"
-          }
-        ]
-      }
-    ]
-  },
-  "schema-stream": {
-    title: "schema-stream",
-    indexRoute: "/schema-stream",
-    sections: [
-      {
-        title: "Getting started",
-        pages: [
+          },
           {
-            title: "Install",
-            slug: "schema-stream",
-            id: "schema-stream"
-          }
-        ]
-      }
-    ]
-  },
-  "ai-ui": {
-    title: "ai-ui",
-    indexRoute: "/ai-ui",
-    sections: [
-      {
-        title: "Getting started",
-        pages: [
+            title: "Getting started",
+            slug: "stream-hooks/getting-started",
+            id: "stream-hooks-getting-started"
+          },
           {
-            title: "Install",
-            slug: "ai-ui",
-            id: "ai-ui"
-          }
-        ]
-      }
-    ]
-  },
-  "instructor": {
-    title: "instructor",
-    indexRoute: "/instructor",
-    sections: [
-      {
-        title: "Getting started",
-        pages: [
-          {
-            title: "Install",
-            slug: "instructor",
-            id: "instructor"
+            title: "API reference",
+            slug: "stream-hooks/api",
+            id: "stream-hooks-api"
           }
         ]
       }
     ]
   }
+  // "schema-stream": {
+  //   title: "schema-stream",
+  //   indexRoute: "/schema-stream",
+  //   sections: [
+  //     {
+  //       title: "Getting started",
+  //       pages: [
+  //         {
+  //           title: "Install",
+  //           slug: "schema-stream",
+  //           id: "schema-stream"
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // },
+  // "ai-ui": {
+  //   title: "ai-ui",
+  //   indexRoute: "/ai-ui",
+  //   sections: [
+  //     {
+  //       title: "Getting started",
+  //       pages: [
+  //         {
+  //           title: "Install",
+  //           slug: "ai-ui",
+  //           id: "ai-ui"
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // },
+  // "instructor": {
+  //   title: "instructor",
+  //   indexRoute: "/instructor",
+  //   sections: [
+  //     {
+  //       title: "Getting started",
+  //       pages: [
+  //         {
+  //           title: "Install",
+  //           slug: "instructor",
+  //           id: "instructor"
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // }
 }
