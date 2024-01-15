@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { docs } from "@/config/docs"
+import { cn } from "@/lib/utils"
 
 const allDocs = Object.values(docs)
 const allPages = allDocs.flatMap(pkg =>
@@ -45,18 +46,17 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
   return (
     <div className="p-4 min-h-full">
       <header className="border-b-[1px] border-b-accent pb-4 mb-8">
-        <span className="text-sm text-muted-foreground">
-          <Link href={`/${doc.slug}`}>{doc.package}</Link>
-        </span>
-        {[...slug].slice(0, -1).map(part => {
+        {[...slug].slice(0, -1).map((part, index) => {
           return (
             <>
-              <span className="text-sm text-muted-foreground">{` / `}</span>
+              {!!index && <span className="text-sm text-muted-foreground">{` / `}</span>}
               <span
                 key={part}
-                className="text-sm text-muted-foreground hover:underline cursor-pointer capitalize"
+                className={cn(
+                  "text-sm text-muted-foreground hover:underline cursor-pointer capitalize"
+                )}
               >
-                <Link href={`/${slug.slice(0, slug.indexOf(part) + 1).join("/")}`}>
+                <Link href={`/docs/${slug.slice(0, slug.indexOf(part) + 1).join("/")}`}>
                   {part.replace(/-/g, " ")}
                 </Link>
               </span>

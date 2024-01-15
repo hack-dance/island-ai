@@ -1,87 +1,18 @@
-# core
-**zod-stream** is a module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas.
+# zod-stream
 
-## [Installation](#install) <span id="install"/>
+## Introduction
 
-with pnpm
-```bash
-$ pnpm add zod-stream zod openai
-```
-with npm
-```bash
-$ npm install zod-stream zod openai
-```
-with bun
-```bash
-$ bun add zod-stream zod openai
-```
+### Overview
+`zod-stream` is a powerful TypeScript toolkit designed for building dynamic, AI-generated UI. It provides a seamless interface for parsing structured, streaming JSON data from OpenAI or AnyScale, ensuring immediate safety and readability. Leveraging `Schema-Stream` for efficient parsing, `zod-stream` is ideal for real-time applications requiring structured LLM response streams.
 
+### Key Features
+  - **Efficient JSON Parsing**: Utilizes `Schema-Stream` for fast and efficient parsing of streaming JSON data.
+  - **Real-Time Data Validation**: Integrates with Zod for on-the-fly validation of data, ensuring that the streams are structured and conform to predefined schemas.
+  - **OpenAI Integration**: Seamlessly works with OpenAI, making it perfect for applications using AI-generated content.
+  - **AnyScale Compatibility**: Designed to be compatible with AnyScale, enhancing its versatility in various streaming contexts.
+  - **Dynamic AI-Generated UI**: Facilitates the creation of dynamic UI that are powered by AI, allowing for real-time updates and interactions.
+  - **TypeScript Support**: Built with TypeScript, offering strong typing and making it a natural fit for TypeScript-based projects.
+  - **Error Handling**: Robust error handling capabilities to ensure reliability and ease of debugging in production environments.
+  - **Customizable and Extendable**: Offers flexibility to be customized and extended to suit specific application needs.
 
-## [Basic Usage](#usage)  <span id="usage"/>
-<Shell />
-
-Creating an endpoint that calls OpenAI with a defined response model.
-
-`/api/get-stream`
-```typescript
-  import { OAIStream } from "zod-stream/OAIStream"
-  import { withResponseModel } from "zod-stream/response-model"
-
-  import OpenAI from "openai"
-  import { z } from "zod"
-
-  const oai = new OpenAI({
-    apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
-    organization: process.env["OPENAI_ORG_ID"] ?? undefined
-  })
-
-export async function POST(request: Request) {
-  const { messages } = await request.json()
-
-  const params = withResponseModel({
-    response_model: { schema: z.object({ content: z.string() }), name: "Content response" },
-    params: {
-      messages,
-      model: "gpt-4"
-    },
-    mode: "TOOLS"
-  })
-
-  const extractionStream = await oai.chat.completions.create({
-    ...params,
-    stream: true
-  })
-
-  return new Response(
-    OAIStream({
-      res: extractionStream
-    })
-  )
-}
-```
-
-
-Consuming the structured stream elsewhere, maybe in the browser.
-
-```typescript
-  const client = new StructuredStreamClient()
-    const stream = await client.create({
-      completionPromise: async () => {
-        const response = fetch("/api/get-stream", {
-          body: JSON.stringify({ messages: [] }),
-          method: "POST"
-        })
-
-        return response.body
-      },
-      response_model: { // should match model expected to be returned by the completion.
-        schema: z.object({
-          content: z.string()
-        })
-      }
-    })
-
-    for await (const chunk of extractionStream) {
-      console.log(chunk) // safe to parse partial json
-    }
-  ```
+These features make `zod-stream` an ideal choice for developers looking to integrate structured, streaming JSON data from AI sources into their applications, especially those focusing on dynamic and interactive UIs.

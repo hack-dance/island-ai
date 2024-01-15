@@ -33,6 +33,7 @@ export async function Footer() {
               </li>
             </ul>
           </div>
+
           <div className="max-w-[420px] mx-auto flex flex-col items-center justify-center space-y-6 h-full mt-4 md:-mt-4 col-start-1 col-end-3 md:col-start-auto md:col-end-auto">
             <article>
               <small></small>
@@ -41,6 +42,7 @@ export async function Footer() {
             </article>
           </div>
         </div>
+
         <div className="px-4 flex justify-between items-center mt-8 border-t border-gray-accent/70 pt-8 text-foreground/60 text-sm space-y-2">
           <div>
             <p>Hack Dance © 2023</p>

@@ -86,25 +86,25 @@ export const docs: Record<string, DocType> = {
   },
   "zod-stream": {
     title: "zod-stream",
-    indexRoute: "/zod-stream",
+    indexRoute: "zod-stream/introduction",
     sections: [
       {
-        title: "Getting started",
+        title: "Overview",
         pages: [
           {
-            title: "Install",
-            slug: "zod-stream",
+            title: "Introduction",
+            slug: "zod-stream/introduction",
             id: "zod-stream"
           },
           {
-            title: "Usage",
-            slug: "zod-stream#usage",
-            id: "usage"
+            title: "Getting started",
+            slug: "zod-stream/getting-started",
+            id: "zod-stream-getting-started"
           },
           {
-            title: "API",
-            slug: "zod-stream#api",
-            id: "api"
+            title: "API reference",
+            slug: "zod-stream/api",
+            id: "zod-stream-api"
           }
         ]
       },

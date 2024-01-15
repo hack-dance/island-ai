@@ -11,8 +11,8 @@ export default async function Page() {
           <BadgeLogo size={186} />
 
           <p className="max-w-xl sm:text-center mt-12 mb-6">
-            A TypeScript toolkit for building dynamic, ai-generated UI with structured, streaming,
-            immediately safe-to-parse JSON from from OpenAI & AnyScale.
+            A TypeScript toolkit for building dynamic ai-generated UI with structured, streaming,
+            immediately safe-to-parse JSON from OpenAI or AnyScale.
           </p>
         </div>
       </div>
