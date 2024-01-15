@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import StructuredStreamClient from "@island-ai/core"
 import { Button } from "@repo/ui/components/ui/button"
 import { Textarea } from "@repo/ui/components/ui/textarea"
 import { Loader2 } from "lucide-react"
+import StructuredStreamClient from "zod-stream"
 
 import { jsonToZod } from "@/lib/json-to-zod"
 

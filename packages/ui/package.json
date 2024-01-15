@@ -86,7 +86,6 @@
     "reactflow": "^11.9.4",
     "rehype-highlight": "^6.0.0",
     "resend": "latest",
-    "schema-stream": "1.2.0",
     "simplex-noise": "^4.0.1",
     "sonner": "latest",
     "svix": "^1.13.0",

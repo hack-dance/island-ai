@@ -1,8 +1,8 @@
-import { OAIStream } from "@island-ai/core/OAIStream"
-import { withResponseModel } from "@island-ai/core/response-model"
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs"
 import { z } from "zod"
+import { OAIStream } from "zod-stream/OAIStream"
+import { withResponseModel } from "zod-stream/response-model"
 
 import { jsonToZod } from "@/lib/json-to-zod"
 import { coreAgentSchema } from "@/ai/agents/core/schema"

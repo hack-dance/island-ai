@@ -29,6 +29,7 @@ module.exports = {
     browser: true
   },
   rules: {
+    "no-prototype-builtins": "off",
     "prettier/prettier": "error",
     "linebreak-style": "off",
     "semi": "off",
@@ -55,11 +56,7 @@ module.exports = {
       }
     }
   },
-  ignorePatterns: [
-    ".*.js",
-    "node_modules/",
-    "dist/"
-  ],
+  ignorePatterns: [".*.js", "node_modules/", "dist/"],
   overrides: [
     // Force ESLint to detect .tsx files
     { files: ["*.js?(x)", "*.ts?(x)", "*.tsx"] }

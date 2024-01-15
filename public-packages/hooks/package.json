@@ -1,0 +1,51 @@
+{
+  "name": "stream-hooks",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "license": "MIT",
+  "exports": {
+    "./components/*": "./dist/components/*.mjs",
+    "./components/ui/*": "./dist/components/ui/*.mjs",
+    "./components/table": "./dist/components/table/index.mjs",
+    "./components/table/*": "./dist/components/table/*.mjs",
+    "./components/primitives/*": "./dist/components/primitives/*.mjs",
+    "./hooks/*": "./dist/hooks/*.mjs",
+    "./styles.css": "./dist/index.css"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "devDependencies": {
+    "zod-stream": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tailwind-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@turbo/gen": "^1.11.3",
+    "@types/node": "^20.10.6",
+    "@types/eslint": "^8.56.1",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "eslint": "^8.53.0",
+    "ramda": "^0.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.2.2",
+    "tsup": "^8.0.1"
+  },
+  "peerDependencies": {
+    "zod-stream": ">=0.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "3.22.4"
+  },
+  "dependencies": {
+    "ramda": "^0.29.0"
+  }
+}

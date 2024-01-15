@@ -1,9 +1,9 @@
 import { Suspense } from "react"
-import StructuredStreamClient from "@island-ai/core"
-import { OAIStream } from "@island-ai/core/OAIStream"
-import { withResponseModel } from "@island-ai/core/response-model"
 import OpenAI from "openai"
 import { z } from "zod"
+import StructuredStreamClient from "zod-stream"
+import { OAIStream } from "zod-stream/OAIStream"
+import { withResponseModel } from "zod-stream/response-model"
 
 const oai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"] ?? undefined,

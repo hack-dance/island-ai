@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import StructuredStreamClient from "@island-ai/core"
 import { Button } from "@repo/ui/components/ui/button"
 import {
   Card,
@@ -11,6 +10,7 @@ import {
   CardTitle
 } from "@repo/ui/components/ui/card"
 import { Loader2 } from "lucide-react"
+import StructuredStreamClient from "zod-stream"
 
 import { coreAgentSchema } from "@/ai/agents/core/schema"
 

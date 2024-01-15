@@ -10,7 +10,7 @@
 
 **Packages:**
 
-- **@island-ai/core**: A client module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas. 
+- **zod-stream**: A client module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas. 
 
 - **@island-ai/hooks**: A set of React hooks tailored for integrating streaming JSON data into React applications. These hooks facilitate the incorporation of live data feeds into user interfaces.
 
@@ -38,8 +38,9 @@
 
 **A basic Next.js App api route**
 ```typescript
-import { OAIStream } from "@island-ai/core/OAIStream"
-import { withResponseModel } from "@island-ai/core/response-model"
+import { OAIStream } from "zod-stream/OAIStream"
+import { withResponseModel } from "zod-stream/response-model"
+
 import OpenAI from "openai"
 
 import { schema } from "./my-schema.ts"
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
 **Consuming the json stream in a react component**
 
 ```tsx
-import StructuredStreamClient from "@island-ai/core"
+import ZodStream from "zod-stream"
 import { schema } from "./my-schema.ts"
 
   const text = `
@@ -82,7 +83,7 @@ import { schema } from "./my-schema.ts"
   - Name: Jane Smith, Email: janesmith@email.com, Twitter: @DigitalDiva88
   - Name: Alex Johnson, Email: alexj@email.com, Twitter: @CodeMaster2023
   
-  During the meeting, we agreed on several key points. The conference will be held on March 15th, 2024, at the Grand Tech Arena located at 4521 Innovation Drive. Dr. Emily Johnson, a renowned AI researcher, will be our keynote speaker.
+  During the meeting, we agreed on several key points. The conference will be held on March 15th, 2024, at the Grand sTech Arena located at 4521 Innovation Drive. Dr. Emily Johnson, a renowned AI researcher, will be our keynote speaker.
   
   The budget for the event is set at $50,000, covering venue costs, speaker fees, and promotional activities. Each participant is expected to contribute an article to the conference blog by February 20th.
   
@@ -97,7 +98,7 @@ export function ExtractTest() {
     setLoading(true)
 
     try {
-      const client = new StructuredStreamClient()
+      const client = new ZodStream()
 
       const completion = async () => {
         const response = await fetch(url, {

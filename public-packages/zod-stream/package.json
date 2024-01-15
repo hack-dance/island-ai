@@ -1,0 +1,75 @@
+{
+  "name": "zod-stream",
+  "version": "0.0.1--alpha.0",
+  "description": "A client for node or the browser to generate and consume streaming json",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/structured-stream.client.js",
+  "module": "./dist/structured-stream.client.mjs",
+  "types": "./dist/structured-stream.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/structured-stream.client.mjs",
+      "require": "./dist/structured-stream.client.js"
+    },
+    "./response-model": {
+      "import": "./dist/response-model.mjs",
+      "require": "./dist/response-model.js"
+    },
+    "./OAIStream": {
+      "import": "./dist/oai/stream.mjs",
+      "require": "./dist/oai/stream.js"
+    },
+    "./*": "./dist/*"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "bun test --coverage --verbose",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "TIMING=1 eslint src/**/*.ts* --fix",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hack-dance/island-ai.git"
+  },
+  "keywords": [
+    "llm",
+    "structured",
+    "outputs",
+    "zod"
+  ],
+  "author": "Dimitri Kennedy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hack-dance/island-ai/issues"
+  },
+  "homepage": "https://github.com/hack-dance/island-ai#readme",
+  "dependencies": {
+    "schema-stream": "workspace:*",
+    "zod-to-json-schema": "^3.22.3",
+    "zod-validation-error": "^2.1.0"
+  },
+  "peerDependencies": {
+    "openai": ">=4.24.1",
+    "zod": ">=3.22.4"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@turbo/gen": "^1.10.12",
+    "@types/node": "^20.5.2",
+    "@types/eslint": "^8.44.7",
+    "eslint": "^8.53.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.2.2",
+    "ramda": "^0.29.0",
+    "zod": "3.22.4"
+  }
+}

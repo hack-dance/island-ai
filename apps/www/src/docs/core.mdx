@@ -1,19 +1,19 @@
 # core
-**@island-ai/core** is a module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas.
+**zod-stream** is a module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas.
 
 ## [Installation](#install) <span id="install"/>
 
 with pnpm
 ```bash
-$ pnpm add @island-ai/core zod openai
+$ pnpm add zod-stream zod openai
 ```
 with npm
 ```bash
-$ npm install @island-ai/core zod openai
+$ npm install zod-stream zod openai
 ```
 with bun
 ```bash
-$ bun add @island-ai/core zod openai
+$ bun add zod-stream zod openai
 ```
 
 
@@ -24,8 +24,8 @@ Creating an endpoint that calls OpenAI with a defined response model.
 
 `/api/get-stream`
 ```typescript
-  import { OAIStream } from "@island-ai/core/OAIStream"
-  import { withResponseModel } from "@island-ai/core/response-model"
+  import { OAIStream } from "zod-stream/OAIStream"
+  import { withResponseModel } from "zod-stream/response-model"
 
   import OpenAI from "openai"
   import { z } from "zod"

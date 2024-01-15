@@ -21,6 +21,7 @@ module.exports = {
   },
   ignorePatterns: [".*.js", "node_modules/", "dist/"],
   rules: {
+    "no-prototype-builtins": "off",
     "prettier/prettier": "error",
     "linebreak-style": "off",
     "semi": "off",
