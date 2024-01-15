@@ -1,7 +1,7 @@
 import { Suspense } from "react"
-import StructuredStreamClient from "@island-ai/client"
-import { OAIStream } from "@island-ai/client/OAIStream"
-import { withResponseModel } from "@island-ai/client/response-model"
+import StructuredStreamClient from "@island-ai/core"
+import { OAIStream } from "@island-ai/core/OAIStream"
+import { withResponseModel } from "@island-ai/core/response-model"
 import OpenAI from "openai"
 import { z } from "zod"
 

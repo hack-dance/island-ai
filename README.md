@@ -10,11 +10,13 @@
 
 **Packages:**
 
-- **@island-ai/client**: A client module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas. 
+- **@island-ai/core**: A client module that interfaces directly with LLM streams. Utilizing Schema-Stream for efficient parsing, it's equipped with tools for processing raw responses from OpenAI, categorizing them by mode (function, tools, JSON, etc.), and ensuring proper error handling and stream conversion. Ideal for API integration delivering structured LLM response streams. There are also utilties for generating OpenAI SDK client parameters with structured response models using Zod schemas. 
 
 - **@island-ai/hooks**: A set of React hooks tailored for integrating streaming JSON data into React applications. These hooks facilitate the incorporation of live data feeds into user interfaces.
 
 - **ai-ui**: A suite of React components specifically developed for AI applications, built on top of the ShadCN component library. These components are designed for easy integration, allowing developers to quickly incorporate AI functionalities into their UIs.
+
+**Related Packages:**
 
 - **@instructor-ai/instructor-js**: A port from Python of the same name, this package is focused on data validation and retry mechanisms, particularly effective in server-only environments. It enhances the reliability and integrity of data processing workflows.
 
@@ -36,8 +38,8 @@
 
 **A basic Next.js App api route**
 ```typescript
-import { OAIStream } from "@island-ai/client/OAIStream"
-import { withResponseModel } from "@island-ai/client/response-model"
+import { OAIStream } from "@island-ai/core/OAIStream"
+import { withResponseModel } from "@island-ai/core/response-model"
 import OpenAI from "openai"
 
 import { schema } from "./my-schema.ts"
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
 **Consuming the json stream in a react component**
 
 ```tsx
-import StructuredStreamClient from "@island-ai/client"
+import StructuredStreamClient from "@island-ai/core"
 import { schema } from "./my-schema.ts"
 
   const text = `

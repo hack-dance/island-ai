@@ -13,8 +13,8 @@ export type DocType = {
 }
 
 export const docs: Record<string, DocType> = {
-  "@island-ai/client": {
-    title: "@island-ai/client",
+  "@island-ai/core": {
+    title: "@island-ai/core",
     indexRoute: "/schema-stream",
     sections: [
       {

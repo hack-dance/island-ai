@@ -1,5 +1,5 @@
-import { OAIStream } from "@island-ai/client/OAIStream"
-import { withResponseModel } from "@island-ai/client/response-model"
+import { OAIStream } from "@island-ai/core/OAIStream"
+import { withResponseModel } from "@island-ai/core/response-model"
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs"
 import { z } from "zod"

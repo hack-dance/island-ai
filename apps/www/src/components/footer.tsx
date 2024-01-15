@@ -7,21 +7,13 @@ export async function Footer() {
       <div className="container px-4 md:px-6">
         <div className="grid gap-8 md:grid-cols-3 grid-cols-2">
           <div className="space-y-2 mx-auto">
-            <h3 className="text-xs tracking-widest uppercase font-blunt">Commercial work</h3>
+            <h3 className="text-xs tracking-widest uppercase font-okineBold">..</h3>
             <ul className="flex flex-col space-y-2 pl-1">
-              <li>
-                <Link
-                  className="text-base hover:underline font-okineBold"
-                  href="https://novy.ai"
-                  target="_blank"
-                >
-                  NOVY AI
-                </Link>
-              </li>
+              <li></li>
             </ul>
           </div>
           <div className="space-y-2 mx-auto">
-            <h3 className="text-xs tracking-widest uppercase font-blunt">Connect</h3>
+            <h3 className="text-xs tracking-widest uppercase font-okineBold">Connect</h3>
             <ul className="flex flex-col space-y-2">
               <li>
                 <div className="flex items-center justify-center gap-4">
@@ -31,7 +23,7 @@ export async function Footer() {
                   <Link href="https://www.linkedin.com/in/dimitri-kennedy/" target="_blank">
                     <Linkedin className="w-5 h-5" />
                   </Link>
-                  <Link href="https://www.github.com/hack-dance/" target="_blank">
+                  <Link href="https://www.github.com/hack-dance/island-ai" target="_blank">
                     <Github className="w-5 h-5" />
                   </Link>
                   <Link href="https://www.twitter.com/dimitrikennedy/" target="_blank">
@@ -43,14 +35,9 @@ export async function Footer() {
           </div>
           <div className="max-w-[420px] mx-auto flex flex-col items-center justify-center space-y-6 h-full mt-4 md:-mt-4 col-start-1 col-end-3 md:col-start-auto md:col-end-auto">
             <article>
-              <small>/hak dans/</small>
-              <small>
-                (<i>noun</i>)
-              </small>
-              <p className="text-xs">
-                In software development: identifying proper trade offs between speed and quality to
-                maximize learning through incremental delivery.
-              </p>
+              <small></small>
+              <small></small>
+              <p className="text-xs"></p>
             </article>
           </div>
         </div>

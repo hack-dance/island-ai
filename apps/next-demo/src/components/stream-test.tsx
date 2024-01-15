@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import StructuredStreamClient from "@island-ai/client"
+import StructuredStreamClient from "@island-ai/core"
 import { Button } from "@repo/ui/components/ui/button"
 import {
   Card,
