@@ -1,3 +1,5 @@
+import { docs } from "./docs"
+
 export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
@@ -18,5 +20,10 @@ export const siteConfig = {
       text: "Github"
     }
   },
-  mainNav: []
+  mainNav: [
+    ...Object.values(docs).map(doc => ({
+      url: `/docs/${doc.indexRoute}`,
+      label: doc.title
+    }))
+  ]
 }

@@ -17,7 +17,20 @@ const config: Omit<Config, "content"> = {
       fontFamily: {
         default: ["var(--font-default)", "system-ui", "sans-serif"],
         serif: ["var(--font-serif)", "serif"],
-        mono: ["var(--font-mono)", "monospace"]
+        inter: ["var(--font-inter)", "system-ui", "sans-serif"],
+
+        mono: ["var(--font-default)", "monospace"],
+        monoBold: ["var(--font-mono-bold)", "monospace"],
+
+        okineBold: ["var(--font-okine-bold)"],
+        okineBoldOutline: ["var(--font-okine-bold-outline)"],
+        okineBlack: ["var(--font-okine-black)"],
+        okineBlackOutline: ["var(--font-okine-black-outline)"],
+        okine: ["var(--font-okine)"],
+        okineMedium: ["var(--font-okine-medium)"],
+
+        blunt: ["var(--font-blunt)"],
+        bluntOutline: ["var(--font-blunt-outline)"]
       },
       colors: {
         border: "hsl(var(--border))",

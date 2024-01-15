@@ -75,12 +75,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                       </h1>
 
                       <nav className="space-x-8 ml-12">
-                        {siteConfig.mainNav.map(({ label, url, external = false }) => (
+                        {siteConfig.mainNav.map(({ label, url }) => (
                           <Link
-                            className="text-xs hover:underline font-okineMedium uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                            className="text-xs hover:underline font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
                             href={url}
                             key={label}
-                            target={external ? "_blank" : undefined}
                           >
                             {label}
                           </Link>

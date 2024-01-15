@@ -1,5 +1,6 @@
 export type DocType = {
   title: string
+  indexRoute: string
   sections: {
     title: string
     pages: {
@@ -12,16 +13,37 @@ export type DocType = {
 }
 
 export const docs: Record<string, DocType> = {
-  main: {
-    title: "main",
+  "@island-ai/client": {
+    title: "@island-ai/client",
+    indexRoute: "/schema-stream",
     sections: [
       {
         title: "Getting started",
         pages: [
           {
             title: "Install",
-            slug: "main",
-            id: "main"
+            slug: "schema-stream",
+            id: "schema-stream"
+          }
+        ]
+      },
+      {
+        title: "other..",
+        pages: []
+      }
+    ]
+  },
+  "schema-stream": {
+    title: "schema-stream",
+    indexRoute: "/schema-stream",
+    sections: [
+      {
+        title: "Getting started",
+        pages: [
+          {
+            title: "Install",
+            slug: "schema-stream",
+            id: "schema-stream"
           }
         ]
       },
