@@ -26,9 +26,9 @@ export const docs: Record<string, DocType> = {
             id: "overview"
           },
           {
-            title: "Validation & type safety",
-            slug: "overview#validation-type-safety",
-            id: "validation"
+            title: "Instructor JS",
+            slug: "overview/instructor",
+            id: "overview-instructor"
           }
         ]
       },
@@ -36,24 +36,14 @@ export const docs: Record<string, DocType> = {
         title: "Concepts",
         pages: [
           {
-            title: "LLMs & streaming",
-            slug: "concepts",
-            id: "concepts"
-          },
-          {
             title: "Stuctured Responses",
-            slug: "structured-responses",
-            id: "structured-responses"
+            slug: "overview/concepts/structured-responses",
+            id: "overview-concepts-structured-responses"
           },
           {
             title: "Partial Streaming",
-            slug: "partial-streaming",
-            id: "partial-streaming"
-          },
-          {
-            title: "Agents",
-            slug: "agents",
-            id: "agents"
+            slug: "overview/concepts/partial-streaming",
+            id: "overview-concepts-partial-streaming"
           }
         ]
       },
