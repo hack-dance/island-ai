@@ -1,20 +1,11 @@
 {
   "name": "stream-hooks",
-  "version": "0.0.1",
+  "version": "0.0.1--alpha.0",
   "private": true,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "license": "MIT",
-  "exports": {
-    "./components/*": "./dist/components/*.mjs",
-    "./components/ui/*": "./dist/components/ui/*.mjs",
-    "./components/table": "./dist/components/table/index.mjs",
-    "./components/table/*": "./dist/components/table/*.mjs",
-    "./components/primitives/*": "./dist/components/primitives/*.mjs",
-    "./hooks/*": "./dist/hooks/*.mjs",
-    "./styles.css": "./dist/index.css"
-  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -43,9 +34,7 @@
     "zod-stream": ">=0.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zod": "3.22.4"
+    "zod": ">=3.22.4"
   },
-  "dependencies": {
-    "ramda": "^0.29.0"
-  }
+  "dependencies": {}
 }

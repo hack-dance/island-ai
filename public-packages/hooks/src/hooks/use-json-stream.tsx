@@ -1,30 +1,9 @@
 import { useRef, useState } from "react"
+import type { StartStream, StartStreamArgs, StopStream, UseJsonStreamProps } from "@/types"
 import z from "zod"
-import StructuredStreamClient from "zod-stream"
+import ZodStream from "zod-stream"
 
-import { useStream, UseStreamProps } from "./use-stream"
-
-interface StartStream {
-  (args: StartStreamArgs): void
-}
-
-interface StopStream {
-  (): void
-}
-
-export interface StartStreamArgs {
-  url: string
-  body?: object
-  headers?: Record<string, string>
-  method?: "GET" | "POST"
-}
-
-export interface UseJsonStreamProps<T extends z.ZodType<any, any>> extends UseStreamProps {
-  onReceive?: (data: Partial<z.infer<T>>) => void
-  onEnd?: (data: z.infer<T>) => void
-  schema: T
-  defaultData?: Partial<z.infer<T>>
-}
+import { useStream } from "./use-stream"
 
 /**
  * `useJsonStream` is a custom React hook that extends the `useStream` hook to add JSON parsing functionality.
@@ -33,7 +12,12 @@ export interface UseJsonStreamProps<T extends z.ZodType<any, any>> extends UseSt
  * @param {UseJsonStreamProps} props - The props for the hook include optional callback
  * functions that will be invoked at different stages of the stream lifecycle, and a schema for the JSON data.
  *
- * @returns {Object} - An object that includes the loading state, start and stop stream functions, and the parsed JSON data.
+ * @returns {
+ * startStream: StartStream,
+ * stopStream: StopStream,
+ * data: Partial<z.infer<T>>,
+ * loading: boolean
+ * }
  *
  * @example
  * ```
@@ -55,12 +39,13 @@ export function useJsonStream<T extends z.AnyZodObject>({
 }: UseJsonStreamProps<T>): {
   startStream: StartStream
   stopStream: StopStream
+  data: Partial<z.infer<T>>
   loading: boolean
 } {
-  const streamClient = useRef(new StructuredStreamClient({}))
+  const streamClient = useRef(new ZodStream({}))
   const stubbedValue = streamClient.current.getSchemaStub({ schema, defaultData })
 
-  const [json, setJson] = useState(stubbedValue)
+  const [json, setJson] = useState<Partial<z.infer<T>>>(stubbedValue)
   const [loading, setLoading] = useState(false)
   const { startStream: startStreamBase, stopStream } = useStream({
     onBeforeStart,
@@ -110,6 +95,7 @@ export function useJsonStream<T extends z.AnyZodObject>({
   return {
     startStream,
     stopStream,
-    loading
+    loading,
+    data: json
   }
 }

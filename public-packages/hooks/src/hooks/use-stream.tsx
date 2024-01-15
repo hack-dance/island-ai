@@ -1,24 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
-
-export interface StartStreamArgs {
-  url: string
-  body?: object
-  headers?: Record<string, string>
-  method?: "GET" | "POST"
-}
-
-interface StartStream {
-  (args: StartStreamArgs): Promise<ReadableStream<Uint8Array>>
-}
-
-interface StopStream {
-  (): void
-}
-
-export interface UseStreamProps {
-  onBeforeStart?: () => void
-  onStop?: () => void
-}
+import type { StartStreamArgs, StartStreamBase, StopStream, UseStreamProps } from "@/types"
 
 /**
  * `useStream` is a custom React hook that creates a fetch request to a stream endpoint and manages the state of that stream
@@ -27,7 +8,10 @@ export interface UseStreamProps {
  * @param {UseStreamProps} props - The props for the hook include optional callback
  * functions that will be invoked at different stages of the stream lifecycle.
  *
- * @returns {Object} - An object that includes the loading state, start and stop stream functions.
+ * @returns {
+ *  startStream: StartStream,
+ *  stopStream: StopStream
+ * }
  *
  * @example
  * ```
@@ -39,7 +23,7 @@ export interface UseStreamProps {
  * ```
  */
 export function useStream({ onBeforeStart, onStop }: UseStreamProps): {
-  startStream: StartStream
+  startStream: StartStreamBase
   stopStream: StopStream
 } {
   const abortControllerRef = useRef<AbortController | null>(null)

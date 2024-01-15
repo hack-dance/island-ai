@@ -117,7 +117,7 @@ export default class StructuredStreamClient {
   }: {
     schema: z.AnyZodObject
     defaultData?: Partial<z.infer<typeof schema>>
-  }) {
+  }): Partial<z.infer<typeof schema>> {
     const streamParser = new SchemaStream(schema, {
       defaultData,
       typeDefaults: {

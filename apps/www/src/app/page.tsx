@@ -12,7 +12,7 @@ export default async function Page() {
 
           <p className="max-w-xl sm:text-center mt-12 mb-6">
             A TypeScript toolkit for building dynamic, ai-generated UI with structured, streaming,
-            immeadately safe-to-parse JSON from from OpenAI & AnyScale.
+            immediately safe-to-parse JSON from from OpenAI & AnyScale.
           </p>
         </div>
       </div>
