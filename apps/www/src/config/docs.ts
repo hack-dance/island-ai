@@ -13,7 +13,7 @@ export type DocType = {
 }
 
 export const docs: Record<string, DocType> = {
-  overview: {
+  "overview": {
     title: "Overview",
     indexRoute: "/overview",
     sections: [
@@ -26,33 +26,17 @@ export const docs: Record<string, DocType> = {
             id: "overview"
           },
           {
-            title: "Why Island AI?",
-            slug: "overview#why-island-ai",
-            id: "why-island-ai"
-          },
-          {
-            title: "How does it work?",
-            slug: "overview#how-does-it-work",
-            id: "how-does-it-work"
-          },
-          {
-            title: "How is it different?",
-            slug: "overview#how-is-it-different",
-            id: "how-is-it-different"
+            title: "Validation & type safety",
+            slug: "overview#validation-type-safety",
+            id: "validation"
           }
         ]
-      }
-    ]
-  },
-  concepts: {
-    title: "Concepts",
-    indexRoute: "/concepts",
-    sections: [
+      },
       {
         title: "Concepts",
         pages: [
           {
-            title: "Concepts",
+            title: "LLMs & streaming",
             slug: "concepts",
             id: "concepts"
           },
@@ -65,31 +49,61 @@ export const docs: Record<string, DocType> = {
             title: "Partial Streaming",
             slug: "partial-streaming",
             id: "partial-streaming"
+          },
+          {
+            title: "Agents",
+            slug: "agents",
+            id: "agents"
+          }
+        ]
+      },
+      {
+        title: "Guides",
+        pages: [
+          {
+            title: "Getting started",
+            slug: "getting-started",
+            id: "getting-started"
+          },
+          {
+            title: "Building dynamic UI",
+            slug: "overview#building-dynamic-ui",
+            id: "building-dynamic-ui"
+          },
+          {
+            title: "Validating LLM Responses",
+            slug: "overview#validating-llm-responses",
+            id: "validating-llm-responses"
+          },
+          {
+            title: "LLM orchestration",
+            slug: "overview#llm-orchestration",
+            id: "llm-orchestration"
           }
         ]
       }
     ]
   },
-  core: {
-    title: "core",
-    indexRoute: "/core",
+  "zod-stream": {
+    title: "zod-stream",
+    indexRoute: "/zod-stream",
     sections: [
       {
         title: "Getting started",
         pages: [
           {
             title: "Install",
-            slug: "core",
-            id: "core"
+            slug: "zod-stream",
+            id: "zod-stream"
           },
           {
             title: "Usage",
-            slug: "core#usage",
+            slug: "zod-stream#usage",
             id: "usage"
           },
           {
             title: "API",
-            slug: "core#api",
+            slug: "zod-stream#api",
             id: "api"
           }
         ]
@@ -99,34 +113,82 @@ export const docs: Record<string, DocType> = {
         pages: [
           {
             title: "Basic example",
-            slug: "core/examples",
+            slug: "zod-stream/examples",
             id: "examples"
           },
           {
             title: "Next.js",
-            slug: "core/examples/next",
+            slug: "zod-stream/examples/next",
             id: "examples-next"
           },
           {
             title: "Express",
-            slug: "core/examples/express",
+            slug: "zod-stream/examples/express",
             id: "examples-express"
           }
         ]
       }
     ]
   },
-  hooks: {
-    title: "hooks",
-    indexRoute: "/hooks",
+  "stream-hooks": {
+    title: "stream-hooks",
+    indexRoute: "/stream-hooks",
     sections: [
       {
         title: "Getting started",
         pages: [
           {
             title: "Install",
-            slug: "hooks",
-            id: "hooks"
+            slug: "stream-hooks",
+            id: "stream-hooks"
+          }
+        ]
+      }
+    ]
+  },
+  "schema-stream": {
+    title: "schema-stream",
+    indexRoute: "/schema-stream",
+    sections: [
+      {
+        title: "Getting started",
+        pages: [
+          {
+            title: "Install",
+            slug: "schema-stream",
+            id: "schema-stream"
+          }
+        ]
+      }
+    ]
+  },
+  "ai-ui": {
+    title: "ai-ui",
+    indexRoute: "/ai-ui",
+    sections: [
+      {
+        title: "Getting started",
+        pages: [
+          {
+            title: "Install",
+            slug: "ai-ui",
+            id: "ai-ui"
+          }
+        ]
+      }
+    ]
+  },
+  "instructor": {
+    title: "instructor",
+    indexRoute: "/instructor",
+    sections: [
+      {
+        title: "Getting started",
+        pages: [
+          {
+            title: "Install",
+            slug: "instructor",
+            id: "instructor"
           }
         ]
       }
