@@ -13,6 +13,63 @@ export type DocType = {
 }
 
 export const docs: Record<string, DocType> = {
+  overview: {
+    title: "Overview",
+    indexRoute: "/overview",
+    sections: [
+      {
+        title: "Introduction",
+        pages: [
+          {
+            title: "What is Island AI?",
+            slug: "overview",
+            id: "overview"
+          },
+          {
+            title: "Why Island AI?",
+            slug: "overview#why-island-ai",
+            id: "why-island-ai"
+          },
+          {
+            title: "How does it work?",
+            slug: "overview#how-does-it-work",
+            id: "how-does-it-work"
+          },
+          {
+            title: "How is it different?",
+            slug: "overview#how-is-it-different",
+            id: "how-is-it-different"
+          }
+        ]
+      }
+    ]
+  },
+  concepts: {
+    title: "Concepts",
+    indexRoute: "/concepts",
+    sections: [
+      {
+        title: "Concepts",
+        pages: [
+          {
+            title: "Concepts",
+            slug: "concepts",
+            id: "concepts"
+          },
+          {
+            title: "Stuctured Responses",
+            slug: "structured-responses",
+            id: "structured-responses"
+          },
+          {
+            title: "Partial Streaming",
+            slug: "partial-streaming",
+            id: "partial-streaming"
+          }
+        ]
+      }
+    ]
+  },
   core: {
     title: "core",
     indexRoute: "/core",
