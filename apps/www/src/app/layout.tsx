@@ -50,8 +50,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "antialiased overflow-hidden h-screen w-screen font-default",
-        ...Object.values(defaultFontMapper)
+        ...Object.values(defaultFontMapper),
+        "antialiased overflow-hidden h-screen w-screen font-inter"
       )}
     >
       <body className="antialiased bg-background">

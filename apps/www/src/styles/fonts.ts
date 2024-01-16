@@ -86,7 +86,7 @@ export const fantasqueBold = localFont({
 })
 
 export const defaultFontMapper = {
-  default: inter.variable,
+  inter: inter.variable,
   serif: zillaBold.variable,
 
   mono: fantasqueRegular.variable,
