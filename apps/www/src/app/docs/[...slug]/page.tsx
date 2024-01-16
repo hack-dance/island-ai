@@ -48,7 +48,7 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
       <header className="border-b-[1px] border-b-accent pb-4 mb-8">
         {[...slug].slice(0, -1).map((part, index) => {
           return (
-            <>
+            <span key={`${part}-${index}`}>
               {!!index && <span className="text-sm text-muted-foreground">{` / `}</span>}
               <span
                 key={part}
@@ -60,7 +60,7 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
                   {part.replace(/-/g, " ")}
                 </Link>
               </span>
-            </>
+            </span>
           )
         })}
         <span className="text-sm text-muted-foreground">{` / `}</span>

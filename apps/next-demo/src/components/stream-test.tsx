@@ -17,6 +17,7 @@ export function StreamTest() {
   const { data, loading, startStream } = useJsonStream({
     schema: coreAgentSchema
   })
+
   const submitMessage = async () => {
     try {
       await startStream({

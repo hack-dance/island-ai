@@ -103,18 +103,13 @@ export const docs: Record<string, DocType> = {
         pages: [
           {
             title: "Basic example",
-            slug: "zod-stream/examples",
-            id: "examples"
+            slug: "zod-stream/examples-basic",
+            id: "zod-stream-examples-basic"
           },
           {
-            title: "Next.js",
+            title: "Next.js Dashboard",
             slug: "zod-stream/examples/next",
-            id: "examples-next"
-          },
-          {
-            title: "Express",
-            slug: "zod-stream/examples/express",
-            id: "examples-express"
+            id: "zod-stream-examples-next"
           }
         ]
       }
@@ -146,52 +141,4 @@ export const docs: Record<string, DocType> = {
       }
     ]
   }
-  // "schema-stream": {
-  //   title: "schema-stream",
-  //   indexRoute: "/schema-stream",
-  //   sections: [
-  //     {
-  //       title: "Getting started",
-  //       pages: [
-  //         {
-  //           title: "Install",
-  //           slug: "schema-stream",
-  //           id: "schema-stream"
-  //         }
-  //       ]
-  //     }
-  //   ]
-  // },
-  // "ai-ui": {
-  //   title: "ai-ui",
-  //   indexRoute: "/ai-ui",
-  //   sections: [
-  //     {
-  //       title: "Getting started",
-  //       pages: [
-  //         {
-  //           title: "Install",
-  //           slug: "ai-ui",
-  //           id: "ai-ui"
-  //         }
-  //       ]
-  //     }
-  //   ]
-  // },
-  // "instructor": {
-  //   title: "instructor",
-  //   indexRoute: "/instructor",
-  //   sections: [
-  //     {
-  //       title: "Getting started",
-  //       pages: [
-  //         {
-  //           title: "Install",
-  //           slug: "instructor",
-  //           id: "instructor"
-  //         }
-  //       ]
-  //     }
-  //   ]
-  // }
 }
