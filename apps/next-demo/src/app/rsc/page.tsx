@@ -1,9 +1,7 @@
 import { Suspense } from "react"
 import OpenAI from "openai"
 import { z } from "zod"
-import StructuredStreamClient from "zod-stream"
-import { OAIStream } from "zod-stream/OAIStream"
-import { withResponseModel } from "zod-stream/response-model"
+import ZodStream, { OAIStream, withResponseModel } from "zod-stream"
 
 const oai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
@@ -35,7 +33,7 @@ async function StreamRenderer({ data }: { data: ChunkPromise }) {
 }
 
 async function handleDataStream() {
-  const client = new StructuredStreamClient({})
+  const client = new ZodStream({})
   const params = withResponseModel({
     response_model: {
       schema: z.object({

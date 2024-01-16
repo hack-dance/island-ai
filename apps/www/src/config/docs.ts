@@ -15,14 +15,14 @@ export type DocType = {
 export const docs: Record<string, DocType> = {
   "overview": {
     title: "Overview",
-    indexRoute: "/overview",
+    indexRoute: "/overview/introduction",
     sections: [
       {
         title: "Introduction",
         pages: [
           {
             title: "What is Island AI?",
-            slug: "overview",
+            slug: "overview/introduction",
             id: "overview"
           },
           {

@@ -1,28 +1,13 @@
 {
   "name": "zod-stream",
-  "version": "0.0.1--alpha.0",
+  "version": "0.0.1--alpha.3",
   "description": "A client for node or the browser to generate and consume streaming json",
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/structured-stream.client.js",
-  "module": "./dist/structured-stream.client.mjs",
-  "types": "./dist/structured-stream.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/structured-stream.client.mjs",
-      "require": "./dist/structured-stream.client.js"
-    },
-    "./response-model": {
-      "import": "./dist/response-model.mjs",
-      "require": "./dist/response-model.js"
-    },
-    "./OAIStream": {
-      "import": "./dist/oai/stream.mjs",
-      "require": "./dist/oai/stream.js"
-    },
-    "./*": "./dist/*"
-  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/**"
   ],
@@ -52,7 +37,7 @@
   },
   "homepage": "https://github.com/hack-dance/island-ai#readme",
   "dependencies": {
-    "schema-stream": "workspace:*",
+    "schema-stream": "*",
     "zod-to-json-schema": "^3.22.3",
     "zod-validation-error": "^2.1.0"
   },

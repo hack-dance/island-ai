@@ -1,9 +1,9 @@
 import { readableStreamToAsyncGenerator } from "@/oai/stream"
-import { ClientConfig, LogLevel, StructredStreamCompletionParams } from "@/types"
+import { ClientConfig, LogLevel, ZodStreamCompletionParams } from "@/types"
 import { SchemaStream } from "schema-stream"
 import { z } from "zod"
 
-export default class StructuredStreamClient {
+export default class ZodStream {
   readonly debug: boolean = false
 
   constructor({ debug = false }: ClientConfig = {}) {
@@ -18,16 +18,16 @@ export default class StructuredStreamClient {
     const timestamp = new Date().toISOString()
     switch (level) {
       case "debug":
-        console.debug(`[StructredStream-CLIENT:DEBUG] ${timestamp}:`, ...args)
+        console.debug(`[ZodStream-CLIENT:DEBUG] ${timestamp}:`, ...args)
         break
       case "info":
-        console.info(`[StructredStream-CLIENT:INFO] ${timestamp}:`, ...args)
+        console.info(`[ZodStream-CLIENT:INFO] ${timestamp}:`, ...args)
         break
       case "warn":
-        console.warn(`[StructredStream-CLIENT:WARN] ${timestamp}:`, ...args)
+        console.warn(`[ZodStream-CLIENT:WARN] ${timestamp}:`, ...args)
         break
       case "error":
-        console.error(`[StructredStream-CLIENT:ERROR] ${timestamp}:`, ...args)
+        console.error(`[ZodStream-CLIENT:ERROR] ${timestamp}:`, ...args)
         break
     }
   }
@@ -36,9 +36,7 @@ export default class StructuredStreamClient {
     completionPromise,
     data,
     response_model
-  }: StructredStreamCompletionParams<T>): Promise<
-    AsyncGenerator<Partial<z.infer<T>>, void, unknown>
-  > {
+  }: ZodStreamCompletionParams<T>): Promise<AsyncGenerator<Partial<z.infer<T>>, void, unknown>> {
     let _activePath: (string | number | undefined)[] = []
     let _completedPaths: (string | number | undefined)[][] = []
 
@@ -130,7 +128,7 @@ export default class StructuredStreamClient {
     return streamParser.getSchemaStub(schema, defaultData)
   }
 
-  public async create<P extends StructredStreamCompletionParams<z.AnyZodObject>>(
+  public async create<P extends ZodStreamCompletionParams<z.AnyZodObject>>(
     params: P
   ): Promise<AsyncGenerator<Partial<z.infer<P["response_model"]["schema"]>>, void, unknown>> {
     return this.chatCompletionStream(params)

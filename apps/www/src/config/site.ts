@@ -4,7 +4,7 @@ export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
   name: "island-ai",
-  url: "https://island.hack.dance",
+  url: "https://island.novy.work",
   description: "",
   og: {
     title: "Island AI",

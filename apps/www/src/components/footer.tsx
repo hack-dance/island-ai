@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Github, Instagram, Linkedin, Twitter } from "lucide-react"
+import { Github, Linkedin, Twitter } from "lucide-react"
 
 export async function Footer() {
   return (
@@ -7,19 +7,16 @@ export async function Footer() {
       <div className="container px-4 md:px-6">
         <div className="grid gap-8 md:grid-cols-3 grid-cols-2">
           <div className="space-y-2 mx-auto">
-            <h3 className="text-xs tracking-widest uppercase font-okineBold">..</h3>
-            <ul className="flex flex-col space-y-2 pl-1">
-              <li></li>
-            </ul>
+            <h3 className="text-xs tracking-widest uppercase font-okineBold">BUILT BY</h3>
+            <Link className="font-okineBold text-xl" href="">
+              NOVY
+            </Link>
           </div>
           <div className="space-y-2 mx-auto">
             <h3 className="text-xs tracking-widest uppercase font-okineBold">Connect</h3>
             <ul className="flex flex-col space-y-2">
               <li>
                 <div className="flex items-center justify-center gap-4">
-                  <Link href="https://www.instagram.com/dimitrikennedy/" target="_blank">
-                    <Instagram className="w-5 h-5" />
-                  </Link>
                   <Link href="https://www.linkedin.com/in/dimitri-kennedy/" target="_blank">
                     <Linkedin className="w-5 h-5" />
                   </Link>
@@ -45,7 +42,7 @@ export async function Footer() {
 
         <div className="px-4 flex justify-between items-center mt-8 border-t border-gray-accent/70 pt-8 text-foreground/60 text-sm space-y-2">
           <div>
-            <p>Hack Dance © 2023</p>
+            <p>Novy © 2023</p>
           </div>
         </div>
       </div>

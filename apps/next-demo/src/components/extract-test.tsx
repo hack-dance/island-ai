@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@repo/ui/components/ui/button"
 import { Textarea } from "@repo/ui/components/ui/textarea"
 import { Loader2 } from "lucide-react"
-import StructuredStreamClient from "zod-stream"
+import ZodStream from "zod-stream"
 
 import { jsonToZod } from "@/lib/json-to-zod"
 
@@ -57,7 +57,7 @@ export function ExtractTest() {
 
       if (!zodSchema || zodSchema instanceof Error) throw new Error("failed to parse schema")
 
-      const client = new StructuredStreamClient({})
+      const client = new ZodStream({})
 
       const extractionStream = await client.create({
         completionPromise: completion,
