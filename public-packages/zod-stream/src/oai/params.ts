@@ -1,68 +1,91 @@
 import { omit } from "@/lib"
 import { Mode } from "@/types"
+import OpenAI from "openai"
 import { ChatCompletionCreateParams } from "openai/resources/index.mjs"
 import { JsonSchema7Type } from "zod-to-json-schema"
 
-import { MODE } from "@/constants/modes"
+import {
+  FunctionParamsReturnType,
+  MessageBasedParamsReturnType,
+  MODE,
+  ToolFunctionParamsReturnType
+} from "@/constants/modes"
 
 type ParseParams = {
   name: string
   description?: string
 } & JsonSchema7Type
 
-export function OAIBuildFunctionParams(
+export function OAIBuildFunctionParams<T extends ChatCompletionCreateParams>(
   definition: ParseParams,
-  params: ChatCompletionCreateParams
-): ChatCompletionCreateParams {
+  params: T
+): FunctionParamsReturnType<T> {
   const { name, description, ...definitionParams } = definition
+
+  const function_call: OpenAI.ChatCompletionFunctionCallOption = {
+    name
+  }
+
+  const functions: OpenAI.FunctionDefinition[] = [
+    ...(params?.functions ?? []),
+    {
+      name: name,
+      description: description ?? undefined,
+      parameters: definitionParams
+    }
+  ]
 
   return {
     ...params,
-    function_call: {
-      name: name
-    },
-    functions: [
-      ...(params?.functions ?? []),
-      {
+    function_call,
+    functions
+  }
+}
+
+export function OAIBuildToolFunctionParams<T extends OpenAI.Chat.ChatCompletionCreateParams>(
+  definition: ParseParams,
+  params: T
+): ToolFunctionParamsReturnType<T> {
+  const { name, description, ...definitionParams } = definition
+
+  const tool_choice: OpenAI.ChatCompletionToolChoiceOption = {
+    type: "function",
+    function: { name }
+  }
+
+  const tools: OpenAI.ChatCompletionTool[] = [
+    {
+      type: "function",
+      function: {
         name: name,
-        description: description ?? undefined,
+        description: description,
         parameters: definitionParams
       }
-    ]
-  }
-}
-
-export function OAIBuildToolFunctionParams(
-  definition: ParseParams,
-  params: ChatCompletionCreateParams
-): ChatCompletionCreateParams {
-  const { name, description, ...definitionParams } = definition
+    },
+    ...(params.tools?.map(
+      (tool): OpenAI.ChatCompletionTool => ({
+        type: tool.type,
+        function: {
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: tool.function.parameters
+        }
+      })
+    ) ?? [])
+  ]
 
   return {
     ...params,
-    tool_choice: {
-      type: "function",
-      function: { name }
-    },
-    tools: [
-      {
-        type: "function",
-        function: {
-          name: name,
-          description: description,
-          parameters: definitionParams
-        }
-      },
-      ...(params?.tools ?? [])
-    ]
+    tool_choice,
+    tools
   }
 }
 
-export function OAIBuildMessageBasedParams(
+export function OAIBuildMessageBasedParams<T extends ChatCompletionCreateParams>(
   definition: ParseParams,
-  params: ChatCompletionCreateParams,
+  params: T,
   mode: Mode
-): ChatCompletionCreateParams {
+): MessageBasedParamsReturnType<T> {
   const MODE_SPECIFIC_CONFIGS: Record<Mode, any> = {
     [MODE.FUNCTIONS]: {},
     [MODE.TOOLS]: {},
@@ -83,6 +106,7 @@ export function OAIBuildMessageBasedParams(
   const t = {
     ...params,
     ...modeConfig,
+    stream: params.stream ?? false,
     messages: [
       ...params.messages,
       {

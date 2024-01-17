@@ -4,7 +4,7 @@ import { Stream } from "openai/streaming"
 import { OAIResponseParser } from "./parser"
 
 interface OaiStreamArgs {
-  res: Stream<OpenAI.ChatCompletionChunk> | OpenAI.ChatCompletion
+  res: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
 }
 
 /**
@@ -17,9 +17,6 @@ interface OaiStreamArgs {
 export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
   let cancelGenerator: () => void
   const encoder = new TextEncoder()
-  if (!(res instanceof Stream)) {
-    throw new Error("Response is not a stream")
-  }
 
   async function* generateStream(
     res: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>

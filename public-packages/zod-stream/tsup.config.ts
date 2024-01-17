@@ -8,7 +8,7 @@ export default defineConfig(options => {
     dts: true,
     minify: true,
     clean: true,
-    external: ["openai", "zod"],
+    external: ["openai", "zod", "openai/streaming"],
     ...options
   }
 })

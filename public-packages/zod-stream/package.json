@@ -1,6 +1,6 @@
 {
   "name": "zod-stream",
-  "version": "0.0.1--alpha.3",
+  "version": "0.0.1--alpha.6",
   "description": "A client for node or the browser to generate and consume streaming json",
   "publishConfig": {
     "access": "public"
@@ -26,16 +26,14 @@
   },
   "keywords": [
     "llm",
-    "structured",
-    "outputs",
+    "structured output",
+    "streaming",
+    "react",
     "zod"
-  ],
-  "author": "Dimitri Kennedy",
+  ], 
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/hack-dance/island-ai/issues"
-  },
-  "homepage": "https://github.com/hack-dance/island-ai#readme",
+  "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
+  "homepage": "https://island.novy.work",
   "dependencies": {
     "schema-stream": "*",
     "zod-to-json-schema": "^3.22.3",

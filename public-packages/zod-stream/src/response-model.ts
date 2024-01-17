@@ -1,27 +1,29 @@
-import type {
-  ChatCompletionCreateParams,
-  ChatCompletionCreateParamsNonStreaming,
-  ChatCompletionCreateParamsStreaming
-} from "openai/resources/index.mjs"
+import {
+  OAIBuildFunctionParams,
+  OAIBuildMessageBasedParams,
+  OAIBuildToolFunctionParams
+} from "@/oai/params"
+import OpenAI from "openai"
 import { z } from "zod"
 import zodToJsonSchema from "zod-to-json-schema"
 
-import { MODE_TO_PARAMS } from "@/constants/modes"
+import { MODE, ModeParamsReturnType } from "@/constants/modes"
 
 import { Mode, ResponseModel } from "./types"
 
-export function withResponseModel<T extends z.AnyZodObject>({
+export function withResponseModel<
+  T extends z.AnyZodObject,
+  M extends Mode,
+  P extends OpenAI.ChatCompletionCreateParams
+>({
   response_model: { name, schema, description = "" },
-  params,
-  mode
+  mode,
+  params
 }: {
   response_model: ResponseModel<T>
-  params: ChatCompletionCreateParams
-  mode: Mode
-}):
-  | ChatCompletionCreateParams
-  | ChatCompletionCreateParamsStreaming
-  | ChatCompletionCreateParamsNonStreaming {
+  mode: M
+  params: P
+}): ModeParamsReturnType<P, M> {
   const safeName = name.replace(/[^a-zA-Z0-9]/g, "_").replace(/\s/g, "_")
 
   const { definitions } = zodToJsonSchema(schema, {
@@ -39,10 +41,13 @@ export function withResponseModel<T extends z.AnyZodObject>({
     description,
     ...definitions[safeName]
   }
+  if (mode === MODE.FUNCTIONS) {
+    return OAIBuildFunctionParams<P>(definition, params) as ModeParamsReturnType<P, M>
+  }
 
-  const paramsForMode = MODE_TO_PARAMS[mode](definition, params, mode)
+  if (mode === MODE.TOOLS) {
+    return OAIBuildToolFunctionParams<P>(definition, params) as ModeParamsReturnType<P, M>
+  }
 
-  return paramsForMode?.stream
-    ? (paramsForMode as ChatCompletionCreateParamsStreaming)
-    : (paramsForMode as ChatCompletionCreateParams)
+  return OAIBuildMessageBasedParams<P>(definition, params, mode) as ModeParamsReturnType<P, M>
 }
