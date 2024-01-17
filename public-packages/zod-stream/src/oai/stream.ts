@@ -1,10 +1,9 @@
 import OpenAI from "openai"
-import { Stream } from "openai/streaming"
 
 import { OAIResponseParser } from "./parser"
 
 interface OaiStreamArgs {
-  res: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
+  res: AsyncIterable<OpenAI.ChatCompletionChunk>
 }
 
 /**
@@ -19,7 +18,7 @@ export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
 
   async function* generateStream(
-    res: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
+    res: AsyncIterable<OpenAI.ChatCompletionChunk>
   ): AsyncGenerator<string> {
     let cancel = false
     cancelGenerator = () => {
