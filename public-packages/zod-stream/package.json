@@ -1,6 +1,6 @@
 {
   "name": "zod-stream",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A client for node or the browser to generate and consume streaming json",
   "publishConfig": {
     "access": "public"
@@ -31,7 +31,7 @@
     "streaming",
     "react",
     "zod"
-  ], 
+  ],
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",

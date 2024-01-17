@@ -1,6 +1,6 @@
 {
   "name": "stream-hooks",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "repository": {
@@ -17,11 +17,11 @@
     "streaming",
     "react",
     "zod"
-  ], 
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-    "files": [
+  "files": [
     "dist/**"
   ],
   "sideEffects": false,
