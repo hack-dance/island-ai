@@ -42,11 +42,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup npmrc
-        run: echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" > .npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Install Dependencies
         run: bun i
 
