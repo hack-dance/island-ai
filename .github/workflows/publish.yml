@@ -6,7 +6,7 @@ on:
       - closed
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
-permissions: {} #reset
+permissions: {}
 jobs:
   publish:
     if: github.repository == 'hack-dance/island-ai' && github.event.pull_request.merged == true && (startsWith(github.head_ref, 'changeset-release/main') || startsWith(github.head_ref, '_publish-trigger'))
