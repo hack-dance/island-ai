@@ -1,5 +1,6 @@
 "use client"
 
+import { coreAgentSchema } from "@/schemas/core"
 import { Button } from "@repo/ui/components/ui/button"
 import {
   Card,
@@ -10,8 +11,6 @@ import {
 } from "@repo/ui/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { useJsonStream } from "stream-hooks"
-
-import { coreAgentSchema } from "@/ai/agents/core/schema"
 
 export function StreamTest() {
   const { data, loading, startStream } = useJsonStream({

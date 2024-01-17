@@ -1,10 +1,10 @@
+import { coreAgentSchema } from "@/schemas/core"
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs"
 import { z } from "zod"
 import { OAIStream, withResponseModel } from "zod-stream"
 
 import { jsonToZod } from "@/lib/json-to-zod"
-import { coreAgentSchema } from "@/ai/agents/core/schema"
 
 const oai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
