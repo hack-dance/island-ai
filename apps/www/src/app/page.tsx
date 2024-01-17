@@ -18,10 +18,10 @@ export default async function Page() {
           </p>
 
           <div className="flex items-center gap-2">
-            <Link href="/docs/overview">
+            <Link href="/docs/overview/introduction">
               <Button>Read the docs</Button>
             </Link>
-            <Link href="/docs/overview">
+            <Link href="/docs/overview/introduction">
               <Button variant="secondary">Live demo</Button>
             </Link>
           </div>
