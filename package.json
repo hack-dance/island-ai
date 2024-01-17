@@ -2,10 +2,10 @@
   "name": "island-ai",
   "private": true,
   "scripts": {
-    "build": "turbo run build --no-daemon",
+    "build": "turbo run build --no-daemon --concurrency=11",
     "dev": "turbo dev --no-daemon --concurrency=11",
-    "lint": "turbo lint",
-    "type-check": "turbo type-check",
+    "lint": "turbo lint --concurrency=11",
+    "type-check": "turbo type-check --concurrency=11",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "format:write": "prettier --write \"**/*.{js,json,jsx,ts,tsx}\"",
     "start": "turbo next start",
