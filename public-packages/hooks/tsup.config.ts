@@ -9,7 +9,7 @@ export default defineConfig(options => {
     minify: process.env.NODE_ENV === "production",
     sourcemap: process.env.NODE_ENV !== "production",
     clean: true,
-    external: ["react", "react-dom"],
+    external: ["react", "react-dom", "zod-stream"],
     esbuildOptions(options) {
       options.banner = {
         js: '"use client"'

@@ -1,6 +1,6 @@
 {
   "name": "zod-stream",
-  "version": "0.0.1--alpha.8",
+  "version": "0.0.0",
   "description": "A client for node or the browser to generate and consume streaming json",
   "publishConfig": {
     "access": "public"
@@ -21,6 +21,7 @@
     "type-check": "tsc --noEmit"
   },
   "repository": {
+    "directory": "public-packages/zod-stream",
     "type": "git",
     "url": "git+https://github.com/hack-dance/island-ai.git"
   },
