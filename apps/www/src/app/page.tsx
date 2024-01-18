@@ -21,7 +21,7 @@ export default async function Page() {
             <Link href="/docs/overview/introduction">
               <Button>Read the docs</Button>
             </Link>
-            <Link href="/docs/overview/introduction">
+            <Link href="https://dashboard-demo.novy.work/">
               <Button variant="secondary">Live demo</Button>
             </Link>
           </div>
