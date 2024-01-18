@@ -9,6 +9,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 import { LogoMark } from "@/components/logo-mark"
+import { MobileNav } from "@/components/mobile-nav"
 import ModeToggle from "@/components/mode-toggle"
 import { defaultFontMapper } from "@/styles/fonts"
 
@@ -65,6 +66,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center lg:gap-6 gap-2">
                     <div className="flex items-center">
+                      <div className="md:hidden">
+                        <MobileNav />
+                      </div>
                       <h1 className="text-lg font-okineBold overflow-hidden whitespace-nowrap">
                         <Link
                           href="/"
@@ -73,8 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                           <LogoMark size={24} />
                         </Link>
                       </h1>
-
-                      <nav className="space-x-8 ml-12">
+                      <nav className="ml-12 hidden md:flex items-center gap-8">
                         {siteConfig.mainNav.map(({ label, url }) => (
                           <Link
                             className="text-xs hover:underline font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"

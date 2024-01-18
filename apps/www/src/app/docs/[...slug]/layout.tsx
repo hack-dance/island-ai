@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation"
 
 import { docs } from "@/config/docs"
-import { DocNav } from "@/components/doc-nav"
 
-;("@/components/doc-header")
+import { DocSidebar } from "../sidebar"
 
 export default async function DocLayout({
   children,
@@ -21,10 +20,8 @@ export default async function DocLayout({
 
   return (
     <>
-      <div className="flex  h-full flex-1 w-full">
-        <aside className="top-[64px] pl-4 pt-6 min-w-[280px] h-full lg:sticky hidden lg:block">
-          <DocNav packageConfig={packageConfig} />
-        </aside>
+      <div className="flex  h-full flex-1 w-full relative">
+        <DocSidebar packageConfig={packageConfig} />
 
         <div className="w-full flex-grow pl-2 border-l-[1px] border-accent h-full max-w-full">
           <main className="h-full w-full overflow-y-auto max-w-full pb-4">{children}</main>

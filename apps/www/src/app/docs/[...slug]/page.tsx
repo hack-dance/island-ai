@@ -45,7 +45,7 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
 
   return (
     <div className="p-4 min-h-full">
-      <header className="border-b-[1px] border-b-accent pb-4 mb-8">
+      <header className="border-b-[1px] border-b-accent pb-4 mb-8 pl-12 lg:pl-0">
         {[...slug].slice(0, -1).map((part, index) => {
           return (
             <span key={`${part}-${index}`}>
