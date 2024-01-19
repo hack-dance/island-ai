@@ -7,7 +7,20 @@ import { Mode } from "./types"
 
 type CreateAgentParams = {
   config: OpenAI.ChatCompletionCreateParams
+  /**
+   * Mode to use
+   * @default "TOOLS"
+   *
+   * @type {Mode}
+   * */
   mode?: Mode
+  /**
+   * OpenAI client instance
+   * @default new OpenAI()
+   *
+   * @type {OpenAI}
+   * */
+  client?: OpenAI
   response_model: {
     schema: z.AnyZodObject
     name: string
@@ -17,19 +30,23 @@ type CreateAgentParams = {
 export type AgentInstance = ReturnType<typeof createAgent>
 export type ConfigOverride = Partial<OpenAI.ChatCompletionCreateParams>
 
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
-})
+function createDefaultOAI() {
+  return new OpenAI({
+    apiKey: process.env["OPENAI_API_KEY"],
+    organization: process.env["OPENAI_ORG_ID"]
+  })
+}
 
 /**
  * Create a pre-configured "agent" that can be used to generate completions
+ * Messages that are passed at initialization will be pre-pended to all completions
+ * all other configuration can be overriden in the completion call.
  *
  * @param {CreateAgentParams} params
  *
  * @returns {AgentInstance}
  */
-export function createAgent({ config, response_model, mode = "TOOLS" }: CreateAgentParams) {
+export function createAgent({ config, response_model, mode = "TOOLS", client }: CreateAgentParams) {
   const defaultAgentParams = {
     temperature: 0.7,
     top_p: 1,
@@ -38,6 +55,8 @@ export function createAgent({ config, response_model, mode = "TOOLS" }: CreateAg
     n: 1,
     ...config
   }
+
+  const oai = client ?? createDefaultOAI()
 
   return {
     /**
