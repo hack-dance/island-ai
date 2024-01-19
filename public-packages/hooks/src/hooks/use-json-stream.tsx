@@ -86,13 +86,15 @@ export function useJsonStream<T extends z.AnyZodObject>({
         response_model: { schema }
       })
 
+      let final: z.infer<T> = {}
       for await (const data of extractionStream) {
+        final = data
         onReceive && onReceive(data)
         setJson(data)
       }
 
       setLoading(false)
-      onEnd && onEnd(json)
+      onEnd && onEnd(final)
     } catch (err: any) {
       setLoading(false)
 
