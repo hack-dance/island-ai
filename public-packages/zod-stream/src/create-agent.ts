@@ -1,7 +1,8 @@
 import OpenAI from "openai"
 import { z } from "zod"
-import { OAIStream, withResponseModel } from "zod-stream"
 
+import { OAIStream } from "./oai/stream"
+import { withResponseModel } from "./response-model"
 import { Mode } from "./types"
 
 type CreateAgentParams = {
