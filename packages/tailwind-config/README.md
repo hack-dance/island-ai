@@ -1,3 +1,0 @@
-# `@repo/tailwind-config`
-
-
