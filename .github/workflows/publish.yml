@@ -9,7 +9,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 permissions: {}
 jobs:
   publish:
-    if: github.repository == 'hack-dance/island-ai' && github.event.pull_request.merged == true && (startsWith(github.head_ref, 'changeset-release/main') || startsWith(github.head_ref, '_publish-trigger'))
+    if: github.repository == 'hack-dance/island-ai' && github.event.pull_request.merged == true && (startsWith(github.head_ref, 'hack-dance/changeset-release/main') || startsWith(github.head_ref, '_publish-trigger'))
     permissions:
       contents: write
       pull-requests: write
