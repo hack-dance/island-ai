@@ -91,11 +91,16 @@ export class SchemaStream {
   /**
    * Gets the default value for a given Zod type.
    *
+   * Full set of first-party Zod types can be found here:
+   * (https://github.com/colinhacks/zod/blob/master/src/types.ts#L4938C1-L4973C1)
+   *
    * @param type - The Zod type.
    * @returns The default value for the type.
    */
   private getDefaultValue(type: ZodTypeAny, typeDefaults?: TypeDefaults): unknown {
     switch (type._def.typeName) {
+      case "ZodDefault":
+        return type._def.defaultValue()
       case "ZodString":
         return typeDefaults?.hasOwnProperty("string") ? typeDefaults.string : ""
       case "ZodNumber":
