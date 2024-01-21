@@ -77,7 +77,7 @@ describe("SchemaStream", () => {
     const data = {}
 
     const { result } = await runTest(schema, data)
-
+    console.log(result)
     expect(result).toEqual({
       someString: "default string",
       someNumber: 420,
