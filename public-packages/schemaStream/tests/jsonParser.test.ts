@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { lensPath, view } from "ramda"
 import { z, ZodObject, ZodRawShape } from "zod"
 
-const checkPathValue = (obj, path) => {
+const checkPathValue = (obj: object, path: (string | number)[]) => {
   const lens = lensPath(path)
   const value = view(lens, obj)
 
@@ -12,11 +12,11 @@ const checkPathValue = (obj, path) => {
 }
 
 async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: object) {
-  let completed: (string | number | undefined)[][] = []
+  let completed: (string | number)[][] = []
 
   const parser = new SchemaStream(schema, {
     onKeyComplete({ completedPaths }) {
-      completed = completedPaths
+      completed = completedPaths as (string | number)[][]
     }
   })
 
@@ -77,7 +77,7 @@ describe("SchemaStream", () => {
     const data = {}
 
     const { result } = await runTest(schema, data)
-    console.log(result)
+
     expect(result).toEqual({
       someString: "default string",
       someNumber: 420,
