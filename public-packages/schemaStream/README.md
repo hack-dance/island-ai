@@ -12,7 +12,6 @@
 - Extensible configuration for customized parsing needs.
 
 
-
 ## Installation
 
 ```bash
