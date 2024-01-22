@@ -1,5 +1,11 @@
 # schema-stream
 
+## 2.1.0
+
+### Minor Changes
+
+- [#12](https://github.com/hack-dance/island-ai/pull/12) [`36eb93ecfec2d3d145238b4f5f80009320917f25`](https://github.com/hack-dance/island-ai/commit/36eb93ecfec2d3d145238b4f5f80009320917f25) Thanks [@roodboi](https://github.com/roodboi)! - Adding support for zod default()
+
 ## 2.0.1
 
 ### Patch Changes
