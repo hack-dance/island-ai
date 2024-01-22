@@ -1,5 +1,12 @@
 # island-next-demos
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`068d069798b07af96d03d9c2f063806ee04ee980`](https://github.com/hack-dance/island-ai/commit/068d069798b07af96d03d9c2f063806ee04ee980)]:
+  - zod-stream@0.0.4
+
 ## 1.0.4
 
 ### Patch Changes
