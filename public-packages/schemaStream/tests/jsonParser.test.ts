@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { lensPath, view } from "ramda"
 import { z, ZodObject, ZodRawShape } from "zod"
 
-const checkPathValue = (obj, path) => {
+const checkPathValue = (obj: object, path: (string | number)[]) => {
   const lens = lensPath(path)
   const value = view(lens, obj)
 
@@ -12,11 +12,11 @@ const checkPathValue = (obj, path) => {
 }
 
 async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: object) {
-  let completed: (string | number | undefined)[][] = []
+  let completed: (string | number)[][] = []
 
   const parser = new SchemaStream(schema, {
     onKeyComplete({ completedPaths }) {
-      completed = completedPaths
+      completed = completedPaths as (string | number)[][]
     }
   })
 
@@ -63,17 +63,28 @@ async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: ob
     result = value
   }
 
-  const parsedData = JSON.parse(decoder.decode(result))
-  expect(parsedData).toEqual(jsonData)
-
-  completed.forEach(path => {
-    expect(checkPathValue(parsedData, path)).toBe(true)
-  })
-
-  return completed
+  return { result: JSON.parse(decoder.decode(result)), completed }
 }
 
 describe("SchemaStream", () => {
+  test("should parse valid JSON correctly - single layer primitives", async () => {
+    const schema = z.object({
+      someString: z.string().default("default string"),
+      someNumber: z.number().default(420),
+      someBoolean: z.boolean().default(true)
+    })
+
+    const data = {}
+
+    const { result } = await runTest(schema, data)
+
+    expect(result).toEqual({
+      someString: "default string",
+      someNumber: 420,
+      someBoolean: true
+    })
+  })
+
   test("should parse valid JSON correctly - single layer primitives", async () => {
     const schema = z.object({
       someString: z.string().refine(val => val === "test", { params: { message: "not test" } }),
@@ -90,7 +101,13 @@ describe("SchemaStream", () => {
         "this is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long stringthis is a long string"
     }
 
-    await runTest(schema, data)
+    const { result, completed } = await runTest(schema, data)
+
+    expect(result).toEqual(data)
+
+    completed.forEach(path => {
+      expect(checkPathValue(data, path)).toBe(true)
+    })
   })
 
   test("should parse valid JSON correctly - single layer primitives", async () => {
@@ -106,7 +123,9 @@ describe("SchemaStream", () => {
       someBoolean: true
     }
 
-    const completed = await runTest(schema, data)
+    const { result, completed } = await runTest(schema, data)
+
+    expect(result).toEqual(data)
 
     completed.forEach(path => {
       expect(checkPathValue(data, path)).toBe(true)
@@ -141,7 +160,9 @@ describe("SchemaStream", () => {
       }
     }
 
-    await runTest(schema, data)
+    const { result } = await runTest(schema, data)
+
+    expect(result).toEqual(data)
   })
 
   // Test for object arrays - single layer deep for now on the objects in those arrays
@@ -168,7 +189,9 @@ describe("SchemaStream", () => {
       ]
     }
 
-    await runTest(schema, data)
+    const { result } = await runTest(schema, data)
+
+    expect(result).toEqual(data)
   })
 
   // Test for arrays of strings with things like commas braces and brackets
@@ -204,6 +227,8 @@ describe("SchemaStream", () => {
       someString6: ":test2"
     }
 
-    await runTest(schema, data)
+    const { result } = await runTest(schema, data)
+
+    expect(result).toEqual(data)
   })
 })
