@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- [#17](https://github.com/hack-dance/island-ai/pull/17) [`274d6af9530e9437035dda14f92948703b20dd93`](https://github.com/hack-dance/island-ai/commit/274d6af9530e9437035dda14f92948703b20dd93) Thanks [@roodboi](https://github.com/roodboi)! - update schema stream dep
+
+## 0.0.4
+
+### Patch Changes
+
 - [#14](https://github.com/hack-dance/island-ai/pull/14) [`068d069798b07af96d03d9c2f063806ee04ee980`](https://github.com/hack-dance/island-ai/commit/068d069798b07af96d03d9c2f063806ee04ee980) Thanks [@roodboi](https://github.com/roodboi)! - set specific schema-stream v
 
 ## 0.0.3
