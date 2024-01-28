@@ -1,5 +1,13 @@
 # zod-stream
 
+## 0.0.5
+
+### Patch Changes
+
+- [#20](https://github.com/hack-dance/island-ai/pull/20) [`bf334a0f23ace44e866a37b3111ac0f312f32929`](https://github.com/hack-dance/island-ai/commit/bf334a0f23ace44e866a37b3111ac0f312f32929) Thanks [@roodboi](https://github.com/roodboi)! - updating exports slightly for wider support
+
+- [#20](https://github.com/hack-dance/island-ai/pull/20) [`6ab5c4076c35b8b7935886eda6225b2cd7b374e2`](https://github.com/hack-dance/island-ai/commit/6ab5c4076c35b8b7935886eda6225b2cd7b374e2) Thanks [@roodboi](https://github.com/roodboi)! - add check on delta so we dont explode
+
 ## 0.0.4
 
 ### Patch Changes
