@@ -15,7 +15,7 @@ export function OAIResponseFnArgsParser(
 ) {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
   const text =
-    parsedData.choices?.[0].delta?.function_call?.arguments ??
+    parsedData.choices?.[0]?.delta?.function_call?.arguments ??
     parsedData.choices?.[0]?.message?.function_call?.arguments ??
     null
 
@@ -38,7 +38,7 @@ export function OAIResponseToolArgsParser(
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
 
   const text =
-    parsedData.choices?.[0].delta?.tool_calls?.[0]?.function?.arguments ??
+    parsedData.choices?.[0]?.delta?.tool_calls?.[0]?.function?.arguments ??
     parsedData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ??
     null
 
@@ -60,7 +60,7 @@ export function OAIResponseTextParser(
 ) {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
   const text =
-    parsedData.choices?.[0].delta?.content ?? parsedData?.choices[0]?.message?.content ?? null
+    parsedData.choices?.[0]?.delta?.content ?? parsedData?.choices[0]?.message?.content ?? null
 
   return text
 }
@@ -88,7 +88,7 @@ export function OAIResponseParser<T>(
     false
 
   const isToolCall =
-    parsedData.choices?.[0].delta?.tool_calls?.[0]?.function?.arguments ??
+    parsedData.choices?.[0]?.delta?.tool_calls?.[0]?.function?.arguments ??
     parsedData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ??
     false
 
