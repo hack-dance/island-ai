@@ -1,5 +1,5 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
+  "extends": "@repo/typescript-config/pub.json",
   "compilerOptions": {
     "outDir": "dist",
     "paths": {
@@ -7,6 +7,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["tests", "src", "turbo", "tsup.config.ts"],
+  "include": ["tests", "src", "turbo", "tsup.config.ts", "examples"],
   "exclude": ["node_modules", "dist"]
 }

@@ -7,6 +7,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["tests", "src", "turbo", "tsup.config.ts"],
+  "include": ["tests", "src", "turbo", "tsup.config.ts", "examples"],
   "exclude": ["node_modules", "dist"]
 }

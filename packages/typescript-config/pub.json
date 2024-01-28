@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Pub Library",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"]
+  }
+}
