@@ -23,16 +23,6 @@ export type ResponseModel<T extends z.AnyZodObject> = {
   description?: string
 }
 
-type ChatCompletionMessageParam = {
-  role: "user" | "assistant" | "system"
-  content: string
-  data?: unknown
-}
-
-export type CompletionParams = {
-  messages: ChatCompletionMessageParam[]
-}
-
 export type ZodStreamCompletionParams<T extends z.AnyZodObject> = {
   response_model: { schema: T }
   data?: Record<string, unknown>
