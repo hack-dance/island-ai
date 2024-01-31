@@ -68,6 +68,7 @@ export default class ZodStream {
           try {
             const parsedChunk = JSON.parse(textDecoder.decode(chunk))
             const validation = response_model.schema.safeParse(parsedChunk)
+
             this.log("debug", "Validation result", validation)
 
             controller.enqueue(

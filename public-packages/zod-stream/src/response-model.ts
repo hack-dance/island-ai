@@ -1,5 +1,7 @@
 import {
   OAIBuildFunctionParams,
+  OAIBuildJsonModeParams,
+  OAIBuildJsonSchemaParams,
   OAIBuildMessageBasedParams,
   OAIBuildToolFunctionParams
 } from "@/oai/params"
@@ -7,9 +9,9 @@ import OpenAI from "openai"
 import { z } from "zod"
 import zodToJsonSchema from "zod-to-json-schema"
 
-import { MODE, ModeParamsReturnType } from "@/constants/modes"
+import { MODE } from "@/constants/modes"
 
-import { Mode, ResponseModel } from "./types"
+import { Mode, ModeParamsReturnType, ResponseModel } from "./types"
 
 export function withResponseModel<
   T extends z.AnyZodObject,
@@ -41,6 +43,7 @@ export function withResponseModel<
     description,
     ...definitions[safeName]
   }
+
   if (mode === MODE.FUNCTIONS) {
     return OAIBuildFunctionParams<P>(definition, params) as ModeParamsReturnType<P, M>
   }
@@ -49,5 +52,17 @@ export function withResponseModel<
     return OAIBuildToolFunctionParams<P>(definition, params) as ModeParamsReturnType<P, M>
   }
 
-  return OAIBuildMessageBasedParams<P>(definition, params, mode) as ModeParamsReturnType<P, M>
+  if (mode === MODE.JSON) {
+    return OAIBuildJsonModeParams<P>(definition, params) as ModeParamsReturnType<P, M>
+  }
+
+  if (mode === MODE.JSON_SCHEMA) {
+    return OAIBuildJsonSchemaParams<P>(definition, params) as ModeParamsReturnType<P, M>
+  }
+
+  if (mode === MODE.MD_JSON) {
+    return OAIBuildMessageBasedParams<P>(definition, params) as ModeParamsReturnType<P, M>
+  }
+
+  return OAIBuildMessageBasedParams<P>(definition, params) as ModeParamsReturnType<P, M>
 }
