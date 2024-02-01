@@ -1,3 +1,4 @@
+import { omit } from "@/lib"
 import {
   FunctionParamsReturnType,
   JsonModeParamsReturnType,
@@ -80,7 +81,6 @@ export function OAIBuildMessageBasedParams<T extends OpenAI.ChatCompletionCreate
   return {
     ...params,
     messages: [
-      ...params.messages,
       {
         role: "system",
         content: `
@@ -91,7 +91,8 @@ export function OAIBuildMessageBasedParams<T extends OpenAI.ChatCompletionCreate
           description: ${definition.description}
           json schema: ${JSON.stringify(definition)}
         `
-      }
+      },
+      ...params.messages
     ]
   }
 }
@@ -104,7 +105,6 @@ export function OAIBuildJsonModeParams<T extends OpenAI.ChatCompletionCreatePara
     ...params,
     response_format: { type: "json_object" },
     messages: [
-      ...params.messages,
       {
         role: "system",
         content: `
@@ -115,7 +115,8 @@ export function OAIBuildJsonModeParams<T extends OpenAI.ChatCompletionCreatePara
           description: ${definition.description}
           json schema: ${JSON.stringify(definition)}
         `
-      }
+      },
+      ...params.messages
     ]
   }
 }
@@ -128,7 +129,20 @@ export function OAIBuildJsonSchemaParams<T extends OpenAI.ChatCompletionCreatePa
     ...params,
     response_format: {
       type: "json_object",
-      schema: definition
-    }
+      schema: omit(["name", "description"], definition)
+    },
+    messages: [
+      {
+        role: "system",
+        content: `
+          Given a user prompt, you will return fully valid JSON based on the following description.
+          You will return no other prose. You will take into account any descriptions or required parameters within the schema
+          and return a valid and fully escaped JSON object that matches the schema and those instructions.
+
+          description: ${definition.description}
+        `
+      },
+      ...params.messages
+    ]
   }
 }

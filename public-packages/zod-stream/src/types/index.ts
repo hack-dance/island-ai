@@ -57,8 +57,9 @@ export type JsonSchemaParamsReturnType<
 > = T & {
   response_format: {
     type: "json_object"
-    schema: ParseParams
+    schema: JsonSchema7Type
   }
+  messages: OpenAI.ChatCompletionMessageParam[]
 }
 
 export type ModeParamsReturnType<
