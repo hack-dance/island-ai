@@ -67,7 +67,8 @@ export default class ZodStream {
         transform: async (chunk, controller): Promise<void> => {
           try {
             const parsedChunk = JSON.parse(textDecoder.decode(chunk))
-            const validation = response_model.schema.safeParse(parsedChunk)
+            const validation = await response_model.schema.safeParseAsync(parsedChunk)
+
             this.log("debug", "Validation result", validation)
 
             controller.enqueue(

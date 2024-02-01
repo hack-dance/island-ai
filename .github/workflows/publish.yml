@@ -19,9 +19,9 @@ jobs:
     environment: Publish
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      TURBO_REMOTE_ONLY: true
+      # TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      # TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      # TURBO_REMOTE_ONLY: true
     
 
     steps:

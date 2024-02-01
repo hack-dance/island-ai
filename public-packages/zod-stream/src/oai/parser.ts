@@ -4,7 +4,7 @@ import OpenAI from "openai"
  * `OAIResponseFnArgsParser` parses a JSON string and extracts the function call arguments.
  *
  * @param {string} data - The JSON string to parse.
- * @returns {Object} - The extracted function call arguments.
+ * @returns {string} - The extracted function arguments.
  *
  */
 export function OAIResponseFnArgsParser(
@@ -12,12 +12,12 @@ export function OAIResponseFnArgsParser(
     | string
     | OpenAI.Chat.Completions.ChatCompletionChunk
     | OpenAI.Chat.Completions.ChatCompletion
-) {
+): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
   const text =
     parsedData.choices?.[0]?.delta?.function_call?.arguments ??
     parsedData.choices?.[0]?.message?.function_call?.arguments ??
-    null
+    ""
 
   return text
 }
@@ -26,7 +26,7 @@ export function OAIResponseFnArgsParser(
  * `OAIResponseToolArgsParser` parses a JSON string and extracts the tool call arguments.
  *
  * @param {string} data - The JSON string to parse.
- * @returns {Object} - The extracted tool call arguments.
+ * @returns {Objstringect} - The extracted tool call arguments.
  *
  */
 export function OAIResponseToolArgsParser(
@@ -34,13 +34,13 @@ export function OAIResponseToolArgsParser(
     | string
     | OpenAI.Chat.Completions.ChatCompletionChunk
     | OpenAI.Chat.Completions.ChatCompletion
-) {
+): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
 
   const text =
     parsedData.choices?.[0]?.delta?.tool_calls?.[0]?.function?.arguments ??
     parsedData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ??
-    null
+    ""
 
   return text
 }
@@ -49,20 +49,24 @@ export function OAIResponseToolArgsParser(
  * `OAIResponseJSONParser` parses a JSON string and extracts the JSON content.
  *
  * @param {string} data - The JSON string to parse.
- * @returns {Object} - The extracted JSON content.
+ * @returns {string} - The extracted JSON content.
+ *
  *
  */
-export function OAIResponseTextParser(
+export function OAIResponseJSONParser(
   data:
     | string
     | OpenAI.Chat.Completions.ChatCompletionChunk
     | OpenAI.Chat.Completions.ChatCompletion
-) {
+): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
   const text =
-    parsedData.choices?.[0]?.delta?.content ?? parsedData?.choices[0]?.message?.content ?? null
+    parsedData.choices?.[0].delta?.content ?? parsedData?.choices[0]?.message?.content ?? ""
 
-  return text
+  const jsonRegex = /```json\n([\s\S]*?)\n```/
+  const match = text.match(jsonRegex)
+
+  return match ? match[1] : text
 }
 
 /**
@@ -71,15 +75,15 @@ export function OAIResponseTextParser(
  * it uses `OAIResponseFnArgsParser` to parse the input, otherwise, it uses `OAIResponseTextParser`.
  *
  * @param {string | Stream<OpenAI.Chat.Completions.ChatCompletionChunk> | OpenAI.Chat.Completions.ChatCompletion} data - The input to parse.
- * @returns {T} - The result of the appropriate parser.
+ * @returns {string} - The result of the appropriate parser.
  */
 
-export function OAIResponseParser<T>(
+export function OAIResponseParser(
   data:
     | string
     | OpenAI.Chat.Completions.ChatCompletionChunk
     | OpenAI.Chat.Completions.ChatCompletion
-): T {
+): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
 
   const isFnCall =
@@ -100,5 +104,5 @@ export function OAIResponseParser<T>(
     return OAIResponseToolArgsParser(data)
   }
 
-  return OAIResponseTextParser(data)
+  return OAIResponseJSONParser(data)
 }

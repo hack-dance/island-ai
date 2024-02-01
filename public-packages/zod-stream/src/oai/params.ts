@@ -1,22 +1,15 @@
 import { omit } from "@/lib"
-import { Mode } from "@/types"
-import OpenAI from "openai"
-import { ChatCompletionCreateParams } from "openai/resources/index.mjs"
-import { JsonSchema7Type } from "zod-to-json-schema"
-
 import {
   FunctionParamsReturnType,
+  JsonModeParamsReturnType,
+  JsonSchemaParamsReturnType,
   MessageBasedParamsReturnType,
-  MODE,
+  ParseParams,
   ToolFunctionParamsReturnType
-} from "@/constants/modes"
+} from "@/types"
+import OpenAI from "openai"
 
-type ParseParams = {
-  name: string
-  description?: string
-} & JsonSchema7Type
-
-export function OAIBuildFunctionParams<T extends ChatCompletionCreateParams>(
+export function OAIBuildFunctionParams<T extends OpenAI.ChatCompletionCreateParams>(
   definition: ParseParams,
   params: T
 ): FunctionParamsReturnType<T> {
@@ -42,7 +35,7 @@ export function OAIBuildFunctionParams<T extends ChatCompletionCreateParams>(
   }
 }
 
-export function OAIBuildToolFunctionParams<T extends OpenAI.Chat.ChatCompletionCreateParams>(
+export function OAIBuildToolFunctionParams<T extends OpenAI.ChatCompletionCreateParams>(
   definition: ParseParams,
   params: T
 ): ToolFunctionParamsReturnType<T> {
@@ -81,34 +74,13 @@ export function OAIBuildToolFunctionParams<T extends OpenAI.Chat.ChatCompletionC
   }
 }
 
-export function OAIBuildMessageBasedParams<T extends ChatCompletionCreateParams>(
+export function OAIBuildMessageBasedParams<T extends OpenAI.ChatCompletionCreateParams>(
   definition: ParseParams,
-  params: T,
-  mode: Mode
+  params: T
 ): MessageBasedParamsReturnType<T> {
-  const MODE_SPECIFIC_CONFIGS: Record<Mode, any> = {
-    [MODE.FUNCTIONS]: {},
-    [MODE.TOOLS]: {},
-    [MODE.JSON]: {
-      response_format: { type: "json_object" }
-    },
-    [MODE.MD_JSON]: {},
-    [MODE.JSON_SCHEMA]: {
-      response_format: {
-        type: "json_object",
-        schema: omit(["name", "description"], definition)
-      }
-    }
-  }
-
-  const modeConfig = MODE_SPECIFIC_CONFIGS[mode]
-
-  const t = {
+  return {
     ...params,
-    ...modeConfig,
-    stream: params.stream ?? false,
     messages: [
-      ...params.messages,
       {
         role: "system",
         content: `
@@ -119,8 +91,58 @@ export function OAIBuildMessageBasedParams<T extends ChatCompletionCreateParams>
           description: ${definition.description}
           json schema: ${JSON.stringify(definition)}
         `
-      }
+      },
+      ...params.messages
     ]
   }
-  return t
+}
+
+export function OAIBuildJsonModeParams<T extends OpenAI.ChatCompletionCreateParams>(
+  definition: ParseParams,
+  params: T
+): JsonModeParamsReturnType<T> {
+  return {
+    ...params,
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content: `
+          Given a user prompt, you will return fully valid JSON based on the following description and schema.
+          You will return no other prose. You will take into account any descriptions or required parameters within the schema
+          and return a valid and fully escaped JSON object that matches the schema and those instructions.
+
+          description: ${definition.description}
+          json schema: ${JSON.stringify(definition)}
+        `
+      },
+      ...params.messages
+    ]
+  }
+}
+
+export function OAIBuildJsonSchemaParams<T extends OpenAI.ChatCompletionCreateParams>(
+  definition: ParseParams,
+  params: T
+): JsonSchemaParamsReturnType<T> {
+  return {
+    ...params,
+    response_format: {
+      type: "json_object",
+      schema: omit(["name", "description"], definition)
+    },
+    messages: [
+      {
+        role: "system",
+        content: `
+          Given a user prompt, you will return fully valid JSON based on the following description.
+          You will return no other prose. You will take into account any descriptions or required parameters within the schema
+          and return a valid and fully escaped JSON object that matches the schema and those instructions.
+
+          description: ${definition.description}
+        `
+      },
+      ...params.messages
+    ]
+  }
 }
