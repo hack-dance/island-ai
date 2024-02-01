@@ -1,6 +1,5 @@
 import { coreAgentSchema } from "@/schemas/core"
 import OpenAI from "openai"
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs"
 import { z } from "zod"
 import { OAIStream, withResponseModel } from "zod-stream"
 
@@ -14,7 +13,7 @@ const oai = new OpenAI({
 export const runtime = "edge"
 
 interface IRequest {
-  messages: ChatCompletionMessageParam[]
+  messages: OpenAI.ChatCompletionMessageParam[]
   schema?: string
 }
 
