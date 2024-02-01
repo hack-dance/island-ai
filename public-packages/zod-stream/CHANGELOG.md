@@ -1,5 +1,11 @@
 # zod-stream
 
+## 0.0.6
+
+### Patch Changes
+
+- [#23](https://github.com/hack-dance/island-ai/pull/23) [`5e8a2cc7bfe39452928a434675bd23539890814a`](https://github.com/hack-dance/island-ai/commit/5e8a2cc7bfe39452928a434675bd23539890814a) Thanks [@roodboi](https://github.com/roodboi)! - Cleaning up some unused types and consants + exposing all the types and things already defined
+
 ## 0.0.5
 
 ### Patch Changes
