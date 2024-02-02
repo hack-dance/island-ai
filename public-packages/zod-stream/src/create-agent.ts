@@ -30,13 +30,6 @@ type CreateAgentParams = {
 export type AgentInstance = ReturnType<typeof createAgent>
 export type ConfigOverride = Partial<OpenAI.ChatCompletionCreateParams>
 
-function createDefaultOAI() {
-  return new OpenAI({
-    apiKey: process.env["OPENAI_API_KEY"],
-    organization: process.env["OPENAI_ORG_ID"]
-  })
-}
-
 /**
  * Create a pre-configured "agent" that can be used to generate completions
  * Messages that are passed at initialization will be pre-pended to all completions
@@ -56,7 +49,11 @@ export function createAgent({ config, response_model, mode = "TOOLS", client }: 
     ...config
   }
 
-  const oai = client ?? createDefaultOAI()
+  if (!client) {
+    throw new Error("an OpenAI-like client is required")
+  }
+
+  const oai = client
 
   return {
     /**
