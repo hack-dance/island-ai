@@ -1,5 +1,11 @@
 # zod-stream
 
+## 0.0.7
+
+### Patch Changes
+
+- [#25](https://github.com/hack-dance/island-ai/pull/25) [`17f8583a9284731be3dcc4c2b59b6733f49c8383`](https://github.com/hack-dance/island-ai/commit/17f8583a9284731be3dcc4c2b59b6733f49c8383) Thanks [@roodboi](https://github.com/roodboi)! - Making agents export seperate and moving out the client credator defualt
+
 ## 0.0.6
 
 ### Patch Changes
