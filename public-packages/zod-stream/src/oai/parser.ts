@@ -61,12 +61,22 @@ export function OAIResponseJSONParser(
 ): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
   const text =
-    parsedData.choices?.[0].delta?.content ?? parsedData?.choices[0]?.message?.content ?? ""
+    parsedData?.choices[0]?.message?.content ?? parsedData.choices?.[0].delta?.content ?? ""
 
-  const jsonRegex = /```json\n([\s\S]*?)\n```/
-  const match = text.match(jsonRegex)
+  const jsonMdRegex = /```json\s*([\s\S]*?)\s*```/
+  const plainJsonRegex = /{[\s\S]*}/
 
-  return match ? match[1] : text
+  let match = text.match(jsonMdRegex)
+  if (match && match[1]) {
+    return match[1].trim()
+  } else {
+    match = text.match(plainJsonRegex)
+    if (match) {
+      return match[0].trim()
+    }
+  }
+
+  return text
 }
 
 /**
