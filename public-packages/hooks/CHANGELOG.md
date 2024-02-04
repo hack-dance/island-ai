@@ -1,5 +1,11 @@
 # stream-hooks
 
+## 0.0.3
+
+### Patch Changes
+
+- [#28](https://github.com/hack-dance/island-ai/pull/28) [`a79bd11a9caaf4f9d99eebe0e528b04fd4ca811e`](https://github.com/hack-dance/island-ai/commit/a79bd11a9caaf4f9d99eebe0e528b04fd4ca811e) Thanks [@roodboi](https://github.com/roodboi)! - adjust peer and dev deps
+
 ## 0.0.2
 
 ### Patch Changes
