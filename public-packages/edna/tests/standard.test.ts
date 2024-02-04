@@ -1,4 +1,5 @@
 import { createEvaluator } from "@/evaluators"
+import { createWeightedEvaluator } from "@/evaluators/weighted"
 import { omit } from "@/lib"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
@@ -10,16 +11,42 @@ const oai = new OpenAI({
   organization: process.env["OPENAI_ORG_ID"] ?? undefined
 })
 
+function relevanceEval() {
+  const evaluationDescription =
+    "Please rate the relevance of the response from 0 (not at all relevant) to 1 (highly relevant), considering whether the AI stayed on topic and provided a reasonable answer."
+
+  return createEvaluator({
+    client: oai,
+    model: "gpt-4-1106-preview",
+    evaluationDescription
+  })
+}
+
+function fluencyEval() {
+  const evaluationDescription =
+    "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
+
+  return createEvaluator({
+    client: oai,
+    model: "gpt-4-1106-preview",
+    evaluationDescription
+  })
+}
+
+function completenessEval() {
+  const evaluationDescription =
+    "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
+
+  return createEvaluator({
+    client: oai,
+    model: "gpt-4-1106-preview",
+    evaluationDescription
+  })
+}
+
 describe("Should eval", () => {
   test("Basic relevance eval", async () => {
-    const evaluationDescription =
-      "Please rate the relevance of the response from 0 (not at all relevant) to 1 (highly relevant), considering whether the AI stayed on topic and provided a reasonable answer."
-
-    const evaluator = createEvaluator({
-      client: oai,
-      model: "gpt-4-1106-preview",
-      evaluationDescription
-    })
+    const evaluator = relevanceEval()
 
     const result = await evaluator({
       data: data
@@ -30,5 +57,30 @@ describe("Should eval", () => {
         value: 1
       }
     })
+  })
+})
+
+describe("Weighted eval", () => {
+  test("Weighted", async () => {
+    const evaluator = createWeightedEvaluator({
+      evaluators: {
+        relevance: relevanceEval(),
+        fluency: fluencyEval(),
+        completeness: completenessEval()
+      },
+      weights: {
+        relevance: 0.25,
+        fluency: 0.25,
+        completeness: 0.5
+      }
+    })
+
+    const result = await evaluator({
+      data: data
+    })
+
+    console.log(result.scoreResults)
+
+    expect(result.scoreResults.value).toBeGreaterThan(0.75)
   })
 })
