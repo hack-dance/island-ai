@@ -1,7 +1,7 @@
 {
-  "name": "zod-stream",
-  "version": "0.0.7",
-  "description": "A client for node or the browser to generate and consume streaming json",
+  "name": "edna",
+  "version": "0.0.0",
+  "description": "A cli for creating model graded evals",
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +29,7 @@
     "type-check": "tsc --noEmit"
   },
   "repository": {
-    "directory": "public-packages/zod-stream",
+    "directory": "public-packages/edna",
     "type": "git",
     "url": "git+https://github.com/hack-dance/island-ai.git"
   },
@@ -44,8 +44,7 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "dependencies": {
-    "schema-stream": "^2.1.0",
-    "zod-to-json-schema": "^3.22.3"
+    "zod-stream": "workspace:*"
   },
   "peerDependencies": {
     "openai": ">=4.24.1",
