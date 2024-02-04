@@ -1,6 +1,5 @@
 import OpenAI from "openai"
 import { z } from "zod"
-
 import ZodStream, { OAIStream, withResponseModel } from "zod-stream"
 
 const textBlock = `
