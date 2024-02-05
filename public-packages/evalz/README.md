@@ -36,7 +36,7 @@ pnpm add evalz openai zod
 First, create an evaluator for assessing a single aspect of a response, such as its relevance:
 
 ```typescript
-import { createEvaluator } from "evalz/evaluators";
+import { createEvaluator } from "evalz";
 import OpenAI from "openai";
 
 const oai = new OpenAI({
@@ -69,7 +69,7 @@ console.log(result.scoreResults);
 Combine multiple evaluators with specified weights for a comprehensive assessment:
 
 ```typescript
-import { createWeightedEvaluator } from "evalz/evaluators/weighted";
+import { createWeightedEvaluator } from "evalz";
 
 const weightedEvaluator = createWeightedEvaluator({
   evaluators: {
