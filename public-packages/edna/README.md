@@ -1,105 +1,93 @@
 # evalz
+
 <div align="center">
-  <a aria-label="NPM version" href="https://twitter.com/dimitrikennedy">
-    <img alt="evalz" src="https://img.shields.io/twitter/follow/dimitrikennedy?style=social&labelColor=000000">
-  </a>
-  <a aria-label="GH Issues" href="https://www.npmjs.com/package/evalz">
-    <img alt="evalz" src="https://img.shields.io/github/issues/hack-dance/island-ai.svg?style=flat-square&labelColor=000000">
-  </a>
-  <a aria-label="Docs" href="https://island.novy.work">
-    <img alt="docs" src="https://img.shields.io/badge/DOCS-000000.svg?style=flat-square&labelColor=000000&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTQuNjkgMjU5LjI0Ij4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjZmZmOwogICAgICAgIHN0cm9rZS13aWR0aDogMHB4OwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8ZyBpZD0iTGF5ZXJfMS0yIiBkYXRhLW5hbWU9IkxheWVyIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTEwMC42MSwxNzguNDVoMTMuOTd2LTE5LjYyaC0xMy45N3YxOS42MlptMC0xMDguOTZ2MjMuNzJoMTMuOTd2LTIzLjcyaC0xMy45N1ptLTIuNzksMTg5Ljc1aDE5LjU2bC0yLjc5LTI4LjkyaC0xMy45N2wtMi43OSwyOC45MlptMi43OS0xMzcuNjJoMTMuOTd2LTE5LjYyaC0xMy45N3YxOS42MlptMCwyOC40MWgxMy45N3YtMTkuNjJoLTEzLjk3djE5LjYyWiIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iOTQuNSIgY3k9IjY5LjExIiByPSIxNC4yNCIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iMTIwLjE5IiBjeT0iNjkuMTEiIHI9IjE0LjI0Ii8+CiAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMjE0LjI1LDYyLjU5Yy0uNzktLjc1LTE4Ljc1LTE3LjQ4LTQ5LjQ2LTE5LjA0bDE1Ljc1LTUuODhjLTEuNjctMi40Ni00LjAxLTQuMTgtNi4zNS02LS4yMy0uMTgtLjAzLS41OC4yMy0uNTcsMy40NS4xNyw2LjgyLDEuNzUsMTAuMTIsMi42OCwxLjA2LjMsMi4wOS43MiwzLjA4LDEuMjRsMTkuNDUtNy4yNmMuNTMtLjIuOS0uNzEuOTEtMS4yOHMtLjMyLTEuMDktLjg1LTEuMzJjLTEuMDQtLjQ0LTI1Ljk2LTEwLjc2LTU3LjM1Ljk2LTEuMTkuNDQtMi4zNy45MS0zLjU0LDEuNDFsMTMuNTEtMTMuMTNjLTIuMTgtLjY3LTQuNC0uOTUtNi42My0xLjQ0LS4zOC0uMDgtLjQxLS43NSwwLS44MSwzLjEyLS40NCw2LjU0LS45OCw5Ljg3LS45MWw5LjEzLTguODdjLjQxLS40LjUzLTEuMDEuMzItMS41My0uMjItLjUzLS44LS43OS0xLjMxLS44Ny0uOTYuMDEtMjMuNy40OS00My45NiwyMC4xOCwwLDAsMCwwLDAsMGwtMjAuMDcsMTkuNzYtMTkuNTgtMTkuNzZDNjcuMjUuNDksNDQuNTEuMDEsNDMuNTUsMGMtLjU2LjA1LTEuMDkuMzQtMS4zMS44Ny0uMjIuNTMtLjA5LDEuMTQuMzIsMS41M2w1LjY3LDUuNTFjNS4xLjIyLDEwLjE0LjcxLDE0LjQzLDQsLjQyLjMyLjIsMS4xMi0uMzkuOTMtMi41OC0uODYtNi4wMi0uODctOS4zOS0uNGwxNS41NiwxNS4xMmMtMS4xNy0uNS0yLjM2LS45Ny0zLjU0LTEuNDEtMzEuNC0xMS43Mi01Ni4zLTEuNDEtNTcuMzUtLjk2LS41Mi4yMi0uODYuNzUtLjg1LDEuMzJzLjM3LDEuMDguOTEsMS4yOGwxMS4wNiw0LjEzYzQuNDYtMS40OCw4LjctMi4zOSwxMC40Mi0yLjU1LjU3LS4wNS41Ni43My4xMi45MS0xLjg2Ljc0LTMuNjEsMi4yOS01LjI3LDMuNjFsMjUuOTQsOS42OEMxOS4xOCw0NS4xMSwxLjIyLDYxLjg0LjQzLDYyLjU5Yy0uNDEuMzktLjU1LDEtLjM0LDEuNTMuMjEuNTMuNzMuODgsMS4zLjg4aDEzLjljLjE1LS4wOS4zMS0uMTkuNDUtLjI4LDUuNzktMy41OCwxMS45NC02LjE5LDE4LjE4LTguODcuNjgtLjI5LDEuMjguNjQuNiwxLjAzLTMuNTQsMi4wMy02LjU0LDUuMS05LjQ5LDguMTNoMTQuNTljNC4yNy0zLjExLDguODItNS43LDEzLjE2LTguNy41OS0uNDEsMS4yMi40OS43NS45Ny0yLjM1LDIuMzgtNC40NCw1LjA2LTYuNTMsNy43NGgxMTYuODNjLS45OS0zLjE5LTIuMDItNi4zNS00LjEzLTkuMDQtLjMzLS40Mi4xOC0uOTYuNTktLjU5LDMuMzYsMy4wMSw3LjM3LDYuMTUsMTEuMDIsOS42M2gxNS4zNGMtMS4zOC0zLjUyLTMuMDUtNi44Mi01LjcxLTguNjctLjU0LS4zNy0uMDgtMS4xNS41MS0uODcsNC40LDIuMDgsOC4yNyw1Ljg2LDExLjY1LDkuNTRoMjAuMmMuNTcsMCwxLjA5LS4zNSwxLjMtLjg4LjIxLS41My4wOC0xLjE0LS4zNC0xLjUzWiIvPgogICAgICA8L2c+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTEwMS4wNiwyMjEuMzNoMTMuOTd2LTMzLjZoLTEzLjk3djMzLjZaIi8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=">
-  </a>
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/evalz">
-    <img alt="evalz" src="https://img.shields.io/npm/v/evalz.svg?style=flat-square&logo=npm&labelColor=000000&label=evalz">
-  </a>
+  <img alt="GitHub issues" src="https://img.shields.io/github/issues/hack-dance/island-ai.svg?style=flat-square&labelColor=000000">
+  <img alt="NPM version" src="https://img.shields.io/npm/v/evalz.svg?style=flat-square&logo=npm&labelColor=000000&label=evalz">
+  <img alt="License" src="https://img.shields.io/npm/l/evalz.svg?style=flat-square&labelColor=000000">
 </div>
 
+**evalz** is a TypeScript package designed to facilitate model-graded evaluations with a focus on structured output. Leveraging Zod schemas, **evalz** streamline s the evaluation of AI-generated responses. It provides a set of tools to assess the quality of responses based on custom criteria such as relevance, fluency, and completeness. The package leverages OpenAI's GPT models to perform evaluations, offering both simple and weighted evaluation mechanisms.
 
-<p align="center">
-  Define structured response models for OpenAI or Anyscale completions using Zod schemas and enable partial streaming of that json so that it can be used safely and right away.
-</p>
+## Features
+
+- **Structured Evaluation Models**: Define your evaluation logic using Zod schemas to ensure data integrity throughout your application.
+- **Flexible Evaluation Strategies**: Supports various evaluation strategies, including score-based and binary evaluations, with customizable evaluators.
+- **Easy Integration**: Designed to integrate seamlessly with existing TypeScript projects, enhancing AI and data processing workflows with minimal setup.
+- **Custom Evaluations**: Define evaluation criteria tailored to your specific requirements.
+- **Weighted Evaluations**: Combine multiple evaluations with custom weights to calculate a composite score.
+
 
 ## Installation
 
-with pnpm
-```bash
-$ pnpm add evalz zod openai
-```
-with npm
-```bash
-$ npm install evalz zod openai
-```
-with bun
-```bash
-$ bun add evalz zod openai
-```
+Install `evalz` using your preferred package manager:
 
+```bash
+npm install evalz openai zod
+
+bun add evalz openai zod
+
+pnpm add evalz openai zod
+```
 
 ## Basic Usage
 
-Creating an endpoint that calls OpenAI with a defined response model. (Next.js app router, route handler example)
+### Creating an Evaluator
 
-`/api/get-stream`
+First, create an evaluator for assessing a single aspect of a response, such as its relevance:
+
 ```typescript
-  import { OAIStream } from "evalz/OAIStream"
-  import { withResponseModel } from "evalz/response-model"
+import { createEvaluator } from "evalz/evaluators";
+import OpenAI from "openai";
 
-  import OpenAI from "openai"
-  import { z } from "zod"
+const oai = new OpenAI({
+  apiKey: process.env["OPENAI_API_KEY"],
+  organization: process.env["OPENAI_ORG_ID"]
+});
 
-  const oai = new OpenAI({
-    apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
-    organization: process.env["OPENAI_ORG_ID"] ?? undefined
-  })
-
-export async function POST(request: Request) {
-  const { messages } = await request.json()
-
-  const params = withResponseModel({
-    response_model: { schema: z.object({ content: z.string() }), name: "Content response" },
-    params: {
-      messages,
-      model: "gpt-4"
-    },
-    mode: "TOOLS"
-  })
-
-  const extractionStream = await oai.chat.completions.create({
-    ...params,
-    stream: true
-  })
-
-  return new Response(
-    OAIStream({
-      res: extractionStream
-    })
-  )
+function relevanceEval() {
+  return createEvaluator({
+    client: oai,
+    model: "gpt-4-1106-preview",
+    evaluationDescription: "Rate the relevance from 0 to 1."
+  });
 }
 ```
 
+### Conducting an Evaluation
 
-Consuming the structured stream elsewhere, maybe in the browser.
+Evaluate AI-generated content by passing the response data to your evaluator:
 
 ```typescript
-  const client = new ZodStream()
+const evaluator = relevanceEval();
 
-  const stream = await client.create({
-    completionPromise: async () => {
-      const response = fetch("/api/get-stream", {
-        body: JSON.stringify({ messages: [] }),
-        method: "POST"
-      })
+const result = await evaluator({ data: yourResponseData });
+console.log(result.scoreResults);
+```
 
-      return response.body
-    },
-    response_model: { // should match model expected to be returned by the completion.
-      schema: z.object({
-        content: z.string()
-      })
-    }
-  })
+### Weighted Evaluation
 
-  for await (const chunk of extractionStream) {
-    console.log(chunk) // safe to parse partial json
+Combine multiple evaluators with specified weights for a comprehensive assessment:
+
+```typescript
+import { createWeightedEvaluator } from "evalz/evaluators/weighted";
+
+const weightedEvaluator = createWeightedEvaluator({
+  evaluators: {
+    relevance: relevanceEval(),
+    fluency: fluencyEval(),
+    completeness: completenessEval()
+  },
+  weights: {
+    relevance: 0.25,
+    fluency: 0.25,
+    completeness: 0.5
   }
-  ```
+});
+
+const result = await weightedEvaluator({ data: yourResponseData });
+console.log(result.scoreResults);
+```
+
+## Contributing
+
+Contributions are welcome! Please submit a pull request or open an issue to propose changes or additions.
