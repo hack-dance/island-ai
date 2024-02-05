@@ -37,7 +37,8 @@
     "llm",
     "structured output",
     "streaming",
-    "react",
+    "evals",
+    "openai",
     "zod"
   ],
   "license": "MIT",
