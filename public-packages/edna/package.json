@@ -44,10 +44,10 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "dependencies": {
+    "zod-stream": "workspace:*"
   },
   "peerDependencies": {
     "openai": ">=4.24.1",
-    "zod-stream": ">=0.0.7",
     "zod": ">=3.22.4"
   },
   "devDependencies": {

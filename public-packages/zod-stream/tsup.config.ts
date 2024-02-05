@@ -5,7 +5,7 @@ export default defineConfig(options => {
     splitting: true,
     sourcemap: true,
     minify: true,
-    entry: ["src/index.ts", "src/create-agent.ts"],
+    entry: ["src/index.ts"],
     target: "es2020",
     format: ["cjs", "esm"],
     clean: true,
