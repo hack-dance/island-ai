@@ -1,7 +1,7 @@
 {
-  "name": "zod-stream",
-  "version": "0.0.7",
-  "description": "A client for node or the browser to generate and consume streaming json",
+  "name": "evalz",
+  "version": "0.0.1--alpha.1",
+  "description": "Model graded evals with typescript",
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +29,7 @@
     "type-check": "tsc --noEmit"
   },
   "repository": {
-    "directory": "public-packages/zod-stream",
+    "directory": "public-packages/edna",
     "type": "git",
     "url": "git+https://github.com/hack-dance/island-ai.git"
   },
@@ -37,15 +37,15 @@
     "llm",
     "structured output",
     "streaming",
-    "react",
+    "evals",
+    "openai",
     "zod"
   ],
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "dependencies": {
-    "schema-stream": "^2.1.0",
-    "zod-to-json-schema": "^3.22.3"
+    "zod-stream": "workspace:*"
   },
   "peerDependencies": {
     "openai": ">=4.24.1",
@@ -54,6 +54,7 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "zod-stream": "workspace:*",
     "@turbo/gen": "^1.10.12",
     "@types/node": "^20.5.2",
     "@types/eslint": "^8.44.7",

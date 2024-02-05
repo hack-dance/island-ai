@@ -10,7 +10,7 @@ export default defineConfig(options => {
     format: ["cjs", "esm"],
     clean: true,
     dts: true,
-    external: ["openai", "zod", "openai/streaming"],
+    external: ["openai", "zod", "zod-stream"],
     ...options
   }
 })

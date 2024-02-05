@@ -1,12 +1,16 @@
 import OpenAI from "openai"
 import { z } from "zod"
 
+import { OAIResponseParser } from "./oai/parser"
 import { OAIStream } from "./oai/stream"
 import { withResponseModel } from "./response-model"
 import { Mode } from "./types"
 
-type CreateAgentParams = {
-  config: OpenAI.ChatCompletionCreateParams
+export type CreateAgentParams = {
+  defaultClientOptions: Partial<OpenAI.ChatCompletionCreateParams> & {
+    model: OpenAI.ChatCompletionCreateParams["model"]
+    messages: OpenAI.ChatCompletionMessageParam[]
+  }
   /**
    * Mode to use
    * @default "TOOLS"
@@ -39,14 +43,19 @@ export type ConfigOverride = Partial<OpenAI.ChatCompletionCreateParams>
  *
  * @returns {AgentInstance}
  */
-export function createAgent({ config, response_model, mode = "TOOLS", client }: CreateAgentParams) {
+export function createAgent({
+  defaultClientOptions,
+  response_model,
+  mode = "TOOLS",
+  client
+}: CreateAgentParams) {
   const defaultAgentParams = {
     temperature: 0.7,
     top_p: 1,
     frequency_penalty: 0,
     presence_penalty: 0,
     n: 1,
-    ...config
+    ...defaultClientOptions
   }
 
   if (!client) {
@@ -65,7 +74,10 @@ export function createAgent({ config, response_model, mode = "TOOLS", client }: 
     completionStream: async (
       configOverride: ConfigOverride
     ): Promise<ReadableStream<Uint8Array>> => {
-      const messages = [...(defaultAgentParams.messages ?? []), ...(configOverride?.messages ?? [])]
+      const messages = [
+        ...(defaultAgentParams.messages ?? []),
+        ...(configOverride?.messages ?? [])
+      ] as OpenAI.ChatCompletionMessageParam[]
 
       const params = withResponseModel({
         mode,
@@ -83,6 +95,36 @@ export function createAgent({ config, response_model, mode = "TOOLS", client }: 
       return OAIStream({
         res: extractionStream
       })
+    },
+    /**
+     * Generate a standard completion
+     * @param {ConfigOverride}
+     *
+     * @returns {Promise<z.infer<typeof response_model.schema>> }
+     */
+    completion: async (
+      configOverride: ConfigOverride
+    ): Promise<z.infer<typeof response_model.schema>> => {
+      const messages = [
+        ...(defaultAgentParams.messages ?? []),
+        ...(configOverride?.messages ?? [])
+      ] as OpenAI.ChatCompletionMessageParam[]
+
+      const params = withResponseModel({
+        mode,
+        response_model,
+        params: {
+          ...defaultAgentParams,
+          ...configOverride,
+          stream: false,
+          messages
+        }
+      })
+
+      const res = await oai.chat.completions.create(params)
+      const extractedResponse = OAIResponseParser(res)
+
+      return JSON.parse(extractedResponse)
     }
   }
 }
