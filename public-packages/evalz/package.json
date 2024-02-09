@@ -1,6 +1,6 @@
 {
   "name": "evalz",
-  "version": "0.0.1--alpha.1",
+  "version": "0.0.1--alpha.2",
   "description": "Model graded evals with typescript",
   "publishConfig": {
     "access": "public"
@@ -45,7 +45,7 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "dependencies": {
-    "zod-stream": "workspace:*"
+    "zod-stream": "*"
   },
   "peerDependencies": {
     "openai": ">=4.24.1",
