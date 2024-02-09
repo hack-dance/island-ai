@@ -1,6 +1,6 @@
 {
   "name": "evalz",
-  "version": "0.0.1--alpha.2",
+  "version": "0.0.1--alpha.3",
   "description": "Model graded evals with typescript",
   "publishConfig": {
     "access": "public"
@@ -54,7 +54,7 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "zod-stream": "workspace:*",
+    "zod-stream": "*",
     "@turbo/gen": "^1.10.12",
     "@types/node": "^20.5.2",
     "@types/eslint": "^8.44.7",
