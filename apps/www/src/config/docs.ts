@@ -140,5 +140,21 @@ export const docs: Record<string, DocType> = {
         ]
       }
     ]
+  },
+  "evalz": {
+    title: "evalz",
+    indexRoute: "evalz/introduction",
+    sections: [
+      {
+        title: "Overview",
+        pages: [
+          {
+            title: "Introduction",
+            slug: "evalz/introduction",
+            id: "evalz"
+          }
+        ]
+      }
+    ]
   }
 }
