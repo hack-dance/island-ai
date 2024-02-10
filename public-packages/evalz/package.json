@@ -1,6 +1,6 @@
 {
   "name": "evalz",
-  "version": "0.0.1--alpha.3",
+  "version": "0.0.1--alpha.4",
   "description": "Model graded evals with typescript",
   "publishConfig": {
     "access": "public"
@@ -44,12 +44,10 @@
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
-  "dependencies": {
-    "zod-stream": "*"
-  },
   "peerDependencies": {
     "openai": ">=4.24.1",
-    "zod": ">=3.22.4"
+    "zod": ">=3.22.4",
+    "zod-stream": ">=0.0.7"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
