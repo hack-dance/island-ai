@@ -98,15 +98,19 @@ export class SchemaStream {
    * @returns The default value for the type.
    */
   private getDefaultValue(type: ZodTypeAny, typeDefaults?: TypeDefaults): unknown {
+    if (type?._def?.defaultValue) {
+      return type._def.defaultValue()
+    }
+
     switch (type._def.typeName) {
       case "ZodDefault":
         return type._def.defaultValue()
       case "ZodString":
-        return typeDefaults?.hasOwnProperty("string") ? typeDefaults.string : ""
+        return typeDefaults?.hasOwnProperty("string") ? typeDefaults.string : null
       case "ZodNumber":
-        return typeDefaults?.hasOwnProperty("number") ? typeDefaults.number : 0
+        return typeDefaults?.hasOwnProperty("number") ? typeDefaults.number : null
       case "ZodBoolean":
-        return typeDefaults?.hasOwnProperty("boolean") ? typeDefaults.boolean : false
+        return typeDefaults?.hasOwnProperty("boolean") ? typeDefaults.boolean : null
       case "ZodArray":
         return []
       case "ZodRecord":
@@ -120,8 +124,13 @@ export class SchemaStream {
         return this.getDefaultValue(type._def.schema)
       case "ZodNullable":
         return null
+      case "ZodEnum":
+        return null
+      case "ZodNativeEnum":
+        return null
       default:
-        throw new Error(`Unsupported type: ${type._def.typeName}`)
+        console.warn(`No explicit default value for type: ${type._def.typeName} - returning null.`)
+        return null
     }
   }
 
