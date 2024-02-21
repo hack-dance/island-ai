@@ -2,11 +2,11 @@
   "name": "schema-stream",
   "version": "2.1.0",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
-  "homepage": "https://schema-stream.hack.dance",
+  "homepage": "https://island.novy.work",
   "repository": {
-    "directory": "packages/schemaStream",
+    "directory": "public-packages/schemaStream",
     "type": "git",
-    "url": "https://github.com/hack-dance/schema-stream.git"
+    "url": "https://github.com/hack-dance/island-ai.git"
   },
   "publishConfig": {
     "access": "public"
