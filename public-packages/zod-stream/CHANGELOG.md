@@ -1,5 +1,12 @@
 # zod-stream
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [[`008d007b1ec9cc7f1276ae92bd0c32dfef801c38`](https://github.com/hack-dance/island-ai/commit/008d007b1ec9cc7f1276ae92bd0c32dfef801c38)]:
+  - schema-stream@3.0.0
+
 ## 0.0.7
 
 ### Patch Changes

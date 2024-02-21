@@ -1,6 +1,6 @@
 {
   "name": "stream-hooks",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "repository": {
@@ -34,7 +34,7 @@
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
   },
   "devDependencies": {
-    "zod-stream": "^0.0.7",
+    "zod-stream": "^0.0.8",
     "@repo/eslint-config": "workspace:*",
     "@repo/tailwind-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
@@ -51,7 +51,7 @@
     "tsup": "^8.0.1"
   },
   "peerDependencies": {
-    "zod-stream": "^0.0.7",
+    "zod-stream": "^0.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zod": ">=3.22.4"
