@@ -1,5 +1,13 @@
 # schema-stream
 
+## 3.0.0
+
+### Major Changes
+
+- [#32](https://github.com/hack-dance/island-ai/pull/32) [`008d007b1ec9cc7f1276ae92bd0c32dfef801c38`](https://github.com/hack-dance/island-ai/commit/008d007b1ec9cc7f1276ae92bd0c32dfef801c38) Thanks [@roodboi](https://github.com/roodboi)! - Updating the defaults to all be null except for objects and arrays - also not explicitly looking for .default values
+
+  Previously we had "", 0, and false default values for primitives (silly) - you could still pass nulls as defaults through the explicit defaultValues map - but this is now the default and they can be updated either via zod .default or using the defaultValues map if there is a need for a more explicit default.
+
 ## 2.1.0
 
 ### Minor Changes
