@@ -10,6 +10,7 @@ export type CompletedPaths = ActivePath[]
 export type CompletionMeta = {
   _activePath: ActivePath
   _completedPaths: CompletedPaths
+  _isValid: boolean
 }
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
