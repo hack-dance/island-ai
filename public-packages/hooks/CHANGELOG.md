@@ -1,5 +1,12 @@
 # stream-hooks
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - zod-stream@0.0.8
+
 ## 0.0.3
 
 ### Patch Changes

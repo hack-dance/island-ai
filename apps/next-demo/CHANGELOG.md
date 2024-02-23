@@ -1,5 +1,13 @@
 # island-next-demos
 
+## 1.0.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - zod-stream@0.0.8
+  - stream-hooks@0.0.4
+
 ## 1.0.10
 
 ### Patch Changes
