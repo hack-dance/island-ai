@@ -4,6 +4,14 @@ import { JsonSchema7Type } from "zod-to-json-schema"
 
 import { MODE } from "@/constants/modes"
 
+export type ActivePath = (string | number | undefined)[]
+export type CompletedPaths = ActivePath[]
+
+export type CompletionMeta = {
+  _activePath: ActivePath
+  _completedPaths: CompletedPaths
+}
+
 export type LogLevel = "debug" | "info" | "warn" | "error"
 
 export type ClientConfig = {
