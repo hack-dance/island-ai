@@ -3,7 +3,7 @@
   "changelog": ["@changesets/changelog-github", { "repo": "hack-dance/island-ai" }],
   "commit": true,
   "fixed": [],
-  "linked": [],
+  "linked": [["zod-stream", "stream-hooks"]],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",

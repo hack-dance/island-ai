@@ -1,5 +1,12 @@
 import { readableStreamToAsyncGenerator } from "@/oai/stream"
-import { ClientConfig, LogLevel, ZodStreamCompletionParams } from "@/types"
+import {
+  ActivePath,
+  ClientConfig,
+  CompletedPaths,
+  CompletionMeta,
+  LogLevel,
+  ZodStreamCompletionParams
+} from "@/types"
 import { SchemaStream } from "schema-stream"
 import { z } from "zod"
 
@@ -36,9 +43,11 @@ export default class ZodStream {
     completionPromise,
     data,
     response_model
-  }: ZodStreamCompletionParams<T>): Promise<AsyncGenerator<Partial<z.infer<T>>, void, unknown>> {
-    let _activePath: (string | number | undefined)[] = []
-    let _completedPaths: (string | number | undefined)[][] = []
+  }: ZodStreamCompletionParams<T>): Promise<
+    AsyncGenerator<Partial<z.infer<T>> & { _meta: CompletionMeta }, void, unknown>
+  > {
+    let _activePath: ActivePath = []
+    let _completedPaths: CompletedPaths = []
 
     this.log("debug", "Starting completion stream")
 
@@ -75,9 +84,11 @@ export default class ZodStream {
               textEncoder.encode(
                 JSON.stringify({
                   ...parsedChunk,
-                  _isValid: validation.success,
-                  _activePath,
-                  _completedPaths
+                  _meta: {
+                    _isValid: validation.success,
+                    _activePath,
+                    _completedPaths
+                  }
                 })
               )
             )
@@ -100,7 +111,7 @@ export default class ZodStream {
       parser.readable.pipeThrough(validationStream)
 
       return readableStreamToAsyncGenerator(validationStream.readable) as AsyncGenerator<
-        Partial<z.infer<T>>,
+        Partial<z.infer<T>> & { _meta: CompletionMeta },
         void,
         unknown
       >
@@ -131,7 +142,13 @@ export default class ZodStream {
 
   public async create<P extends ZodStreamCompletionParams<z.AnyZodObject>>(
     params: P
-  ): Promise<AsyncGenerator<Partial<z.infer<P["response_model"]["schema"]>>, void, unknown>> {
+  ): Promise<
+    AsyncGenerator<
+      Partial<z.infer<P["response_model"]["schema"]>> & { _meta: CompletionMeta },
+      void,
+      unknown
+    >
+  > {
     return this.chatCompletionStream(params)
   }
 }
