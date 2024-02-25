@@ -22,11 +22,11 @@
 Install `evalz` using your preferred package manager:
 
 ```bash
-npm install evalz openai zod
+npm install evalz openai zod zod-stream
 
-bun add evalz openai zod
+bun add evalz openai zod zod-stream
 
-pnpm add evalz openai zod
+pnpm add evalz openai zod zod-stream
 ```
 
 ## Basic Usage
@@ -47,7 +47,7 @@ const oai = new OpenAI({
 function relevanceEval() {
   return createEvaluator({
     client: oai,
-    model: "gpt-4-1106-preview",
+    model: "gpt-4",
     evaluationDescription: "Rate the relevance from 0 to 1."
   });
 }

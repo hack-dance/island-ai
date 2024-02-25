@@ -29,7 +29,7 @@
     "type-check": "tsc --noEmit"
   },
   "repository": {
-    "directory": "public-packages/edna",
+    "directory": "public-packages/evalz",
     "type": "git",
     "url": "git+https://github.com/hack-dance/island-ai.git"
   },
