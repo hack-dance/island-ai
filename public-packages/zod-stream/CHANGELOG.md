@@ -1,5 +1,11 @@
 # zod-stream
 
+## 1.0.0
+
+### Major Changes
+
+- [#34](https://github.com/hack-dance/island-ai/pull/34) [`1f6b63175bf5baa787b0e38e8decb1c811a49bec`](https://github.com/hack-dance/island-ai/commit/1f6b63175bf5baa787b0e38e8decb1c811a49bec) Thanks [@roodboi](https://github.com/roodboi)! - moving the internal meta around key completino and validity into a single \_meta object on the response and adding explicit types so that consumers can reference it safely - the format has chnaged slightly from indicvidual keys on the resposne to all being wrapped up - additionalyl theres a new utility for checking completed paths
+
 ## 0.0.8
 
 ### Patch Changes
