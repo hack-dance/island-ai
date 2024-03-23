@@ -5,7 +5,7 @@ import {
   OpenAILikeClient
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
-import { ClientOptions } from "openai"
+import OpenAI, { ClientOptions } from "openai"
 
 export const anthropicModels = ["claude-3-opus-20240229", "claude-3-sonnet-20240229"]
 
@@ -118,7 +118,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
           invokeElement.getElementsByTagName("parameters")[0].children
         )
 
-        const parameters: Record<string, any> = {}
+        const parameters: Record<string, unknown> = {}
 
         for (const parameterElement of parameterElements) {
           const parameterName = parameterElement.tagName
@@ -149,7 +149,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
   ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
     if (!result.id) throw new Error("Response id is undefined")
 
-    let transformedResponse = {
+    const transformedResponse = {
       id: result.id,
       originResponse: result,
       model: result.model,
@@ -221,12 +221,19 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
   }
 
   private transformParams(
-    params: AnthropicChatCompletionParams
+    params: OpenAI.ChatCompletionCreateParams
   ): AnthropicMessageCompletionPayload {
-    const systemMessages = params.messages.filter((message: any) => message.role === "system")
-    const supportedMessages = params.messages.filter((message: any) => message.role !== "system")
+    const systemMessages = params.messages.filter(
+      (message: OpenAI.ChatCompletionMessageParam) => message.role === "system"
+    )
+    const supportedMessages = params.messages.filter(
+      (message: OpenAI.ChatCompletionMessageParam) => message.role !== "system"
+    )
+
     let system = systemMessages?.length
-      ? systemMessages.map((message: any) => message.content).join("\n")
+      ? systemMessages
+          .map((message: OpenAI.ChatCompletionMessageParam) => message.content)
+          .join("\n")
       : ""
 
     if (systemMessages.length) {
@@ -276,10 +283,10 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
     return {
       model: params.model,
       system: system?.length ? system : undefined,
-      messages: supportedMessages.map((message: any) => ({
+      messages: supportedMessages.map((message: OpenAI.ChatCompletionMessageParam) => ({
         role: message.role,
         content: message.content
-      })),
+      })) as AnthropicMessage[],
       max_tokens: params.max_tokens,
       stop_sequences: params.stop
         ? Array.isArray(params.stop)
@@ -363,7 +370,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
                   //   )
                   // }
 
-                  finalChatCompletion.choices[0].delta.content = ""
+                  finalChatCompletion.choices[0].delta = {}
                   finalChatCompletion.choices[0].finish_reason = "stop"
                 }
 

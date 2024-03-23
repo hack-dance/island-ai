@@ -35,10 +35,17 @@ describe("LLMClient Anthropic Provider", () => {
       ]
     })
 
+    let final = ""
+
     for await (const data of completion) {
-      expect(data?.choices?.[0].delta.content).toBeDefined()
+      final += data.choices?.[0]?.delta?.content ?? ""
+
+      console.clear()
+      console.log("raw:", JSON.stringify(data, null, 2))
+
+      console.log("response:", final)
     }
 
-    expect(completion).toBeDefined()
+    expect(final.length).toBeGreaterThan(0)
   })
 })
