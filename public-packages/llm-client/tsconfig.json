@@ -8,5 +8,5 @@
     "baseUrl": "."
   },
   "include": ["tests", "src", "turbo", "tsup.config.ts", "examples"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", ".eslintrc.cjs"]
 }

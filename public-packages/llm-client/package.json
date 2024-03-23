@@ -1,0 +1,65 @@
+{
+  "name": "llm-polyglot",
+  "version": "0.0.1--alpha.0",
+  "description": "[WIP] - A universal LLM client - provides adapters for various LLM providers to adhere to a universal interface - the openai sdk - allows you to use providers like anthropic using the same openai interface and transforms the responses in the same way - this allows you to switch between providers without changing your code - we currently have partial support for anthropic and openai - azure coming soon.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**"
+  ],
+  "typings": "./dist/index.d.ts",
+  "scripts": {
+    "test": "bun test --coverage --verbose",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "TIMING=1 eslint src/**/*.ts* --fix",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "repository": {
+    "directory": "public-packages/llm-client",
+    "type": "git",
+    "url": "git+https://github.com/hack-dance/island-ai.git"
+  },
+  "keywords": [
+    "llm",
+    "openai",
+    "streaming",
+    "anthropic",
+    "llm client",
+    "claude",
+    "gpt-4"
+  ],
+  "license": "MIT",
+  "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
+  "homepage": "https://island.novy.work",
+  "dependencies": {},
+  "peerDependencies": {
+    "@anthropic-ai/sdk": "^0.17.2",
+    "openai": ">=4.28.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@turbo/gen": "^1.10.12",
+    "@types/eslint": "^8.44.7",
+    "@types/node": "^20.5.2",
+    "eslint": "^8.53.0",
+    "ramda": "^0.29.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.2.2",
+    "zod": "^3.22.4"
+  }
+}

@@ -2,6 +2,7 @@
   "extends": "@repo/typescript-config/pub.json",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "./",
     "paths": {
       "@/*": ["./src/*"]
     },
