@@ -1,7 +1,6 @@
 import { LLMClient } from "@/index"
+import Instructor from "@instructor-ai/instructor"
 import z from "zod"
-
-import Instructor from "../../../../../instructor-ai/instructor-js"
 
 const anthropicClient = new LLMClient({
   provider: "anthropic"
