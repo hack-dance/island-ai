@@ -6,7 +6,7 @@ const project = resolve(__dirname, "tsconfig.lint.json")
 module.exports = {
   root: true,
   ignorePatterns: [".eslintrc.cjs"],
-  extends: ["@repo/eslint-config/react-internal.js"],
+  extends: ["@repo/eslint-config/library.js"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project

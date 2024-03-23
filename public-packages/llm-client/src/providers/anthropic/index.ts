@@ -1,11 +1,11 @@
 import {
-  AnthropicModels,
+  AnthropicChatCompletionParams,
   ExtendedCompletionAnthropic,
   ExtendedCompletionChunkAnthropic,
   OpenAILikeClient
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
-import OpenAI, { ClientOptions } from "openai"
+import { ClientOptions } from "openai"
 
 export const anthropicModels = ["claude-3-opus-20240229", "claude-3-sonnet-20240229"]
 
@@ -221,7 +221,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
   }
 
   private transformParams(
-    params: OpenAI.ChatCompletionCreateParams
+    params: AnthropicChatCompletionParams
   ): AnthropicMessageCompletionPayload {
     const systemMessages = params.messages.filter((message: any) => message.role === "system")
     const supportedMessages = params.messages.filter((message: any) => message.role !== "system")
@@ -295,7 +295,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
 
   private async *streamChatCompletion(
     response: Response
-  ): AsyncGenerator<ExtendedCompletionChunkAnthropic, void, undefined> {
+  ): AsyncIterable<ExtendedCompletionChunkAnthropic> {
     const reader = response.body?.getReader()
 
     if (!reader) {
@@ -386,24 +386,16 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
   }
 
   public async create(
-    params: Omit<OpenAI.Chat.ChatCompletionCreateParams, "model"> & {
-      model: AnthropicModels
+    params: Omit<AnthropicChatCompletionParams, "stream"> & {
       stream: true
     }
-  ): Promise<AsyncGenerator<ExtendedCompletionChunkAnthropic, void, undefined>>
+  ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
+
+  public async create(params: AnthropicChatCompletionParams): Promise<ExtendedCompletionAnthropic>
 
   public async create(
-    params: Omit<OpenAI.Chat.ChatCompletionCreateParams, "model"> & { model: AnthropicModels }
-  ): Promise<ExtendedCompletionAnthropic>
-
-  public async create(
-    params: Omit<OpenAI.Chat.ChatCompletionCreateParams, "model"> & {
-      model: AnthropicModels
-      stream?: boolean
-    }
-  ): Promise<
-    AsyncGenerator<ExtendedCompletionChunkAnthropic, void, undefined> | ExtendedCompletionAnthropic
-  > {
+    params: AnthropicChatCompletionParams
+  ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic> | ExtendedCompletionAnthropic> {
     const anthropicParams = this.transformParams(params)
 
     try {
@@ -420,11 +412,9 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       }
 
       if (params.stream) {
-        return this.streamChatCompletion(response) as AsyncGenerator<
-          ExtendedCompletionChunkAnthropic,
-          void,
-          undefined
-        >
+        return this.streamChatCompletion(
+          response
+        ) as AsyncIterable<ExtendedCompletionChunkAnthropic>
       } else {
         const result: Anthropic.Messages.Message = await response.json()
         const transformedResult = await this.transformResponse(result)

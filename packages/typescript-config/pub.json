@@ -3,10 +3,10 @@
   "display": "Pub Library",
   "extends": "./base.json",
   "compilerOptions": {
-    "lib": ["ESNext", "ES2015.Proxy", "dom"],
-    "module": "ESNext",
+    "lib": ["es2020", "dom"],
+    "module": "esnext",
+    "target": "es2020",
     "moduleResolution": "Bundler",
-    "target": "ES2020",
     "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true

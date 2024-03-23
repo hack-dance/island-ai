@@ -21,15 +21,20 @@ export class LLMClient<P extends Providers> {
 
     const proxyHandler: ProxyHandler<OpenAILikeClient<P>> = {
       get: (target, prop, receiver) => {
-        if (typeof (target as any)[prop] === "function") {
-          return (...args: unknown[]) => {
-            return (target as any)[prop](...args)
-          }
+        if (prop in target) {
+          return Reflect.get(target, prop, receiver)
         }
-        return Reflect.get(target, prop, receiver)
       }
     }
 
     return new Proxy(providerInstance, proxyHandler) as OpenAILikeClient<P>
   }
+}
+
+export function createLLMClient<P extends Providers>(
+  opts?: ClientOptions & { provider: P }
+): OpenAILikeClient<P> {
+  const client = new LLMClient<P>(opts)
+
+  return client as OpenAILikeClient<P>
 }

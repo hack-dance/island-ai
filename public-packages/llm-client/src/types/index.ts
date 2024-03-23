@@ -13,6 +13,16 @@ export type ExtendedCompletionChunkAnthropic = Partial<OpenAI.ChatCompletionChun
 
 export type AnthropicModels = "claude-3-opus-20240229" | "claude-3-sonnet-20240229"
 
+export type AnthropicChatCompletionParams = Omit<
+  Partial<OpenAI.ChatCompletionCreateParams>,
+  "model"
+> & {
+  model: AnthropicModels
+  messages: OpenAI.ChatCompletionCreateParams["messages"]
+  stream?: boolean
+  max_tokens: number
+}
+
 export type OpenAILikeClient<P> = P extends "openai"
   ? OpenAI
   : P extends "anthropic"
@@ -20,15 +30,11 @@ export type OpenAILikeClient<P> = P extends "openai"
         baseURL: string
         chat: {
           completions: {
-            create: (
-              params: Omit<OpenAI.ChatCompletionCreateParams, "model"> & {
-                model: AnthropicModels
-                stream?: boolean
-              }
-            ) => Promise<
-              | AsyncGenerator<ExtendedCompletionChunkAnthropic, void, undefined>
-              | ExtendedCompletionAnthropic
-            >
+            create: <P extends AnthropicChatCompletionParams>(
+              params: P
+            ) => P extends { stream: true }
+              ? Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
+              : Promise<ExtendedCompletionAnthropic>
           }
         }
       }
