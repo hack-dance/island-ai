@@ -45,13 +45,12 @@
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
-  "dependencies": {
+  "dependencies": {},
+  "peerDependencies": {
     "@anthropic-ai/sdk": "^0.17.2",
-    "openai": "latest"
+    "openai": ">=4.28.0"
   },
-  "peerDependencies": {},
   "devDependencies": {
-    "@instructor-ai/instructor": "^0.0.7",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^1.10.12",
