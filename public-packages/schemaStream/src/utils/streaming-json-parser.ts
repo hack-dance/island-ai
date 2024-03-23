@@ -225,6 +225,7 @@ export class SchemaStream {
     } = { stringBufferSize: 0, handleUnescapedNewLines: true }
   ) {
     const textEncoder = new TextEncoder()
+
     const parser = new JSONParser({
       stringBufferSize: opts.stringBufferSize ?? 0,
       handleUnescapedNewLines: opts.handleUnescapedNewLines ?? true

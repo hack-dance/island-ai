@@ -1,0 +1,66 @@
+{
+  "name": "llm-client",
+  "version": "0.0.1--alpha.0",
+  "description": "A universal LLM client - extends the official openai client to support providers like Anthropic that do not adhere to the same api",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**"
+  ],
+  "typings": "./dist/index.d.ts",
+  "scripts": {
+    "test": "bun test --coverage --verbose",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "TIMING=1 eslint src/**/*.ts* --fix",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "repository": {
+    "directory": "public-packages/llm-client",
+    "type": "git",
+    "url": "git+https://github.com/hack-dance/island-ai.git"
+  },
+  "keywords": [
+    "llm",
+    "openai",
+    "streaming",
+    "anthropic",
+    "llm client",
+    "claude",
+    "gpt-4"
+  ],
+  "license": "MIT",
+  "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
+  "homepage": "https://island.novy.work",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.17.2",
+    "openai": "latest"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@instructor-ai/instructor": "^0.0.7",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@turbo/gen": "^1.10.12",
+    "@types/eslint": "^8.44.7",
+    "@types/node": "^20.5.2",
+    "eslint": "^8.53.0",
+    "ramda": "^0.29.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.2.2",
+    "zod": "^3.22.4"
+  }
+}

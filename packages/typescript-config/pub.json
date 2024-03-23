@@ -3,11 +3,12 @@
   "display": "Pub Library",
   "extends": "./base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "moduleResolution": "node",
+    "lib": ["ESNext", "ES2015.Proxy", "dom"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2020",
     "declaration": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"]
+    "esModuleInterop": true
   }
 }
