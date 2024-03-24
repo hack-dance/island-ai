@@ -7,6 +7,8 @@ import {
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI, { ClientOptions } from "openai"
 
+import { extractFunctionCalls } from "./fns"
+
 export const anthropicModels = ["claude-3-opus-20240229", "claude-3-sonnet-20240229"]
 
 export type AnthropicMessageContentBlock = {
@@ -88,61 +90,6 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
     }
   }
 
-  private async callFunction(functionName: string, _args: string): Promise<string> {
-    // Implement the logic to execute the function based on the functionName and arguments
-    // Return the function result as a string
-    // For example:
-    // if (functionName === "get_weather") {
-    //   const { location } = JSON.parse(arguments);
-    //   const weather = await getWeather(location);
-    //   return JSON.stringify(weather);
-    // }
-    // ...
-    throw new Error(`Function '${functionName}' not implemented`)
-  }
-
-  private extractFunctionCalls(text: string): Array<{ functionName: string; args: string }> {
-    const functionCallsRegex = /<function_calls>(.*?)<\/function_calls>/gs
-    const matches = text.matchAll(functionCallsRegex)
-    const functionCalls = []
-
-    for (const match of matches) {
-      const functionCallXml = match[1]
-      const parser = new DOMParser()
-      const xmlDoc = parser.parseFromString(functionCallXml, "text/xml")
-      const invokeElements = Array.from(xmlDoc.getElementsByTagName("invoke"))
-
-      for (const invokeElement of invokeElements) {
-        const functionName = invokeElement.getElementsByTagName("tool_name")[0].textContent || "" // Fix applied here
-        const parameterElements = Array.from(
-          invokeElement.getElementsByTagName("parameters")[0].children
-        )
-
-        const parameters: Record<string, unknown> = {}
-
-        for (const parameterElement of parameterElements) {
-          const parameterName = parameterElement.tagName
-          const parameterValue = parameterElement.textContent
-          parameters[parameterName] = parameterValue
-        }
-
-        const args = JSON.stringify(parameters)
-        functionCalls.push({ functionName, args })
-      }
-    }
-
-    return functionCalls
-  }
-
-  private formatFunctionResults(functionName: string, result: string): string {
-    return `<function_results>
-      <result>
-        <tool_name>${functionName}</tool_name>
-        <stdout>${result}</stdout>
-      </result>
-    </function_results>`
-  }
-
   private async transformResponse(
     result: Anthropic.Messages.Message,
     { stream }: { stream?: boolean } = {}
@@ -162,17 +109,16 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
 
     if (!stream) {
       const content = result.content.map(choice => choice.text).join("")
-      const functionCalls = this.extractFunctionCalls(content)
-      let updatedContent = content
-
-      for (const { functionName, args } of functionCalls) {
-        const functionResult = await this.callFunction(functionName, args)
-        const formattedResult = this.formatFunctionResults(functionName, functionResult)
-        updatedContent = updatedContent.replace(
-          /<function_calls>.*?<\/function_calls>/s,
-          formattedResult
-        )
-      }
+      const functionCalls = extractFunctionCalls(content) ?? []
+      const tool_calls = functionCalls.map(({ functionName, args }, index) => ({
+        index,
+        id: `${index}-${functionName}`,
+        type: "function" as const,
+        function: {
+          name: functionName,
+          arguments: JSON.stringify(args)
+        }
+      }))
 
       return {
         ...transformedResponse,
@@ -181,9 +127,10 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
           {
             message: {
               role: "assistant",
-              content: updatedContent
+              content,
+              ...(tool_calls?.length ? { tool_calls } : {})
             },
-            finish_reason: "stop",
+            finish_reason: tool_calls?.length ? "tool_calls" : "stop",
             index: 0,
             logprobs: null
           }
@@ -191,17 +138,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       }
     } else {
       const content = result.content.map(choice => choice.text).join("")
-      const functionCalls = this.extractFunctionCalls(content)
-      let updatedContent = content
-
-      for (const { functionName, args } of functionCalls) {
-        const functionResult = await this.callFunction(functionName, args)
-        const formattedResult = this.formatFunctionResults(functionName, functionResult)
-        updatedContent = updatedContent.replace(
-          /<function_calls>.*?<\/function_calls>/s,
-          formattedResult
-        )
-      }
+      const updatedContent = content
 
       return {
         ...transformedResponse,
@@ -230,6 +167,11 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       (message: OpenAI.ChatCompletionMessageParam) => message.role !== "system"
     )
 
+    const messages = supportedMessages.map((message: OpenAI.ChatCompletionMessageParam) => ({
+      role: message.role,
+      content: message.content
+    })) as AnthropicMessage[]
+
     let system = systemMessages?.length
       ? systemMessages
           .map((message: OpenAI.ChatCompletionMessageParam) => message.content)
@@ -246,19 +188,25 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       throw new Error("max_tokens is required")
     }
 
-    if (
-      params.tool_choice &&
-      typeof params.tool_choice === "object" &&
-      "function" in params.tool_choice &&
-      params.tool_choice.function.name
-    ) {
-      system += `\n\n<tool_choice><function><name>${params.tool_choice.function.name}</name></function></tool_choice>\n`
-    }
-
     if (params.tools && params.tools.length > 0) {
-      system +=
-        "<tools>\n" +
-        params.tools
+      system += `
+      In this environment you have access to a set of tools you can use to answer the user's question.
+
+      You may call them like this:
+
+      <function_calls>
+      <invoke>
+      <tool_name>$TOOL_NAME</tool_name>
+      <parameters>
+      <$PARAMETER_NAME>$PARAMETER_VALUE</$PARAMETER_NAME>
+      ...
+      </parameters>
+      </invoke>
+      </function_calls>
+
+      Here are the tools available:
+      <tools>
+        ${params.tools
           .map(tool => {
             const parameterXML = Object.entries(tool.function.parameters?.["properties"] ?? {})
               .map(
@@ -276,17 +224,23 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
             <parameters>${parameterXML}</parameters>
           </tool_description>`
           })
-          .join("\n") +
-        "\n</tools>"
+          .join("\n")}
+        \n</tools>`
+    }
+
+    if (
+      params.tool_choice &&
+      typeof params.tool_choice === "object" &&
+      "function" in params.tool_choice &&
+      params.tool_choice.function.name
+    ) {
+      system += `//(System request): \n\n<tool_choice><tool_name>${params.tool_choice.function.name}</tool_name></tool_choice>\n`
     }
 
     return {
       model: params.model,
       system: system?.length ? system : undefined,
-      messages: supportedMessages.map((message: OpenAI.ChatCompletionMessageParam) => ({
-        role: message.role,
-        content: message.content
-      })) as AnthropicMessage[],
+      messages,
       max_tokens: params.max_tokens,
       stop_sequences: params.stop
         ? Array.isArray(params.stop)
@@ -310,6 +264,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
     }
 
     let finalChatCompletion: ExtendedCompletionChunkAnthropic | null = null
+    let currentContentDelta = ""
 
     const decoder = new TextDecoder("utf-8")
 
@@ -341,36 +296,52 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
                 })) as ExtendedCompletionChunkAnthropic
 
                 yield finalChatCompletion
-                break
+                continue
 
               case "content_block_delta":
                 if (data.delta && data.delta.text) {
+                  currentContentDelta += data.delta.text
+
                   if (finalChatCompletion && finalChatCompletion.choices) {
                     finalChatCompletion.choices[0].delta = {
                       content: data.delta.text,
                       role: "assistant"
                     }
+
+                    const functionCalls = extractFunctionCalls(currentContentDelta)
+
+                    finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
+                      ({ functionName, args }, index) => ({
+                        index,
+                        type: "function" as const,
+                        function: {
+                          name: functionName,
+                          arguments: JSON.stringify(args ?? {})
+                        }
+                      })
+                    )
                   }
 
                   yield finalChatCompletion as ExtendedCompletionChunkAnthropic
                 }
-                break
+
+                continue
 
               case "content_block_stop":
                 if (finalChatCompletion && finalChatCompletion.choices) {
-                  // const functionCalls = this.extractFunctionCalls(currentContentDelta)
-                  // let updatedContent = currentContentDelta
+                  const functionCalls = extractFunctionCalls(currentContentDelta)
 
-                  // for (const { functionName, args } of functionCalls) {
-                  //   const functionResult = await this.callFunction(functionName, args)
-                  //   const formattedResult = this.formatFunctionResults(functionName, functionResult)
-                  //   updatedContent = updatedContent.replace(
-                  //     /<function_calls>.*?<\/function_calls>/s,
-                  //     formattedResult
-                  //   )
-                  // }
+                  finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
+                    ({ functionName, args }, index) => ({
+                      index,
+                      type: "function" as const,
+                      function: {
+                        name: functionName,
+                        arguments: JSON.stringify(args ?? {})
+                      }
+                    })
+                  )
 
-                  finalChatCompletion.choices[0].delta = {}
                   finalChatCompletion.choices[0].finish_reason = "stop"
                 }
 
