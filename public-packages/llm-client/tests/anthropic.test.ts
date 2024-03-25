@@ -55,6 +55,114 @@ describe("LLMClient Anthropic Provider", () => {
     ])
   })
 
+  test("Function Calling complex schema", async () => {
+    const completion = await anthropicClient.chat.completions.create({
+      model: "claude-3-opus-20240229",
+      max_tokens: 1000,
+      stream: true,
+      messages: [
+        {
+          role: "user",
+          content: `User Data Submission:
+
+          First Name: John
+          Last Name: Doe
+          Contact Details:
+          Email: john.doe@example.com
+          Phone Number: 555-1234
+          Job History:
+          
+          Company Name: Acme Corp
+          Role: Software Engineer
+          Years: 5
+          Company Name: Globex Inc.
+          Role: Lead Developer
+          Years: 3
+          Skills:
+          
+          Programming
+          Leadership
+          Communication`
+        }
+      ],
+      tool_choice: {
+        type: "function",
+        function: {
+          name: "process_user_data"
+        }
+      },
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "process_user_data",
+            description: "Processes user data, including personal and professional details.",
+            parameters: {
+              type: "object",
+              properties: {
+                userDetails: {
+                  type: "object",
+                  properties: {
+                    firstName: {
+                      type: "string"
+                    },
+                    lastName: {
+                      type: "string"
+                    },
+                    contactDetails: {
+                      type: "object",
+                      properties: {
+                        email: {
+                          type: "string"
+                        },
+                        phoneNumber: {
+                          type: "string"
+                        }
+                      },
+                      required: ["email"]
+                    }
+                  },
+                  required: ["firstName", "lastName", "contactDetails"]
+                },
+                jobHistory: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      companyName: {
+                        type: "string"
+                      },
+                      role: {
+                        type: "string"
+                      },
+                      years: {
+                        type: "number"
+                      }
+                    },
+                    required: ["companyName", "role"]
+                  }
+                },
+                skills: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  }
+                }
+              },
+              required: ["userDetails", "jobHistory"],
+              additionalProperties: false
+            }
+          }
+        }
+      ]
+    })
+
+    for await (const data of completion) {
+      console.clear()
+      console.log(JSON.stringify(data, null, 2))
+    }
+  })
+
   test("Function Calling stream", async () => {
     const completion = await anthropicClient.chat.completions.create({
       model: "claude-3-opus-20240229",
