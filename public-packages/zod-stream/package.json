@@ -44,7 +44,7 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.novy.work",
   "dependencies": {
-    "schema-stream": "^3.0.0",
+    "schema-stream": "^3.1.0",
     "zod-to-json-schema": "^3.22.3"
   },
   "peerDependencies": {
