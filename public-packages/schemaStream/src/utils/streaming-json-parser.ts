@@ -239,6 +239,7 @@ export class SchemaStream {
         try {
           if (parser.isEnded) {
             controller.enqueue(textEncoder.encode(JSON.stringify(this.schemaInstance)))
+
             return
           } else {
             parser.write(chunk)

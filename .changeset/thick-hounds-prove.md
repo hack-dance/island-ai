@@ -3,4 +3,5 @@
 "llm-polyglot": patch
 ---
 
-protect against parsing tokens if we have hit an ended state
+protect against parsing tokens if we have hit an ended state in schema-stream.
+add initial function calling support in lly-polyglot
