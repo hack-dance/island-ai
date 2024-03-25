@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 0.0.3
+
+### Patch Changes
+
+- [#45](https://github.com/hack-dance/island-ai/pull/45) [`e32c0f1`](https://github.com/hack-dance/island-ai/commit/e32c0f10e37b9e11f2792d9ad6f11c9b3facefeb) Thanks [@roodboi](https://github.com/roodboi)! - handle numbers better
+
 ## 0.0.2
 
 ### Patch Changes
