@@ -1,5 +1,11 @@
 # zod-stream
 
+## 1.0.1
+
+### Patch Changes
+
+- [#41](https://github.com/hack-dance/island-ai/pull/41) [`8d0ec77`](https://github.com/hack-dance/island-ai/commit/8d0ec77948510ff7aedf6327fdaa168a89873e76) Thanks [@roodboi](https://github.com/roodboi)! - Updating schema stream
+
 ## 1.0.0
 
 ### Major Changes
