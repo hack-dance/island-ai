@@ -170,8 +170,6 @@ export class FunctionCallExtractor {
     const tagRegex = /<([^>]+)>([\s\S]*?)<\/\1>/g
     let itemMatch
 
-    console.log(parameterBlock, "parameterBlock ARRAY")
-
     while ((itemMatch = tagRegex.exec(parameterBlock))) {
       const [_, _tagName, itemValue] = itemMatch
       if (isJSONSchema7(itemSchema) && itemSchema.type === "object") {
