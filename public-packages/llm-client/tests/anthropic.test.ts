@@ -158,9 +158,14 @@ describe("LLMClient Anthropic Provider", () => {
       ]
     })
 
+    let final = {}
     for await (const data of completion) {
-      console.log(JSON.stringify(data, null, 2))
+      final = data
+      console.log(JSON.stringify(final, null, 2))
     }
+
+    console.log(JSON.stringify(final, null, 2))
+    expect(final).toBeDefined()
   })
 
   test("Function Calling stream", async () => {

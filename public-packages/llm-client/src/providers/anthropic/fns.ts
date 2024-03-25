@@ -152,7 +152,7 @@ function renderArraySchema(schema: JSONSchema7Array, indent: number): string {
   const indentStr = "  ".repeat(indent)
   const items = Array.isArray(schema.items) ? schema.items : [schema.items]
 
-  return `${indentStr}<type>array</type><description>${schema?.description ?? " "}</description>\n${indentStr}<properties>\n${renderParameter(items[0], indent + 2)}\n${indentStr}</properties>`
+  return `${indentStr}<type>array</type><description>${schema?.description ?? " "}</description>\n${indentStr}<$INDEX>\n${renderParameter(items[0], indent + 2)}\n${indentStr}</$INDEX>`
 }
 
 function renderBasicSchema(schema: JSONSchema7 | boolean, indent: number): string {
