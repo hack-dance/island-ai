@@ -154,18 +154,12 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
         ]
       }
     } else {
-      const content = result.content.map(choice => choice.text).join("")
-      const updatedContent = content
-
       return {
         ...transformedResponse,
         object: "chat.completion.chunk",
         choices: [
           {
-            delta: {
-              role: "assistant",
-              content: updatedContent
-            },
+            delta: {},
             finish_reason: null,
             index: 0
           }
@@ -273,7 +267,8 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
    * @returns An asynchronous iterable of ExtendedCompletionChunkAnthropic objects.
    */
   private async *streamChatCompletion(
-    response: Response
+    response: Response,
+    { toolChoice }: { toolChoice?: string }
   ): AsyncIterable<ExtendedCompletionChunkAnthropic> {
     const reader = response.body?.getReader()
 
@@ -319,21 +314,32 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
               case "content_block_delta":
                 if (data.delta && data.delta.text) {
                   if (finalChatCompletion && finalChatCompletion.choices) {
-                    finalChatCompletion.choices[0].delta = {
-                      content: data.delta.text,
-                      role: "assistant"
+                    if (data.delta.text && !toolChoice) {
+                      finalChatCompletion.choices[0].delta = {
+                        content: data.delta.text,
+                        role: "assistant"
+                      }
                     }
 
                     const functionCalls = extractor.extractFunctionCalls(data.delta.text)
+                    const functionCallsDefault =
+                      functionCalls?.length > 0
+                        ? functionCalls
+                        : toolChoice
+                          ? [
+                              {
+                                functionName: toolChoice,
+                                args: {}
+                              }
+                            ]
+                          : []
 
-                    finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
+                    finalChatCompletion.choices[0].delta.tool_calls = functionCallsDefault.map(
                       ({ functionName, args }, index) => ({
                         index,
-                        id: `${index}-${functionName}`,
-                        type: "function" as const,
                         function: {
                           name: functionName,
-                          arguments: JSON.stringify(args ?? {})
+                          arguments: `${JSON.stringify(args ?? {})}`
                         }
                       })
                     )
@@ -346,7 +352,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
 
               case "content_block_stop":
                 if (finalChatCompletion && finalChatCompletion.choices) {
-                  finalChatCompletion.choices[0].delta.content = null
+                  finalChatCompletion.choices[0].delta = {}
                   finalChatCompletion.choices[0].finish_reason = "stop"
                 }
 
@@ -400,7 +406,12 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       }
 
       if (params.stream) {
-        return this.streamChatCompletion(response)
+        return this.streamChatCompletion(response, {
+          toolChoice:
+            typeof params?.tool_choice === "object" && "function" in params?.tool_choice
+              ? params?.tool_choice?.function?.name
+              : undefined
+        })
       } else {
         const result: Anthropic.Messages.Message = await response.json()
         const transformedResult = await this.transformResponse(result)

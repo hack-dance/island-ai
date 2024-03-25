@@ -1,5 +1,6 @@
 import { createLLMClient } from "@/index"
 import { describe, expect, test } from "bun:test"
+import OpenAI from "openai"
 
 describe("LLMClient Anthropic Provider", () => {
   const anthropicClient = createLLMClient({
@@ -201,17 +202,16 @@ describe("LLMClient Anthropic Provider", () => {
       ]
     })
 
-    let final = {}
+    let final: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] = []
     for await (const data of completion) {
-      final = data
+      if (data?.choices?.[0]?.delta.tool_calls) {
+        final = data?.choices?.[0]?.delta.tool_calls
+      }
     }
 
-    // @ts-expect-error not typing this
-    expect(final?.choices?.[0]?.delta.tool_calls).toEqual([
+    expect(final).toEqual([
       {
         index: 0,
-        id: "0-say_hello",
-        type: "function",
         function: {
           name: "say_hello",
           arguments: '{"name":"Dimitri Kennedy"}'
