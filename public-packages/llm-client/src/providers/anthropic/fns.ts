@@ -8,21 +8,22 @@ type FunctionCall = {
 export class FunctionCallExtractor {
   private functionCalls: FunctionCall[] = []
   private buffer: string = ""
-
   private currentFunctionName: string | undefined
   private currentArgs: Record<string, unknown> = {}
+  // private isInInvokeBlock: boolean = false
+  private currentParameterName: string | undefined
 
   extractFunctionCalls(chunk: string): FunctionCall[] {
     this.buffer += chunk
     this.processFunctionCalls()
     const extractedCalls = this.functionCalls
-
     this.functionCalls = []
-
     return extractedCalls
   }
 
   private processFunctionCalls() {
+    //TODO: need to start processing before we get to the end of this block
+
     const invokeRegex = /<invoke>([\s\S]*?)<\/invoke>/g
     let invokeMatch
 
@@ -40,46 +41,67 @@ export class FunctionCallExtractor {
       this.finishCurrentFunctionCall()
       this.currentFunctionName = newFunctionName
       this.currentArgs = {}
+      // this.isInInvokeBlock = true
+      this.currentParameterName = undefined
     }
 
-    const parametersBlockMatch = /<parameters>([\s\S]*?)<\/parameters>/.exec(invokeBlock)
-    const parametersBlock = parametersBlockMatch ? parametersBlockMatch[1] : ""
+    const parameterRegex = /<(\w+)>([\s\S]*?)<\/\1>/g
+    let paramMatch
 
-    this.processParametersBlock(parametersBlock)
-
-    const existingFunctionCall = this.functionCalls.find(
-      call => call.functionName === this.currentFunctionName
-    )
-
-    if (existingFunctionCall) {
-      existingFunctionCall.args = {
-        ...existingFunctionCall.args,
-        ...this.currentArgs
-      }
-    } else if (this.currentFunctionName) {
-      this.functionCalls.push({
-        functionName: this.currentFunctionName,
-        args: this.currentArgs
-      })
+    while ((paramMatch = parameterRegex.exec(invokeBlock))) {
+      const [_, paramName, paramValue] = paramMatch
+      this.processParameter(paramName, paramValue)
     }
+
+    // this.isInInvokeBlock = false
+    this.finishCurrentFunctionCall()
   }
-  private processParametersBlock(parametersBlock: string) {
+
+  private processParameter(paramName: string, paramValue: string) {
     if (!this.currentFunctionName) return
 
-    const args = this.parseParameters(parametersBlock)
-    this.currentArgs = { ...this.currentArgs, ...args }
+    if (this.currentParameterName !== paramName) {
+      this.finishCurrentParameter()
+      this.currentParameterName = paramName
+    }
+
+    if (paramName === "parameters") {
+      const args = this.parseParameters(paramValue)
+      this.currentArgs = args
+    }
+  }
+
+  private finishCurrentParameter() {
+    if (this.currentParameterName) {
+      this.currentParameterName = undefined
+    }
+  }
+
+  private updateFunctions() {
+    if (this.currentFunctionName) {
+      const existingFunctionCall = this.functionCalls.find(
+        call => call.functionName === this.currentFunctionName
+      )
+
+      if (existingFunctionCall) {
+        existingFunctionCall.args = {
+          ...existingFunctionCall.args,
+          ...this.currentArgs
+        }
+      } else {
+        this.functionCalls.push({
+          functionName: this.currentFunctionName,
+          args: this.currentArgs
+        })
+      }
+    }
   }
 
   private finishCurrentFunctionCall() {
-    if (this.currentFunctionName) {
-      this.functionCalls.push({
-        functionName: this.currentFunctionName,
-        args: this.currentArgs
-      })
-    }
-
+    this.updateFunctions()
     this.currentFunctionName = undefined
     this.currentArgs = {}
+    this.currentParameterName = undefined
   }
 
   private parseParameters(parametersBlock: string): Record<string, unknown> {
@@ -89,11 +111,15 @@ export class FunctionCallExtractor {
 
     while ((paramMatch = parameterRegex.exec(parametersBlock))) {
       const [_, paramName, paramValue] = paramMatch
+
       if (paramValue.includes("<")) {
         args[paramName] = this.parseParameters(paramValue)
       } else {
         args[paramName] = paramValue
       }
+
+      this.currentArgs = args
+      this.updateFunctions()
     }
 
     return args
@@ -154,6 +180,7 @@ export function renderParameter(schema: JSONSchema7Definition, indent = 0): stri
 
   return renderBasicSchema(schema as JSONSchema7 | boolean, indent)
 }
+
 export function formatFunctionResults(functionName: string, result: string): string {
   return `<function_results>
     <result>
