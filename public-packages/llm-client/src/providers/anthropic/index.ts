@@ -226,10 +226,10 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
         .map(tool => {
           const parameterXML = renderParameter(tool.function.parameters as JSONSchema7Definition)
           return `<tool_description>
-        <tool_name>${tool.function.name}</tool_name>
-        <description>${tool.function.description}</description>
-        <parameters>${parameterXML}</parameters>
-      </tool_description>`
+            <tool_name>${tool.function.name}</tool_name>
+            <description>${tool.function.description}</description>
+            <parameters>${parameterXML}</parameters>
+          </tool_description>`
         })
         .join("\n")}
     </tools>`

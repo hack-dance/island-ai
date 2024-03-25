@@ -141,22 +141,18 @@ function renderObjectSchema(schema: JSONSchema7Object, indent: number): string {
   const propertyXML = Object.entries(properties)
     .map(
       ([name, propertySchema]) =>
-        `${indentStr}<parameter>\n${indentStr}  <name>${name}</name>\n${renderParameter(propertySchema, indent + 2)}\n${indentStr}</parameter>`
+        `${indentStr}<parameter>\n${indentStr} <name>${name}</name>\n${renderParameter(propertySchema, indent + 2)}\n${indentStr}</parameter>`
     )
     .join("\n")
-  return `${indentStr}<type>object</type>\n${propertyXML}`
+
+  return `${indentStr}<type>object</type>\n<properties>${propertyXML}</properties>`
 }
 
 function renderArraySchema(schema: JSONSchema7Array, indent: number): string {
   const indentStr = "  ".repeat(indent)
   const items = Array.isArray(schema.items) ? schema.items : [schema.items]
-  const itemsXML = items
-    .map(
-      itemSchema =>
-        `${indentStr}  <item>\n${renderParameter(itemSchema, indent + 2)}\n${indentStr}  </item>`
-    )
-    .join("\n")
-  return `${indentStr}<type>array</type>\n${itemsXML}`
+
+  return `${indentStr}<type>array</type><description>${schema?.description ?? " "}</description>\n${indentStr}<properties>\n${renderParameter(items[0], indent + 2)}\n${indentStr}</properties>`
 }
 
 function renderBasicSchema(schema: JSONSchema7 | boolean, indent: number): string {
