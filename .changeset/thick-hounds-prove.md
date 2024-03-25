@@ -1,5 +1,5 @@
 ---
-"schema-stream": patch
+"schema-stream": minor
 "llm-polyglot": patch
 ---
 
