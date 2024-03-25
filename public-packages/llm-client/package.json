@@ -1,6 +1,6 @@
 {
   "name": "llm-polyglot",
-  "version": "0.0.1--alpha.2",
+  "version": "0.0.1--alpha.3",
   "description": "[WIP] - A universal LLM client - provides adapters for various LLM providers to adhere to a universal interface - the openai sdk - allows you to use providers like anthropic using the same openai interface and transforms the responses in the same way - this allows you to switch between providers without changing your code - we currently have partial support for anthropic and openai - azure coming soon.",
   "publishConfig": {
     "access": "public"
