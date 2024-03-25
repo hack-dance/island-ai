@@ -1,5 +1,21 @@
 import { JSONSchema7 } from "json-schema"
 
+export type JSONSchema7Object = JSONSchema7["properties"] & {
+  properties: JSONSchema7["properties"]
+}
+
+export type JSONSchema7Array = JSONSchema7 & {
+  items: JSONSchema7["items"]
+}
+
+export type JSONSchema7Definition = JSONSchema7Object | JSONSchema7Array | JSONSchema7 | boolean
+
+function isJSONSchema7(schema?: JSONSchema7Definition): schema is JSONSchema7 {
+  return (
+    typeof schema === "object" && schema !== null && schema !== undefined && !Array.isArray(schema)
+  )
+}
+
 type FunctionCall = {
   functionName: string
   args: Record<string, unknown>
@@ -12,6 +28,11 @@ export class FunctionCallExtractor {
   private currentArgs: Record<string, unknown> = {}
   // private isInInvokeBlock: boolean = false
   private currentParameterName: string | undefined
+  private schema?: JSONSchema7Object
+
+  constructor(schema?: JSONSchema7Object) {
+    this.schema = schema
+  }
 
   extractFunctionCalls(chunk: string): FunctionCall[] {
     this.buffer += chunk
@@ -103,7 +124,10 @@ export class FunctionCallExtractor {
     this.currentParameterName = undefined
   }
 
-  private parseParameters(parametersBlock: string): Record<string, unknown> {
+  private parseParameters(
+    parametersBlock: string,
+    schema: JSONSchema7Definition | undefined = this.schema
+  ): Record<string, unknown> {
     const args: Record<string, unknown> = {}
     const parameterRegex = /<(\w+)>([\s\S]*?)<\/\1>/g
     let paramMatch
@@ -111,38 +135,64 @@ export class FunctionCallExtractor {
     while ((paramMatch = parameterRegex.exec(parametersBlock))) {
       const [_, paramName, paramValue] = paramMatch
 
-      if (paramValue.includes("<")) {
-        args[paramName] = this.parseParameters(paramValue)
-      } else {
-        args[paramName] = paramValue
+      if (isJSONSchema7(schema)) {
+        if (schema.properties && schema.properties[paramName]) {
+          const propertySchema = schema.properties[paramName]
+          if (isJSONSchema7(propertySchema)) {
+            if (propertySchema.type === "array") {
+              args[paramName] = this.parseArrayParameter(
+                paramValue,
+                propertySchema as JSONSchema7Array
+              )
+            } else if (propertySchema.type === "object") {
+              args[paramName] = this.parseParameters(
+                paramValue,
+                propertySchema as JSONSchema7Object
+              )
+            } else {
+              args[paramName] = paramValue
+            }
+          }
+        } else {
+          args[paramName] = paramValue
+        }
       }
 
       this.currentArgs = args
-      // this.updateFunctions()
     }
 
     return args
   }
-}
 
-export type JSONSchema7Object = JSONSchema7 & {
-  properties?: { [key: string]: JSONSchema7Definition }
-}
+  private parseArrayParameter(parameterBlock: string, schema: JSONSchema7Array): unknown[] {
+    const arrayItems: unknown[] = []
+    const itemSchema = Array.isArray(schema.items) ? schema.items[0] : schema.items
+    const tagRegex = /<([^>]+)>([\s\S]*?)<\/\1>/g
+    let itemMatch
 
-export type JSONSchema7Array = JSONSchema7 & {
-  items: JSONSchema7Definition | JSONSchema7Definition[]
-}
+    console.log(parameterBlock, "parameterBlock ARRAY")
 
-export type JSONSchema7Definition = JSONSchema7Object | JSONSchema7Array | JSONSchema7 | boolean
+    while ((itemMatch = tagRegex.exec(parameterBlock))) {
+      const [_, _tagName, itemValue] = itemMatch
+      if (isJSONSchema7(itemSchema) && itemSchema.type === "object") {
+        arrayItems.push(this.parseParameters(itemValue, itemSchema as JSONSchema7Object))
+      } else {
+        arrayItems.push(itemValue)
+      }
+    }
+
+    return arrayItems
+  }
+}
 
 function renderObjectSchema(schema: JSONSchema7Object, indent: number): string {
   const indentStr = "  ".repeat(indent)
   const properties = schema.properties || {}
   const propertyXML = Object.entries(properties)
-    .map(
-      ([name, propertySchema]) =>
-        `${indentStr}<parameter>\n${indentStr} <name>${name}</name>\n${renderParameter(propertySchema, indent + 2)}\n${indentStr}</parameter>`
-    )
+    .map(([name, propertySchema]) => {
+      if (typeof propertySchema === "boolean") return ""
+      return `${indentStr}<parameter>\n${indentStr} <name>${name}</name>\n${renderParameter(propertySchema, indent + 2)}\n${indentStr}</parameter>`
+    })
     .join("\n")
 
   return `${indentStr}<type>object</type>\n<properties>${propertyXML}</properties>`
@@ -151,8 +201,9 @@ function renderObjectSchema(schema: JSONSchema7Object, indent: number): string {
 function renderArraySchema(schema: JSONSchema7Array, indent: number): string {
   const indentStr = "  ".repeat(indent)
   const items = Array.isArray(schema.items) ? schema.items : [schema.items]
+  const firstItemSchema = items[0] || {}
 
-  return `${indentStr}<type>array</type><description>${schema?.description ?? " "}</description>\n${indentStr}<$INDEX>\n${renderParameter(items[0], indent + 2)}\n${indentStr}</$INDEX>`
+  return `${indentStr}<type>array</type><description>${schema?.description ?? " "}</description>\n${indentStr}<$INDEX>\n${renderParameter(firstItemSchema as JSONSchema7, indent + 2)}\n${indentStr}</$INDEX>`
 }
 
 function renderBasicSchema(schema: JSONSchema7 | boolean, indent: number): string {
@@ -164,7 +215,7 @@ function renderBasicSchema(schema: JSONSchema7 | boolean, indent: number): strin
   return `${indentStr}<type>${schema.type}</type>\n${schema.description ? `${indentStr}<description>${schema.description}</description>` : ""}`
 }
 
-export function renderParameter(schema: JSONSchema7Definition, indent = 0): string {
+export function renderParameter(schema?: JSONSchema7, indent = 0): string {
   if (typeof schema === "object" && schema !== null) {
     if ("properties" in schema && schema.properties !== undefined) {
       return renderObjectSchema(schema as JSONSchema7Object, indent)
