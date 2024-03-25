@@ -149,6 +149,8 @@ export class FunctionCallExtractor {
                 paramValue,
                 propertySchema as JSONSchema7Object
               )
+            } else if (propertySchema.type === "number") {
+              args[paramName] = parseFloat(`${paramValue}`) ?? paramValue
             } else {
               args[paramName] = paramValue
             }
