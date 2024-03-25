@@ -48,7 +48,7 @@ export default class JSONParser {
       parser: {
         state: TokenParserState
         key: JsonKey
-        mode: TokenParserMode
+        mode: TokenParserMode | undefined
         stack: StackElement[]
       }
       tokenizer: ParsedTokenInfo
