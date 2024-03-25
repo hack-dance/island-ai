@@ -23,7 +23,6 @@ export class FunctionCallExtractor {
 
   private processFunctionCalls() {
     //TODO: need to start processing before we get to the end of this block
-
     const invokeRegex = /<invoke>([\s\S]*?)<\/invoke>/g
     let invokeMatch
 
@@ -38,7 +37,7 @@ export class FunctionCallExtractor {
     const newFunctionName = toolNameMatch ? toolNameMatch[1] : undefined
 
     if (this.currentFunctionName !== newFunctionName) {
-      this.finishCurrentFunctionCall()
+      // this.finishCurrentFunctionCall()
       this.currentFunctionName = newFunctionName
       this.currentArgs = {}
       // this.isInInvokeBlock = true
@@ -119,7 +118,7 @@ export class FunctionCallExtractor {
       }
 
       this.currentArgs = args
-      this.updateFunctions()
+      // this.updateFunctions()
     }
 
     return args

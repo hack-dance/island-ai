@@ -1,5 +1,9 @@
 import { createLLMClient } from "@/index"
 
+// import { z } from "zod"
+
+// import ZodStream, { OAIStream } from "../../zod-stream"
+
 const anthropicClient = createLLMClient({
   provider: "anthropic"
 })
@@ -44,3 +48,22 @@ const completion = await anthropicClient.chat.completions.create({
 for await (const data of completion) {
   console.log(JSON.stringify(data, null, 2))
 }
+
+// const client = new ZodStream({ debug: true })
+
+// const stream = await client.create({
+//   completionPromise: async () => {
+//     return OAIStream({ res: completion })
+//   },
+//   response_model: {
+//     schema: z.object({
+//       name: z.string()
+//     })
+//   }
+// })
+
+// for await (const chunk of stream) {
+//   console.log(chunk, "yo yo ")
+// }
+
+// console.log("over?")

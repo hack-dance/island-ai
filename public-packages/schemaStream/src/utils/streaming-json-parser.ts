@@ -172,7 +172,7 @@ export class SchemaStream {
     parser: {
       state: TokenParserState
       key: string | number | undefined
-      mode: TokenParserMode
+      mode: TokenParserMode | undefined
       stack: StackElement[]
     }
     tokenizer: ParsedTokenInfo
@@ -237,8 +237,13 @@ export class SchemaStream {
     const stream = new TransformStream({
       transform: async (chunk, controller): Promise<void> => {
         try {
-          parser.write(chunk)
-          controller.enqueue(textEncoder.encode(JSON.stringify(this.schemaInstance)))
+          if (parser.isEnded) {
+            controller.enqueue(textEncoder.encode(JSON.stringify(this.schemaInstance)))
+            return
+          } else {
+            parser.write(chunk)
+            controller.enqueue(textEncoder.encode(JSON.stringify(this.schemaInstance)))
+          }
         } catch (e) {
           console.error(`Error in the json parser transform stream: parsing chunk`, e, chunk)
         }

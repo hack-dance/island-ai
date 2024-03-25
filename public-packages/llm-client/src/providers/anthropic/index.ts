@@ -322,24 +322,12 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
                     }
 
                     const functionCalls = extractor.extractFunctionCalls(data.delta.text)
-                    const functionCallsDefault =
-                      functionCalls?.length > 0
-                        ? functionCalls
-                        : toolChoice
-                          ? [
-                              {
-                                functionName: toolChoice,
-                                args: {}
-                              }
-                            ]
-                          : []
-
-                    finalChatCompletion.choices[0].delta.tool_calls = functionCallsDefault.map(
+                    finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
                       ({ functionName, args }, index) => ({
                         index,
                         function: {
                           name: functionName,
-                          arguments: `${JSON.stringify(args ?? {})}`
+                          arguments: `${JSON.stringify(args)}`
                         }
                       })
                     )
