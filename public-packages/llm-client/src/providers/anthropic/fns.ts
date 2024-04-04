@@ -39,6 +39,7 @@ export class FunctionCallExtractor {
     this.processFunctionCalls()
     const extractedCalls = this.functionCalls
     this.functionCalls = []
+
     return extractedCalls
   }
 
@@ -130,10 +131,12 @@ export class FunctionCallExtractor {
   ): Record<string, unknown> {
     const args: Record<string, unknown> = {}
     const parameterRegex = /<(\w+)>([\s\S]*?)<\/\1>/g
+
     let paramMatch
 
     while ((paramMatch = parameterRegex.exec(parametersBlock))) {
-      const [_, paramName, paramValue] = paramMatch
+      const [_, paramName, paramValueRaw] = paramMatch
+      const paramValue = cleanRawFunctionArgs(paramValueRaw)
 
       if (isJSONSchema7(schema)) {
         if (schema.properties && schema.properties[paramName]) {
@@ -234,4 +237,11 @@ export function formatFunctionResults(functionName: string, result: string): str
       <stdout>${result}</stdout>
     </result>
   </function_results>`
+}
+
+export function cleanRawFunctionArgs(rawArgs: string): string {
+  // remove control characters
+  const cleanedArgs = rawArgs.replace(/[\x00-\x1F\x7F-\x9F]/g, "")
+
+  return cleanedArgs
 }

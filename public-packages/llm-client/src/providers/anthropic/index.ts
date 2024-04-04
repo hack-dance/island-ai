@@ -45,6 +45,8 @@ export type AnthropicMessageCompletionPayload = {
   top_k?: number
 }
 
+type LogLevel = "debug" | "info" | "warn" | "error"
+
 /**
  * AnthropicProvider is a class that provides an interface for interacting with the Anthropic API.
  * It implements the OpenAILikeClient interface and allows users to create chat completions using
@@ -54,12 +56,42 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
   public apiKey: string
   public baseURL: string = "https://api.anthropic.com/v1"
   public models = anthropicModels
+  public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
+
+  private log<T extends unknown[]>(level: LogLevel, ...args: T) {
+    const timestamp = new Date().toISOString()
+    switch (level) {
+      case "debug":
+        if (this.logLevel === "debug") {
+          console.debug(`[ZodStream-CLIENT:DEBUG] ${timestamp}:`, ...args)
+        }
+        break
+      case "info":
+        if (this.logLevel === "debug" || this.logLevel === "info") {
+          console.info(`[ZodStream-CLIENT:INFO] ${timestamp}:`, ...args)
+        }
+        break
+      case "warn":
+        if (this.logLevel === "debug" || this.logLevel === "info" || this.logLevel === "warn") {
+          console.warn(`[ZodStream-CLIENT:WARN] ${timestamp}:`, ...args)
+        }
+        break
+      case "error":
+        console.error(`[ZodStream-CLIENT:ERROR] ${timestamp}:`, ...args)
+        break
+    }
+  }
 
   /**
    * Constructs a new instance of the AnthropicProvider class.
    * @param opts - An optional ClientOptions object containing the API key.
    */
-  constructor(opts?: ClientOptions) {
+  constructor(
+    opts?: ClientOptions & {
+      logLevel?: LogLevel
+    }
+  ) {
+    this.logLevel = opts?.logLevel ?? this.logLevel
     const apiKey = opts?.apiKey ?? process.env?.["ANTHROPIC_API_KEY"] ?? null
 
     if (!apiKey) {
@@ -90,6 +122,8 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       "anthropic-version": "2023-06-01"
     }
 
+    this.log("debug", `Anthropic API request: ${method} ${this.baseURL}/${url}`, body)
+
     try {
       return fetch(`${this.baseURL}/${url}`, {
         method,
@@ -114,6 +148,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
     { stream }: { stream?: boolean } = {}
   ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
     if (!result.id) throw new Error("Response id is undefined")
+
     const toolChoice =
       typeof params?.tool_choice === "object" && "function" in params?.tool_choice
         ? params?.tool_choice?.function?.name
@@ -121,6 +156,7 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
 
     const schema = (params.tools ?? []).find(tool => tool.function.name === toolChoice)?.function
       ?.parameters as JSONSchema7Object
+
     const extractor = new FunctionCallExtractor(schema)
 
     const transformedResponse = {
@@ -285,11 +321,12 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
       throw new Error("Failed to get stream reader")
     }
 
-    const schema = (params.tools ?? []).find(tool => tool.function.name === toolChoice)?.function
-      ?.parameters as JSONSchema7Object
+    const schema = toolChoice
+      ? ((params.tools ?? []).find(tool => tool.function.name === toolChoice)?.function
+          ?.parameters as JSONSchema7Object)
+      : undefined
 
-    const extractor = new FunctionCallExtractor(schema)
-
+    const extractor = schema ? new FunctionCallExtractor(schema) : undefined
     let finalChatCompletion: ExtendedCompletionChunkAnthropic | null = null
 
     const decoder = new TextDecoder("utf-8")
@@ -309,11 +346,24 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
             const [_, eventData] = line.split("data:")
 
             if (!eventData) {
-              console.warn("Skipping line without event data:", line)
+              console.warn("Skipping line with no event data:", line)
               continue
             }
 
-            const data = JSON.parse(eventData.trim())
+            let data
+            try {
+              data = JSON.parse(eventData.trim())
+            } catch (error) {
+              console.log(eventData)
+              console.error("Error parsing event data:", error)
+              throw error
+            }
+
+            if (!data) {
+              console.log(eventData)
+              console.warn("Skipping line without valid data:", line)
+              continue
+            }
 
             switch (data.type) {
               case "message_start":
@@ -322,28 +372,32 @@ export class AnthropicProvider implements OpenAILikeClient<"anthropic"> {
                 })) as ExtendedCompletionChunkAnthropic
 
                 yield finalChatCompletion
+
                 continue
 
               case "content_block_delta":
                 if (data.delta && data.delta.text) {
                   if (finalChatCompletion && finalChatCompletion.choices) {
-                    if (data.delta.text && !toolChoice) {
+                    if (data.delta.text) {
                       finalChatCompletion.choices[0].delta = {
                         content: data.delta.text,
                         role: "assistant"
                       }
                     }
 
-                    const functionCalls = extractor.extractFunctionCalls(data.delta.text)
-                    finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
-                      ({ functionName, args }, index) => ({
-                        index,
-                        function: {
-                          name: functionName,
-                          arguments: `${JSON.stringify(args)}`
-                        }
-                      })
-                    )
+                    if (extractor) {
+                      const functionCalls = extractor.extractFunctionCalls(data.delta.text)
+                      finalChatCompletion.choices[0].delta.tool_calls =
+                        finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
+                          ({ functionName, args }, index) => ({
+                            index,
+                            function: {
+                              name: functionName,
+                              arguments: `${JSON.stringify(args)}`
+                            }
+                          })
+                        )
+                    }
                   }
 
                   yield finalChatCompletion as ExtendedCompletionChunkAnthropic

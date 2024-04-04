@@ -9,7 +9,7 @@ describe("LLMClient Anthropic Provider", () => {
 
   test("Function Calling standard", async () => {
     const completion = await anthropicClient.chat.completions.create({
-      model: "claude-3-opus-20240229",
+      model: "claude-3-sonnet-20240229",
       max_tokens: 1000,
       messages: [
         {
@@ -58,9 +58,9 @@ describe("LLMClient Anthropic Provider", () => {
 
   test("Function Calling complex schema", async () => {
     const completion = await anthropicClient.chat.completions.create({
-      model: "claude-3-opus-20240229",
-      max_tokens: 1000,
+      model: "claude-3-sonnet-20240229",
       stream: true,
+      max_tokens: 1000,
       messages: [
         {
           role: "user",
@@ -101,6 +101,11 @@ describe("LLMClient Anthropic Provider", () => {
             parameters: {
               type: "object",
               properties: {
+                story: {
+                  type: "string",
+                  description:
+                    "The user's a minimum 500 word story made up story about the user - in valid markdown."
+                },
                 userDetails: {
                   type: "object",
                   properties: {
@@ -160,11 +165,13 @@ describe("LLMClient Anthropic Provider", () => {
 
     let final = {}
     for await (const data of completion) {
+      if (data.choices?.[0]?.finish_reason === "stop") {
+        break
+      }
       final = data
-      console.log(JSON.stringify(final, null, 2))
     }
 
-    console.log(JSON.stringify(final, null, 2), "final final")
+    console.log(final, "final final")
     expect(final).toBeDefined()
   })
 
