@@ -145,6 +145,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     if (!stream) {
       const content = result.content.map(choice => choice.text).join("")
       const functionCalls = extractor.extractFunctionCalls(content) ?? []
+
       const tool_calls = functionCalls.map(({ functionName, args }, index) => ({
         id: `${index}-${functionName}`,
         type: "function" as const,
@@ -176,7 +177,21 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
         object: "chat.completion.chunk",
         choices: [
           {
-            delta: {},
+            delta: {
+              tool_calls: [
+                ...(toolChoice
+                  ? [
+                      {
+                        index: 0,
+                        function: {
+                          name: toolChoice,
+                          arguments: ``
+                        }
+                      }
+                    ]
+                  : [])
+              ]
+            },
             finish_reason: null,
             index: 0
           }
@@ -293,13 +308,9 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
       ? ((params.tools ?? []).find(tool => tool.function.name === toolChoice)?.function
           ?.parameters as JSONSchema7Object)
       : undefined
-
     const extractor = schema
-      ? new FunctionCallExtractor(schema, {
-          logger: this.log.bind(this)
-        })
+      ? new FunctionCallExtractor(schema, { logger: this.log.bind(this) })
       : undefined
-
     let finalChatCompletion: ExtendedCompletionChunkAnthropic | null = null
 
     for await (const data of response) {
@@ -311,7 +322,6 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           })) as ExtendedCompletionChunkAnthropic
 
           yield finalChatCompletion
-
           continue
 
         case "content_block_delta":
@@ -326,7 +336,8 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
 
               if (extractor) {
                 const functionCalls = extractor.extractFunctionCalls(data.delta.text)
-                finalChatCompletion.choices[0].delta.tool_calls =
+                if (functionCalls.length > 0) {
+                  // Replace the stubbed tool call with the extracted function call
                   finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
                     ({ functionName, args }, index) => ({
                       index,
@@ -336,12 +347,12 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
                       }
                     })
                   )
+                }
               }
             }
 
             yield finalChatCompletion as ExtendedCompletionChunkAnthropic
           }
-
           continue
 
         case "content_block_stop":
