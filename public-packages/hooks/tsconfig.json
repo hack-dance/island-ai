@@ -5,7 +5,9 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["src", "turbo", "tsup.config.ts", "tailwind.config.ts"],
   "exclude": ["node_modules", "dist"]

@@ -6,7 +6,9 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["tests", "src", "turbo", "tsup.config.ts", "examples"],
   "exclude": ["node_modules", "dist"]

@@ -6,7 +6,9 @@
       "@/*": ["./src/*"]
     },
     "baseUrl": ".",
-    "types": ["bun-types"]
+    "types": ["bun-types"],
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["src", "turbo", "tsup.config.ts", "tests"],
   "exclude": ["node_modules", "dist"]
