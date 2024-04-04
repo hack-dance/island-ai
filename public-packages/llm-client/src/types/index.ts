@@ -26,8 +26,8 @@ export type AnthropicChatCompletionParams = Omit<
 export type OpenAILikeClient<P> = P extends "openai"
   ? OpenAI
   : P extends "anthropic"
-    ? {
-        baseURL: string
+    ? Anthropic & {
+        models: AnthropicModels[]
         chat: {
           completions: {
             create: <P extends AnthropicChatCompletionParams>(

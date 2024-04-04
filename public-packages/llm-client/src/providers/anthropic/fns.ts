@@ -1,5 +1,7 @@
 import { JSONSchema7 } from "json-schema"
 
+import { LogLevel } from "."
+
 export type JSONSchema7Object = JSONSchema7["properties"] & {
   properties: JSONSchema7["properties"]
 }
@@ -29,9 +31,20 @@ export class FunctionCallExtractor {
   // private isInInvokeBlock: boolean = false
   private currentParameterName: string | undefined
   private schema?: JSONSchema7Object
+  private log: (level: LogLevel, ...args: unknown[]) => void
 
-  constructor(schema?: JSONSchema7Object) {
+  constructor(
+    schema: JSONSchema7Object,
+    {
+      logger
+    }: {
+      logger: (level: LogLevel, ...args: unknown[]) => void
+    }
+  ) {
+    this.log = logger
     this.schema = schema
+
+    this.log("debug", "FunctionCallExtractor initialized")
   }
 
   extractFunctionCalls(chunk: string): FunctionCall[] {

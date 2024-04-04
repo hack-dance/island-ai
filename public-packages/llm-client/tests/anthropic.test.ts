@@ -1,10 +1,11 @@
 import { createLLMClient } from "@/index"
+import { ExtendedCompletionChunkAnthropic } from "@/types"
 import { describe, expect, test } from "bun:test"
-import OpenAI from "openai"
 
 describe("LLMClient Anthropic Provider", () => {
   const anthropicClient = createLLMClient({
-    provider: "anthropic"
+    provider: "anthropic",
+    logLevel: "error"
   })
 
   test("Function Calling standard", async () => {
@@ -163,16 +164,12 @@ describe("LLMClient Anthropic Provider", () => {
       ]
     })
 
-    let final = {}
+    let final = {} as ExtendedCompletionChunkAnthropic
     for await (const data of completion) {
-      if (data.choices?.[0]?.finish_reason === "stop") {
-        break
-      }
       final = data
     }
 
-    console.log(final, "final final")
-    expect(final).toBeDefined()
+    expect(final?.choices?.[0]?.delta.tool_calls).toBeDefined()
   })
 
   test("Function Calling stream", async () => {
@@ -213,14 +210,12 @@ describe("LLMClient Anthropic Provider", () => {
       ]
     })
 
-    let final: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] = []
+    let final = {} as ExtendedCompletionChunkAnthropic
     for await (const data of completion) {
-      if (data?.choices?.[0]?.delta.tool_calls) {
-        final = data?.choices?.[0]?.delta.tool_calls
-      }
+      final = data
     }
 
-    expect(final).toEqual([
+    expect(final?.choices?.[0]?.delta.tool_calls).toEqual([
       {
         index: 0,
         function: {
