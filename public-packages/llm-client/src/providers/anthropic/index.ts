@@ -1,51 +1,13 @@
 import {
   AnthropicChatCompletionParams,
-  AnthropicModels,
+  AnthropicChatCompletionParamsNonStream,
+  AnthropicChatCompletionParamsStream,
   ExtendedCompletionAnthropic,
   ExtendedCompletionChunkAnthropic,
   OpenAILikeClient
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
-import { MessageStream } from "@anthropic-ai/sdk/lib/MessageStream.mjs"
 import OpenAI, { ClientOptions } from "openai"
-
-import { FunctionCallExtractor, JSONSchema7Object, renderParameter } from "./fns"
-
-export const anthropicModels = ["claude-3-opus-20240229", "claude-3-sonnet-20240229"]
-
-export type AnthropicMessageContentBlock = {
-  type: "text" | "image"
-  text?: string
-  source?: {
-    type: "base64"
-    media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
-    data: string
-  }
-}
-
-export type AnthropicMessageContent = string | AnthropicMessageContentBlock[]
-
-export type AnthropicMessageRole = "user" | "assistant"
-
-export type AnthropicMessage = {
-  role: AnthropicMessageRole
-  content: AnthropicMessageContent
-}
-
-export type AnthropicMessageCompletionPayload = {
-  model: string
-  messages: AnthropicMessage[]
-  system?: string
-  max_tokens: number
-  metadata?: {
-    user_id?: string
-  }
-  stop_sequences?: string[]
-  stream?: boolean
-  temperature?: number
-  top_p?: number
-  top_k?: number
-}
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
 
@@ -56,7 +18,6 @@ export type LogLevel = "debug" | "info" | "warn" | "error"
  */
 export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"anthropic"> {
   public apiKey: string
-  public models = anthropicModels as AnthropicModels[]
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
 
   private log<T extends unknown[]>(level: LogLevel, ...args: T) {
@@ -113,22 +74,20 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    * @returns A Promise that resolves to an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
    */
   private async transformResponse(
-    result: Anthropic.Messages.Message,
-    params: AnthropicChatCompletionParams,
+    result: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage,
     { stream }: { stream?: boolean } = {}
   ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
     if (!result.id) throw new Error("Response id is undefined")
+    this.log("debug", "Response:", result)
 
-    const toolChoice =
-      typeof params?.tool_choice === "object" && "function" in params?.tool_choice
-        ? params?.tool_choice?.function?.name
-        : undefined
-
-    const schema = (params.tools ?? []).find(tool => tool.function.name === toolChoice)?.function
-      ?.parameters as JSONSchema7Object
-
-    const extractor = new FunctionCallExtractor(schema, {
-      logger: this.log.bind(this)
+    result.content.forEach(content => {
+      content.type === "tool_use"
+        ? this.log("info", "JSON Summary:", JSON.stringify(content.input, null, 2))
+        : this.log(
+            "info",
+            "No JSON summary found in the response.",
+            JSON.stringify(content, null, 2)
+          )
     })
 
     const transformedResponse = {
@@ -143,17 +102,24 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     }
 
     if (!stream) {
-      const content = result.content.map(choice => choice.text).join("")
-      const functionCalls = extractor.extractFunctionCalls(content) ?? []
+      const toolUseBlocks = result.content.filter(
+        block => block.type === "tool_use"
+      ) as Anthropic.Beta.Tools.ToolUseBlock[]
 
-      const tool_calls = functionCalls.map(({ functionName, args }, index) => ({
-        id: `${index}-${functionName}`,
-        type: "function" as const,
+      const resultTextBlocks = result.content.filter(
+        block => block.type === "text"
+      ) as Anthropic.TextBlock[]
+
+      const tool_calls = toolUseBlocks.map(block => ({
+        id: block.id,
+        type: "function",
         function: {
-          name: functionName,
-          arguments: JSON.stringify(args)
+          name: block.name,
+          arguments: JSON.stringify(block.input)
         }
       }))
+
+      const content = resultTextBlocks.map(choice => choice.text).join("")
 
       return {
         ...transformedResponse,
@@ -168,7 +134,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
             finish_reason: tool_calls?.length ? "tool_calls" : "stop",
             index: 0,
             logprobs: null
-          }
+          } as OpenAI.ChatCompletion.Choice
         ]
       }
     } else {
@@ -178,19 +144,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
         choices: [
           {
             delta: {
-              tool_calls: [
-                ...(toolChoice
-                  ? [
-                      {
-                        index: 0,
-                        function: {
-                          name: toolChoice,
-                          arguments: ``
-                        }
-                      }
-                    ]
-                  : [])
-              ]
+              content: ""
             },
             finish_reason: null,
             index: 0
@@ -205,27 +159,19 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    * @param params - The OpenAI chat completion parameters.
    * @returns The transformed Anthropic chat completion parameters.
    */
-  private transformParams(
-    params: OpenAI.ChatCompletionCreateParams
-  ):
-    | Anthropic.Messages.MessageCreateParamsStreaming
-    | Anthropic.Messages.MessageCreateParamsNonStreaming {
-    const systemMessages = params.messages.filter(
-      (message: OpenAI.ChatCompletionMessageParam) => message.role === "system"
-    )
-    const supportedMessages = params.messages.filter(
-      (message: OpenAI.ChatCompletionMessageParam) => message.role !== "system"
-    )
+  private transformParamsRegular(
+    params: AnthropicChatCompletionParams
+  ): Anthropic.Beta.Tools.Messages.MessageCreateParamsNonStreaming {
+    let tools: Anthropic.Beta.Tools.Tool[] = []
 
-    const messages = supportedMessages.map((message: OpenAI.ChatCompletionMessageParam) => ({
-      role: message.role,
-      content: message.content
-    })) as Anthropic.MessageParam[]
+    const systemMessages = params.messages.filter(message => message.role === "system")
 
-    let system = systemMessages?.length
-      ? systemMessages
-          .map((message: OpenAI.ChatCompletionMessageParam) => message.content)
-          .join("\n")
+    const messages = params.messages.filter(
+      message => message.role === "user" || message.role === "assistant"
+    ) as Anthropic.Beta.Tools.ToolsBetaMessageParam[]
+
+    const system = systemMessages?.length
+      ? systemMessages.map(message => message.content).join("\n")
       : ""
 
     if (systemMessages.length) {
@@ -238,44 +184,64 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
       throw new Error("max_tokens is required")
     }
 
-    if (params.tools && params.tools.length > 0) {
-      system += `
-      In this environment you have access to a set of tools you can use to answer the user's question.
-
-      You may call them like this:
-
-      <function_calls>
-      <invoke>
-      <tool_name>$TOOL_NAME</tool_name>
-      <parameters>
-      <$PARAMETER_NAME>$PARAMETER_VALUE</$PARAMETER_NAME>
-      ...
-      </parameters>
-      </invoke>
-      </function_calls>
-
-      Here are the tools available:
-      <tools>
-      ${params.tools
-        .map(tool => {
-          const parameterXML = renderParameter(tool.function.parameters as JSONSchema7Object)
-          return `<tool_description>
-            <tool_name>${tool.function.name}</tool_name>
-            <description>${tool.function.description}</description>
-            <parameters>${parameterXML}</parameters>
-          </tool_description>`
-        })
-        .join("\n")}
-    </tools>`
+    if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
+      tools = params.tools.map(tool => ({
+        name: tool.function.name ?? "",
+        description: tool.function.description ?? "",
+        input_schema: {
+          type: "object",
+          ...tool.function.parameters
+        }
+      }))
     }
 
     if (
-      params.tool_choice &&
+      "tool_choice" in params &&
       typeof params.tool_choice === "object" &&
-      "function" in params.tool_choice &&
-      params.tool_choice.function.name
+      "function" in params.tool_choice
     ) {
-      system += `//(System request): \n\n<tool_choice><tool_name>${params.tool_choice.function.name}</tool_name></tool_choice>\n`
+      messages[messages.length - 1].content +=
+        `\n\nUse the ${params.tool_choice.function.name} tool in your response`
+    }
+
+    return {
+      model: params.model,
+      tools,
+      system: system?.length ? system : undefined,
+      messages,
+      max_tokens: params.max_tokens,
+      stop_sequences: params.stop
+        ? Array.isArray(params.stop)
+          ? params.stop
+          : [params.stop]
+        : undefined,
+      temperature: params.temperature ?? undefined,
+      top_p: params.top_p ?? undefined,
+      top_k: params.n ?? undefined,
+      stream: false
+    }
+  }
+
+  private transformParamsStream(
+    params: AnthropicChatCompletionParams
+  ): Anthropic.Messages.MessageCreateParamsStreaming {
+    const systemMessages = params.messages.filter(message => message.role === "system")
+    const messages = params.messages.filter(
+      message => message.role === "user" || message.role === "assistant"
+    ) as Anthropic.MessageParam[]
+
+    const system = systemMessages?.length
+      ? systemMessages.map(message => message.content).join("\n")
+      : ""
+
+    if (systemMessages.length) {
+      console.warn(
+        "Anthropic does not support system messages - concatenating them all into a single 'system' property."
+      )
+    }
+
+    if (!params.max_tokens) {
+      throw new Error("max_tokens is required")
     }
 
     return {
@@ -291,7 +257,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
       temperature: params.temperature ?? undefined,
       top_p: params.top_p ?? undefined,
       top_k: params.n ?? undefined,
-      stream: params.stream ?? false
+      stream: true
     }
   }
 
@@ -301,23 +267,15 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    * @returns An asynchronous iterable of ExtendedCompletionChunkAnthropic objects.
    */
   private async *streamChatCompletion(
-    response: MessageStream,
-    { toolChoice, params }: { toolChoice?: string; params: AnthropicChatCompletionParams }
+    response: AsyncIterable<Anthropic.MessageStreamEvent>
   ): AsyncIterable<ExtendedCompletionChunkAnthropic> {
-    const schema = toolChoice
-      ? ((params.tools ?? []).find(tool => tool.function.name === toolChoice)?.function
-          ?.parameters as JSONSchema7Object)
-      : undefined
-    const extractor = schema
-      ? new FunctionCallExtractor(schema, { logger: this.log.bind(this) })
-      : undefined
     let finalChatCompletion: ExtendedCompletionChunkAnthropic | null = null
 
     for await (const data of response) {
       switch (data.type) {
         case "message_start":
           this.log("debug", "Message start:", data)
-          finalChatCompletion = (await this.transformResponse(data.message, params, {
+          finalChatCompletion = (await this.transformResponse(data.message, {
             stream: true
           })) as ExtendedCompletionChunkAnthropic
 
@@ -333,22 +291,6 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
                   role: "assistant"
                 }
               }
-
-              if (extractor) {
-                const functionCalls = extractor.extractFunctionCalls(data.delta.text)
-                if (functionCalls.length > 0) {
-                  // Replace the stubbed tool call with the extracted function call
-                  finalChatCompletion.choices[0].delta.tool_calls = functionCalls.map(
-                    ({ functionName, args }, index) => ({
-                      index,
-                      function: {
-                        name: functionName,
-                        arguments: `${JSON.stringify(args)}`
-                      }
-                    })
-                  )
-                }
-              }
             }
 
             yield finalChatCompletion as ExtendedCompletionChunkAnthropic
@@ -359,7 +301,6 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           this.log("debug", "Content block stop:", data)
 
           if (finalChatCompletion && finalChatCompletion.choices) {
-            // finalChatCompletion.choices[0].delta = {}
             finalChatCompletion.choices[0].finish_reason = "stop"
           }
 
@@ -378,39 +319,47 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    * @returns A Promise that resolves to an ExtendedCompletionAnthropic object or an asynchronous iterable of ExtendedCompletionChunkAnthropic objects if streaming is enabled.
    */
   public async create(
-    params: Omit<AnthropicChatCompletionParams, "stream"> & {
-      stream: true
-    }
+    params: AnthropicChatCompletionParamsStream
   ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
 
-  public async create(params: AnthropicChatCompletionParams): Promise<ExtendedCompletionAnthropic>
+  public async create(
+    params: AnthropicChatCompletionParamsNonStream
+  ): Promise<ExtendedCompletionAnthropic>
 
   public async create(
     params: AnthropicChatCompletionParams
   ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic> | ExtendedCompletionAnthropic> {
     try {
       if (params.stream) {
-        const anthropicParams = this.transformParams(params)
+        //@ts-expect-error if tools get passed in even if type errors throw, we should explictly throw here
+        if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
+          throw new Error("Streaming is not currently supported with tools in the Anthropic API.")
+        }
+
+        const anthropicParams = this.transformParamsStream(params)
         this.log("debug", "Starting streaming completion response")
+
         const messageStream = await this.messages.stream({
           ...anthropicParams
         })
 
-        return this.streamChatCompletion(messageStream, {
-          params,
-          toolChoice:
-            typeof params?.tool_choice === "object" && "function" in params?.tool_choice
-              ? params?.tool_choice?.function?.name
-              : undefined
-        })
+        return this.streamChatCompletion(messageStream)
       } else {
-        const anthropicParams = this.transformParams(params)
-        const result = await this.messages.create({
-          ...anthropicParams,
-          stream: false
-        })
+        const anthropicParams = this.transformParamsRegular(params)
 
-        const transformedResult = await this.transformResponse(result, params)
+        const result = await this.beta.tools.messages.create(
+          {
+            ...anthropicParams,
+            stream: false
+          },
+          {
+            headers: {
+              "anthropic-beta": "tools-2024-04-04"
+            }
+          }
+        )
+
+        const transformedResult = await this.transformResponse(result)
 
         return transformedResult as ExtendedCompletionAnthropic
       }
