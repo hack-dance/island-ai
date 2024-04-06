@@ -1,6 +1,6 @@
 # llm-polyglot
 
-**this is in alpha and not ready for production use - documentation is incomplete**
+**this is still in beta and may not be ready for production use - documentation is incomplete**
 
 ---
 
@@ -100,7 +100,10 @@ for await (const data of completion) {
 ```
 
 ### Function Calling
-The llm-polyglot library supports function calling for the Anthropic API. To use this feature, you need to provide the tool_choice and tools options in the create method:
+The llm-polyglot library supports function calling for the Anthropic API. To use this feature, you need to provide the tool_choice (optional) and tools options in the create method
+
+Anthropic does not support the tool_choice option, so this instead appends the instruction to use the provided tool to the latest user message.
+
 ```typescript
 const completion = await anthropicClient.chat.completions.create({
   model: "claude-3-opus-20240229",
@@ -133,6 +136,7 @@ const completion = await anthropicClient.chat.completions.create({
   ]
 });
 ```
+
 The tool_choice option specifies the function to call, and the tools option defines the available functions and their parameters. The response from the Anthropic API will include the function call and its arguments in the tool_calls field.
 
 
