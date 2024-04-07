@@ -3,31 +3,59 @@ import OpenAI from "openai"
 
 export type Providers = "openai" | "anthropic"
 
+type SupportedChatCompletionMessageParam = Omit<
+  OpenAI.ChatCompletionCreateParams["messages"][number],
+  "content"
+> & {
+  content:
+    | string
+    | (
+        | Anthropic.Messages.TextBlockParam
+        | Anthropic.Messages.ImageBlockParam
+        | Anthropic.Beta.Tools.Messages.ToolUseBlockParam
+        | Anthropic.Beta.Tools.Messages.ToolResultBlockParam
+      )[]
+}
+
 export type ExtendedCompletionAnthropic = Partial<OpenAI.ChatCompletion> & {
-  originResponse: Anthropic.Messages.Message
+  originResponse: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage
 }
 
 export type ExtendedCompletionChunkAnthropic = Partial<OpenAI.ChatCompletionChunk> & {
-  originResponse: Anthropic.Messages.Message
+  originResponse: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage
 }
 
-export type AnthropicModels = "claude-3-opus-20240229" | "claude-3-sonnet-20240229"
-
-export type AnthropicChatCompletionParams = Omit<
+export type AnthropicChatCompletionParamsStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
-  "model"
+  "model" | "messages" | "tools" | "tool_choice"
 > & {
-  model: AnthropicModels
-  messages: OpenAI.ChatCompletionCreateParams["messages"]
-  stream?: boolean
+  model: Anthropic.CompletionCreateParams["model"]
+  messages: SupportedChatCompletionMessageParam[]
+  stream: true
+  max_tokens: number
+  tools?: undefined
+  tool_choice?: undefined
+}
+
+export type AnthropicChatCompletionParamsNonStream = Omit<
+  Partial<OpenAI.ChatCompletionCreateParams>,
+  "model" | "messages"
+> & {
+  model: Anthropic.CompletionCreateParams["model"]
+  messages: SupportedChatCompletionMessageParam[]
+  stream?: false | undefined
   max_tokens: number
 }
+
+export type AnthropicChatCompletionParams =
+  | AnthropicChatCompletionParamsStream
+  | AnthropicChatCompletionParamsNonStream
 
 export type OpenAILikeClient<P> = P extends "openai"
   ? OpenAI
   : P extends "anthropic"
-    ? {
-        baseURL: string
+    ? Anthropic & {
+        [key: string]: unknown
         chat: {
           completions: {
             create: <P extends AnthropicChatCompletionParams>(

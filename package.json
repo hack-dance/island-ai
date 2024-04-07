@@ -32,5 +32,6 @@
     "apps/*",
     "packages/*",
     "public-packages/*"
-  ]
+  ],
+  "dependencies": {}
 }
