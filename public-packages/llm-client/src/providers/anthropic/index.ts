@@ -66,6 +66,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
   }
+  [key: string]: unknown
 
   /**
    * Transforms the Anthropic API response into an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
@@ -82,9 +83,9 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
 
     result.content.forEach(content => {
       content.type === "tool_use"
-        ? this.log("info", "JSON Summary:", JSON.stringify(content.input, null, 2))
+        ? this.log("debug", "JSON Summary:", JSON.stringify(content.input, null, 2))
         : this.log(
-            "info",
+            "debug",
             "No JSON summary found in the response.",
             JSON.stringify(content, null, 2)
           )

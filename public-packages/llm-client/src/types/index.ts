@@ -55,6 +55,7 @@ export type OpenAILikeClient<P> = P extends "openai"
   ? OpenAI
   : P extends "anthropic"
     ? Anthropic & {
+        [key: string]: unknown
         chat: {
           completions: {
             create: <P extends AnthropicChatCompletionParams>(
