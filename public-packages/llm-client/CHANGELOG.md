@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 1.0.0
+
+### Major Changes
+
+- [#48](https://github.com/hack-dance/island-ai/pull/48) [`5fc272d`](https://github.com/hack-dance/island-ai/commit/5fc272d12f7dafb8af3dce04ee400e75203665f4) Thanks [@roodboi](https://github.com/roodboi)! - Updating anthropic provider to use the new tools api that supports json out the box - this moves away from the xml parsing in and out and intro=duces a new limitation in that you can no longer stream tool output - prevously we allowed it although we would only stream content and the tool output wouldnt be available until the end so this isnt really much of a reduction in functionality as it is getting things more inline with what hte underlying api currently supports - because of the signifigant changes this does require a major bump
+
 ## 0.0.3
 
 ### Patch Changes
