@@ -6,6 +6,11 @@ interface OaiStreamArgs {
   res: AsyncIterable<OpenAI.ChatCompletionChunk>
 }
 
+function stripControlCharacters(str: string): string {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/[\x00-\x1F\x7F-\x9F]/g, "")
+}
+
 /**
  * `OaiStream` creates a ReadableStream that parses the SSE response from OAI
  * and returns a parsed string from the response.
@@ -44,7 +49,7 @@ export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
   return new ReadableStream({
     async start(controller) {
       for await (const parsedData of generator) {
-        controller.enqueue(encoder.encode(parsedData))
+        controller.enqueue(encoder.encode(stripControlCharacters(parsedData)))
       }
 
       controller.close()
@@ -76,7 +81,9 @@ export async function* readableStreamToAsyncGenerator(
       break
     }
 
-    yield JSON.parse(decoder.decode(value))
+    // stripping a second time to be safe.
+    const decodedString = stripControlCharacters(decoder.decode(value))
+    yield JSON.parse(decodedString)
   }
 
   return
