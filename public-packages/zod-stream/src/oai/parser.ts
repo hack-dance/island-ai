@@ -60,6 +60,7 @@ export function OAIResponseJSONParser(
     | OpenAI.Chat.Completions.ChatCompletion
 ): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
+
   const text =
     parsedData.choices?.[0].delta?.content ?? parsedData?.choices[0]?.message?.content ?? ""
 
