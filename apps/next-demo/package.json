@@ -1,6 +1,6 @@
 {
   "name": "island-next-demos",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "private": true,
   "scripts": {
     "dev": "next dev --port=4000",
