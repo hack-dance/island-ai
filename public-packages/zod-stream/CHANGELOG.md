@@ -1,5 +1,11 @@
 # zod-stream
 
+## 1.0.2
+
+### Patch Changes
+
+- [#50](https://github.com/hack-dance/island-ai/pull/50) [`6a018c6`](https://github.com/hack-dance/island-ai/commit/6a018c6d9623120296a3abe954cb43f6209ac937) Thanks [@roodboi](https://github.com/roodboi)! - remove control characthers from string
+
 ## 1.0.1
 
 ### Patch Changes
