@@ -17,7 +17,7 @@ function relevanceEval() {
 
   return createEvaluator({
     client: oai,
-    model: "gpt-4-1106-preview",
+    model: "gpt-4-turbo",
     evaluationDescription
   })
 }
@@ -28,7 +28,7 @@ function fluencyEval() {
 
   return createEvaluator({
     client: oai,
-    model: "gpt-4-1106-preview",
+    model: "gpt-4-turbo",
     evaluationDescription
   })
 }
@@ -39,7 +39,7 @@ function completenessEval() {
 
   return createEvaluator({
     client: oai,
-    model: "gpt-4-1106-preview",
+    model: "gpt-4-turbo",
     evaluationDescription
   })
 }
@@ -51,6 +51,8 @@ describe("Should eval", () => {
     const result = await evaluator({
       data: data
     })
+
+    console.log(result)
 
     expect(omit(["results"], result)).toEqual({
       scoreResults: {

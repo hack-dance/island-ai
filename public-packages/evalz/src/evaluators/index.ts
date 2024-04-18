@@ -1,6 +1,7 @@
 import { EvaluationResponse, Evaluator, ExecuteEvalParams, ResultsType } from "@/types"
+import createInstructor from "@instructor-ai/instructor"
+import OpenAI from "openai"
 import z from "zod"
-import { createAgent, type CreateAgentParams } from "zod-stream"
 
 import { CUSTOM_EVALUATOR_IDENTITY, RESULTS_TYPE_PROMPT } from "@/constants/prompts"
 
@@ -17,47 +18,45 @@ export function createEvaluator<T extends ResultsType>({
 }: {
   resultsType?: T
   evaluationDescription: string
-  model?: CreateAgentParams["defaultClientOptions"]["model"]
-  messages?: CreateAgentParams["defaultClientOptions"]["messages"]
-  client: CreateAgentParams["client"]
+  model?: OpenAI.Model["id"]
+  messages?: OpenAI.ChatCompletionMessageParam[]
+  client: OpenAI
 }): Evaluator<T> {
   if (!evaluationDescription || typeof evaluationDescription !== "string") {
     throw new Error("Evaluation description was not provided.")
   }
 
-  const execute = async ({ data }: ExecuteEvalParams): Promise<EvaluationResponse<T>> => {
-    const agent = createAgent({
-      client,
-      response_model: {
-        schema: scoringSchema,
-        name: "Scoring"
-      },
-      defaultClientOptions: {
-        model: model ?? "gpt-4-1106-preview",
-        messages: [
-          {
-            role: "system",
-            content: CUSTOM_EVALUATOR_IDENTITY
-          },
-          {
-            role: "system",
-            content: RESULTS_TYPE_PROMPT[resultsType]
-          },
-          {
-            role: "system",
-            content: evaluationDescription
-          },
-          ...(messages ?? [])
-        ]
-      }
-    })
+  const instructorClient = createInstructor<OpenAI>({
+    client,
+    mode: "TOOLS"
+  })
 
+  const execute = async ({ data }: ExecuteEvalParams): Promise<EvaluationResponse<T>> => {
     const evaluationResults = await Promise.all(
       data.map(async item => {
         const { prompt, completion, expectedCompletion } = item
 
-        const response = await agent.completion({
+        const response = await instructorClient.chat.completions.create({
+          max_retries: 3,
+          model: model ?? "gpt-4-turbo",
+          response_model: {
+            schema: scoringSchema,
+            name: "Scoring"
+          },
           messages: [
+            {
+              role: "system",
+              content: CUSTOM_EVALUATOR_IDENTITY
+            },
+            {
+              role: "system",
+              content: RESULTS_TYPE_PROMPT[resultsType]
+            },
+            {
+              role: "system",
+              content: evaluationDescription
+            },
+            ...(messages ?? []),
             {
               role: "system",
               content: `prompt: ${prompt} \n completion: ${completion}\n  ${expectedCompletion?.length ? `expectedCompletion: ${expectedCompletion}\n` : " "}Please provide your score now:`
