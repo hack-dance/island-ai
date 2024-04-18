@@ -6,7 +6,7 @@
   <img alt="License" src="https://img.shields.io/npm/l/evalz.svg?style=flat-square&labelColor=000000">
 </div>
 
-**evalz** is a TypeScript package designed to facilitate model-graded evaluations with a focus on structured output. Leveraging Zod schemas, **evalz** streamline s the evaluation of AI-generated responses. It provides a set of tools to assess the quality of responses based on custom criteria such as relevance, fluency, and completeness. The package leverages OpenAI's GPT models to perform evaluations, offering both simple and weighted evaluation mechanisms.
+**evalz** is a TypeScript package designed to facilitate model-graded evaluations with a focus on structured output. Leveraging Zod schemas, **evalz** streamlines the evaluation of AI-generated responses. It provides a set of tools to assess the quality of responses based on custom criteria such as relevance, fluency, and completeness. The package leverages OpenAI and Instructor js (@instructor-ai/instructor) to perform structured model-graded evaluations, offering both simple and weighted evaluation mechanisms.
 
 ## Features
 
