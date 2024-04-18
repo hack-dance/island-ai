@@ -22,11 +22,11 @@
 Install `evalz` using your preferred package manager:
 
 ```bash
-npm install evalz openai zod zod-stream
+npm install evalz openai zod @instructor-ai/instructor
 
-bun add evalz openai zod zod-stream
+bun add evalz openai zod @instructor-ai/instructor
 
-pnpm add evalz openai zod zod-stream
+pnpm add evalz openai zod @instructor-ai/instructor
 ```
 
 ## Basic Usage
