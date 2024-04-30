@@ -1,7 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
-export type Providers = "openai" | "anthropic"
+// TODO: Do we want this to be an enum instead to avoid referencing strings
+// all over the place ?
+export type Providers = "openai" | "anthropic" | "azure"
 
 type SupportedChatCompletionMessageParam = Omit<
   OpenAI.ChatCompletionCreateParams["messages"][number],
@@ -51,6 +53,7 @@ export type AnthropicChatCompletionParams =
   | AnthropicChatCompletionParamsStream
   | AnthropicChatCompletionParamsNonStream
 
+// TODO: Update this type to include the Azure provider
 export type OpenAILikeClient<P> = P extends "openai"
   ? OpenAI
   : P extends "anthropic"

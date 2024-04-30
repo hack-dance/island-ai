@@ -11,12 +11,30 @@ export class LLMClient<P extends Providers> {
       provider: P
     }
   ) {
-    if (opts?.provider === "openai") {
-      this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
-    } else {
-      this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+    // TODO: Throw this in a factory
+
+    // TODO: Parameter is not optional ?
+    switch (opts?.provider) {
+        case "openai":
+            this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
+            break
+        case "anthropic":
+            // TODO: Why is this asserted as unknown before the client type ?
+            this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+            break
+        case "azure":
+            this.providerInstance = new AzureProvider(opts) as OpenAILikeClient<P>
+        default:
+            throw new Error("Unsupported LLM provider")
     }
 
+    // if (opts?.provider === "openai") {
+    //   this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
+    // } else {
+    //   this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+    // }
+
+    // TODO: What is the point of this ?
     const proxyHandler: ProxyHandler<OpenAILikeClient<P>> = {
       get: (target, prop, receiver) => {
         if (prop in target) {
