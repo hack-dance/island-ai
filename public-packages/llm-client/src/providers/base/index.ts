@@ -52,7 +52,7 @@ environment variable named ${p.apiKeyEnvVar}`
   private abstract transformParamsStream(params: P): Q;
 
   // TODO: Purpose statement + figure out types
-  private abstract transformResponse(response: P): Q;
+  private abstract transformResponse(response: P): OpenAI.ChatCompletion;
 
   public async create<P extends GenericChatCompletionParams>(
     params: P
