@@ -9,40 +9,13 @@ import {
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI, { ClientOptions } from "openai"
 
-export type LogLevel = "debug" | "info" | "warn" | "error"
-
 /**
  * AnthropicProvider is a class that provides an interface for interacting with the Anthropic API.
  * It implements the OpenAILikeClient interface and allows users to create chat completions using
  * the Anthropic API.
  */
-export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"anthropic"> {
+export class AnthropicProvider extends Anthropic implements BaseProviders<"anthropic"> {
   public apiKey: string
-  public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
-
-  private log<T extends unknown[]>(level: LogLevel, ...args: T) {
-    const timestamp = new Date().toISOString()
-    switch (level) {
-      case "debug":
-        if (this.logLevel === "debug") {
-          console.debug(`[LLM-CLIENT--ANTHROPIC-CLIENT:DEBUG] ${timestamp}:`, ...args)
-        }
-        break
-      case "info":
-        if (this.logLevel === "debug" || this.logLevel === "info") {
-          console.info(`[LLM-CLIENT--ANTHROPIC-CLIENT:INFO] ${timestamp}:`, ...args)
-        }
-        break
-      case "warn":
-        if (this.logLevel === "debug" || this.logLevel === "info" || this.logLevel === "warn") {
-          console.warn(`[LLM-CLIENT--ANTHROPIC-CLIENT:WARN] ${timestamp}:`, ...args)
-        }
-        break
-      case "error":
-        console.error(`[LLM-CLIENT--ANTHROPIC-CLIENT:ERROR] ${timestamp}:`, ...args)
-        break
-    }
-  }
 
   /**
    * Constructs a new instance of the AnthropicProvider class.

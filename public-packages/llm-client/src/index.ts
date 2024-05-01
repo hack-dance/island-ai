@@ -11,43 +11,31 @@ export class LLMClient<P extends Providers> {
       provider: P
     }
   ) {
-    // TODO: Throw this in a factory
-
-    // TODO: Parameter is not optional ?
-    switch (opts?.provider) {
-        case "openai":
-            this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
-            break
-        case "anthropic":
-            // TODO: Why is this asserted as unknown before the client type ?
-            this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
-            break
-        case "azure":
-            this.providerInstance = new AzureProvider(opts) as OpenAILikeClient<P>
-        default:
-            throw new Error("Unsupported LLM provider")
-    }
-
-    // if (opts?.provider === "openai") {
-    //   this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
-    // } else {
-    //   this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
-    // }
-
-    // TODO: What is the point of this ?
-    const proxyHandler: ProxyHandler<OpenAILikeClient<P>> = {
-      get: (target, prop, receiver) => {
-        if (prop in target) {
-          return Reflect.get(target, prop, receiver)
-        }
-      }
-    }
-
-    this.providerInstance = new Proxy(this.providerInstance, proxyHandler) as OpenAILikeClient<P>
+    this.providerInstance = constructProviderInstance(opts?.provider)
   }
 
   public getProviderInstance(): OpenAILikeClient<P> {
     return this.providerInstance
+  }
+
+  /**
+   * Factory method for model provider (eg. Azure, OpenAI, Anthropic, etc.) client instance
+   * @param {Providers} p - The name of the provider
+   * @returns {OpenAILikeClient<P extends Providers>} The client associated with 
+   * the model provider
+   */
+  private constructProviderInstance<P extends Providers>(provider: P): OpenAILikeClient<P> {
+    switch (opts?.provider) {
+      case "openai":
+        return new OpenAIProvider(opts) as OpenAILikeClient<P>
+      case "anthropic":
+        // TODO: Why is this asserted as unknown before the client type ?
+        return new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+      case "azure":
+        return new AzureProvider(opts) as OpenAILikeClient<P>
+      default:
+        throw new Error("Unsupported LLM provider")
+    }
   }
 }
 
