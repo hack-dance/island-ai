@@ -43,6 +43,9 @@ export type AnthropicChatCompletionParamsNonStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
   "model" | "messages"
 > & {
+  // TODO: The Completions API from Anthropic seems to be deprecated. I'm not even sure
+  // how the sample test in Instructor passes since the claude-3 model is not supported by this
+  // endpoint
   model: Anthropic.CompletionCreateParams["model"]
   messages: SupportedChatCompletionMessageParam[]
   stream?: false | undefined

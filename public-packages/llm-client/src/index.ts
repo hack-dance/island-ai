@@ -3,6 +3,9 @@ import { OpenAIProvider } from "@/providers/openai"
 import { OpenAILikeClient, Providers } from "@/types"
 import { ClientOptions } from "openai"
 
+// TODO: Enum to avoid throwing strings around ?
+export type LogLevel = "debug" | "info" | "warn" | "error"
+
 export class LLMClient<P extends Providers> {
   private providerInstance: OpenAILikeClient<P>
 
@@ -42,7 +45,7 @@ export class LLMClient<P extends Providers> {
 export function createLLMClient<P extends Providers>(
   opts: ClientOptions & {
     provider: P
-    logLevel?: string
+    logLevel: LogLevel = "info"
   } = { provider: "openai" as P }
 ): OpenAILikeClient<P> {
   const client = new LLMClient<P>(opts)

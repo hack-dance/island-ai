@@ -1,6 +1,5 @@
+import { LogLevel } from '../../index.ts'
 
-
-export type LogLevel = "debug" | "info" | "warn" | "error"
 export type ProviderCreationParams = ClientOptions & {
   apiKeyEnvVar: string,
   providerName: string,
@@ -13,6 +12,7 @@ export type ProviderCreationParams = ClientOptions & {
  * of client authentication and chat completion using the provider's API
  */
 export abstract class BaseProvider<P extends Providers> implements OpenAILikeClient<P> {
+  private client
   private name: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
 
@@ -28,18 +28,51 @@ environment variable named ${p.apiKeyEnvVar}`
       )
     }
 
-    this.authenticateClient()
+    this.client = this.createClient()
   }
 
   /**
-   * TODO: Purpose statement. Don't forget to mention that the API key must
-   * be set before this is called
+   * TODO: Purpose statement + return type
    */
-  private abstract authenticateClient();
+  private abstract createClient(): Q;
 
-  // public async create(
-  //   params: 
-  // )
+  // TODO: Figure out types
+
+  /**
+   * Transforms the given parameters (that follow OpenAI's Chat Completion API with
+   * the exception of the models available. These will differ depending on provider)
+   * into parameters appropriate for the particular model provider's API.
+   * @param {type} params - The OpenAI chat completion parameters
+   * @returns {type} The transformed chat completion parameters that correspond
+   * to the particular model provider's API
+   */
+  private abstract transformParamsRegular(params: P): Q;
+
+  // TODO: Purpose statement + figure out types
+  private abstract transformParamsStream(params: P): Q;
+
+  // TODO: Purpose statement + figure out types
+  private abstract transformResponse(response: P): Q;
+
+  public async create<P extends GenericChatCompletionParams>(
+    params: P
+  ): Q {
+    try {
+      if (params.stream) {
+        const providerParams = this.transformParamsStream(params)
+        // TODO: Streaming chat completion
+      } else {
+        const providerParams = this.transformParamsRegular(params)
+        // TODO: Figure out how to abstract this across providers
+        const result = await this.client.getChatCompletions(providerParams)
+        const transformedResult = await = this.transformResponse(result)
+
+        return transformedResult as Q
+      }
+    } catch (error) {
+      console.error(`Error in ${this.name} API request:`, error)
+    }
+  }
 
   public chat = {
     completions: {
