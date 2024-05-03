@@ -1,9 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import { OpenAIClient as AzureClient } from "@azure/openai"
 
-// TODO: Do we want this to be an enum instead to avoid referencing strings
-// all over the place ?
-export type Providers = "openai" | "anthropic" | "azure"
+export type LogLevel = "debug" | "info" | "warn" | "error"
+
+export type SupportedProvider = "openai" | "anthropic" | "azure"
+
+export type ProviderClient = OpenAI | Anthropic | AzureClient
+
+// ANTHROPIC
 
 type SupportedChatCompletionMessageParam = Omit<
   OpenAI.ChatCompletionCreateParams["messages"][number],
@@ -55,6 +60,20 @@ export type AnthropicChatCompletionParamsNonStream = Omit<
 export type AnthropicChatCompletionParams =
   | AnthropicChatCompletionParamsStream
   | AnthropicChatCompletionParamsNonStream
+
+// AZURE
+
+// COMBINED
+
+export type ExtendedChatCompletionParams = 
+  | AnthropicChatCompletionParams
+  | AzureChatCompletionParams
+
+export type ProviderChatCompletionParams = undefined
+
+export type ExtendedChatCompletion = 
+  | AnthropicChatCompletion
+  | AzureChatCompletion
 
 // TODO: Update this type to include the Azure provider
 export type OpenAILikeClient<P> = P extends "openai"

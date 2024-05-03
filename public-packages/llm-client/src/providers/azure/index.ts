@@ -1,8 +1,13 @@
 import { OpenAIClient as AzureClient } from "@azure/openai";
+import { omit } from "@/lib"
+import { }
 
-// TODO: Purpose statement
+/**
+ * Represents an wrapper around the OpenAIClient from the Azure OpenAI JS
+ * client that can be interacted with using the OpenAI API
+ */
 export class AzureProvider extends BaseProvider<"azure"> {
-  // TODO: Purpose statement
+
   constructor(opts: ClientOpts) {
     super({
       apiKeyEnvVar: "AZURE_API_KEY",
@@ -19,7 +24,7 @@ export class AzureProvider extends BaseProvider<"azure"> {
   }
 
   private transformParamsStream(
-    params: P
+    params: 
   ): {
     return this.transformParamsRegular(params);
   }

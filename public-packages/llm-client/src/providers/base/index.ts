@@ -1,4 +1,4 @@
-import { LogLevel } from '../../index.ts'
+import { LogLevel, ProviderClient } from "@/types"
 
 export type ProviderCreationParams = ClientOptions & {
   apiKeyEnvVar: string,
@@ -7,18 +7,19 @@ export type ProviderCreationParams = ClientOptions & {
 }
 
 /**
- * Abstract base class that provides interface for interacting with 
- * the API from for non-OpenAI LLM providers. Allows for concrete implementations
- * of client authentication and chat completion using the provider's API
+ * Abstract base class that represents a wrapper around a LLM provider client.
+ * Supports chat completions using the OpenAI interface by transforming both
+ * input parameters and output responses to and from the associated LLM 
+ * provider (eg. Anthropic, Azure, etc.), respectively
  */
-export abstract class BaseProvider<P extends Providers> implements OpenAILikeClient<P> {
-  private client
+export abstract class BaseProvider<P extends SupportedProvider> implements OpenAILikeClient<P> {
+  private client: ProviderClient
   private name: string
-  public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
+  public logLevel: LogLevel
 
   constructor(p: ProviderCreationParams) {
     const apiKey = p.opts?.apiKey ?? process.env?.[p.apiKeyEnvVar] ?? null
-    const logLevel = p.opts?.logLevel ?? process.env?.["LOG_LEVEL" as LogLevel] ?? "info"
+    this.logLevel = p.opts?.logLevel ?? process.env?.["LOG_LEVEL" as LogLevel] ?? "info"
 
     if (!apiKey) {
       throw new Error(
@@ -32,40 +33,84 @@ environment variable named ${p.apiKeyEnvVar}`
   }
 
   /**
-   * TODO: Purpose statement + return type
+   * Creates an instance of this provider's official client
+   * and authenticates it
+   * @return {ProviderClient} The provider client
    */
-  private abstract createClient(): Q;
-
-  // TODO: Figure out types
+  private abstract createClient(): ProviderClient
 
   /**
    * Transforms the given parameters (that follow OpenAI's Chat Completion API with
    * the exception of the models available. These will differ depending on provider)
-   * into parameters appropriate for the particular model provider's API.
-   * @param {type} params - The OpenAI chat completion parameters
-   * @returns {type} The transformed chat completion parameters that correspond
-   * to the particular model provider's API
+   * into parameters appropriate for the particular model provider's chat 
+   * completion API.
+   * @param {ExtendedChatCompletionParams} params - The (extended) OpenAI chat 
+   * completion parameters
+   * @returns {ProviderChatCompletionParams} The transformed chat completion 
+   * parameters that correspond to the particular model provider's chat
+   * completion API
    */
-  private abstract transformParamsRegular(params: P): Q;
+  private abstract transformParamsRegular(
+    params: ExtendedChatCompletionParams
+  ): ProviderChatCompletionParams
+
+  /**
+   * Transforms the given parameters (that follow OpenAI's Chat Completion API with
+   * the exception of the models available. These will differ depending on provider)
+   * into parameters appropriate for the particular model provider's chat 
+   * completion streaming API.
+   * @param {ExtendedChatCompletionParams} params - The OpenAI API-like 
+   * chat completion parameters
+   * @returns {ProviderChatCompletionStreamingParams} The transformed chat 
+   * completion parameters that correspond to the particular model provider's 
+   * chat completion streaming API
+   */
+  private abstract transformParamsStream<E extends ExtendedChatCompletionParams>(
+    params: E
+  ): ProviderChatCompletionStreamingParams
 
   // TODO: Purpose statement + figure out types
-  private abstract transformParamsStream(params: P): Q;
+  private abstract transformResponse(
+    response: ProviderChatCompletion
+  ): ExtendedChatCompletion
 
   // TODO: Purpose statement + figure out types
-  private abstract transformResponse(response: P): OpenAI.ChatCompletion;
+  private async abstract *transformResultingStream(
+    responseStream: AsyncIterable<ProviderChatCompletionChunk>
+  ): AsyncIterable<ExtendedChatCompletionChunk>
 
   // TODO: Purpose statement + figure out types
-  private async abstract *transformResultingStream(messageStream: P): AsyncIterable<Q>;
+  private async abstract clientStreamChatCompletions(
+    providerParams: ProviderChatCompletionStreamingParams
+  ): AsyncIterable<ProviderChatCompletionChunk>
 
   // TODO: Purpose statement + figure out types
-  private async abstract clientStreamChatCompletions(providerParams: P): AsyncIterable<Q>;
+  private async abstract clientChatCompletions(
+    providerParams: ProviderChatCompletionParams
+  ): ProviderChatCompletion
 
-  // TODO: Purpose statement + figure out types
-  private async abstract clientChatCompletions(providerParams: P): Q;
+  /**
+   * Creates a chat completion using this provider's API by:
+   * 1) Transforming the input to conform with this provider
+   * 2) Calling the provider's chat completion API
+   * 3) Transforming the output to conform with (an extended 
+   * version of) OpenAI's API
+   * @param {ExtendedChatCompletionParams} params - The (extended)
+   * OpenAI chat completion parameters
+   * @returns {Promise<ExtendedChatCompletion>} A Promise 
+   * that resolves to an (extended) OpenAI chat completion
+   */
+  public async create(
+    params: ExtendedChatCompletionParams
+  ): Promise<ExtendedChatCompletion>
 
-  public async create<P extends GenericChatCompletionParams>(
-    params: P
-  ): Q {
+  public async create(
+    params: ExtendedChatCompletionParams
+  ): Promise<AsyncIterable<ExtendedChatCompletionChunk>>
+
+  public async create(
+    params: ExtendedChatCompletionParams
+  ): Promise<ExtendedChatCompletion | AsyncIterable<ExtendedChatCompletionChunk>>{
     try {
       if (params.stream) {
         const providerParams = this.transformParamsStream(params)
@@ -77,7 +122,7 @@ environment variable named ${p.apiKeyEnvVar}`
         const result = await this.clientChatCompletions(providerParams)
         const transformedResult = this.transformResponse(result)
 
-        return transformedResult as Q
+        return transformedResult
       }
     } catch (error) {
       console.error(`Error in ${this.name} API request:`, error)

@@ -3,31 +3,22 @@ import { OpenAIProvider } from "@/providers/openai"
 import { OpenAILikeClient, Providers } from "@/types"
 import { ClientOptions } from "openai"
 
-// TODO: Enum to avoid throwing strings around ?
-export type LogLevel = "debug" | "info" | "warn" | "error"
-
-export class LLMClient<P extends Providers> {
+export class LLMClient<P extends SupportedProvider> {
   private providerInstance: OpenAILikeClient<P>
 
   constructor(
-    opts: ClientOptions & {
-      provider: P
-    }
+    opts: LLMClientCreateParams
   ) {
-    this.providerInstance = constructProviderInstance(opts?.provider)
+    this.providerInstance = constructProviderInstance(opts)
   }
 
   public getProviderInstance(): OpenAILikeClient<P> {
     return this.providerInstance
   }
 
-  /**
-   * Factory method for model provider (eg. Azure, OpenAI, Anthropic, etc.) client instance
-   * @param {Providers} p - The name of the provider
-   * @returns {OpenAILikeClient<P extends Providers>} The client associated with 
-   * the model provider
-   */
-  private constructProviderInstance<P extends Providers>(provider: P): OpenAILikeClient<P> {
+  private constructProviderInstance<P extends SupportedProvider>(
+    opts: LLMClientCreateParams 
+  ): OpenAILikeClient<P> {
     switch (opts?.provider) {
       case "openai":
         return new OpenAIProvider(opts) as OpenAILikeClient<P>
@@ -42,12 +33,19 @@ export class LLMClient<P extends Providers> {
   }
 }
 
-export function createLLMClient<P extends Providers>(
-  opts: ClientOptions & {
-    provider: P
-    logLevel: LogLevel = "info"
-  } = { provider: "openai" as P }
+export type LLMClientCreateParams<P extends SupportedProvider> = ClientOptions & {
+  provider: P
+  logLevel: LogLevel
+}
+
+export function createLLMClient<P extends SupportedProvider>(
+  opts: LLMClientCreateParams
 ): OpenAILikeClient<P> {
+  if (!opts?.provider) {
+    opts.provider = "openai"
+  }
+
   const client = new LLMClient<P>(opts)
+
   return client.getProviderInstance()
 }
