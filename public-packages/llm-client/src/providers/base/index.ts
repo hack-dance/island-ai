@@ -54,18 +54,28 @@ environment variable named ${p.apiKeyEnvVar}`
   // TODO: Purpose statement + figure out types
   private abstract transformResponse(response: P): OpenAI.ChatCompletion;
 
+  // TODO: Purpose statement + figure out types
+  private async abstract *transformResultingStream(messageStream: P): AsyncIterable<Q>;
+
+  // TODO: Purpose statement + figure out types
+  private async abstract clientStreamChatCompletions(providerParams: P): AsyncIterable<Q>;
+
+  // TODO: Purpose statement + figure out types
+  private async abstract clientChatCompletions(providerParams: P): Q;
+
   public async create<P extends GenericChatCompletionParams>(
     params: P
   ): Q {
     try {
       if (params.stream) {
         const providerParams = this.transformParamsStream(params)
-        // TODO: Streaming chat completion
+        const messageStream = this.clientStreamChatCompletions(providerParams)
+
+        return this.transformResultingStream(messageStream)
       } else {
         const providerParams = this.transformParamsRegular(params)
-        // TODO: Figure out how to abstract this across providers
-        const result = await this.client.getChatCompletions(providerParams)
-        const transformedResult = await = this.transformResponse(result)
+        const result = await this.clientChatCompletions(providerParams)
+        const transformedResult = this.transformResponse(result)
 
         return transformedResult as Q
       }
@@ -82,9 +92,10 @@ environment variable named ${p.apiKeyEnvVar}`
 
   private log<T extends unknown[]>(level: LogLevel, ...args: T) {
     const timestamp = new Date().toISOString()
+    const preamble = `[LLM-CLIENT--${this.name.toUpperCase()}-CLIENT:${level.toUpperCase()}]`
+    const message = `${preamble} ${timestamp}:`
+
     switch (level) {
-      const preamble = `[LLM-CLIENT--${this.name.toUpperCase()}-CLIENT:${level.toUpperCase()}]`
-      const message = `${preamble} ${timestamp}:`
       case "debug":
         if (this.logLevel === "debug") {
           console.debug(message, ...args)

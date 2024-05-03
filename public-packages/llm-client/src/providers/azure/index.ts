@@ -18,6 +18,12 @@ export class AzureProvider extends BaseProvider<"azure"> {
     return new AzureClient()
   }
 
+  private transformParamsStream(
+    params: P
+  ): {
+    return this.transformParamsRegular(params);
+  }
+
   private transformParamsRegular(
     params: P
   ): AzureChatCompletionCreateParamsNonStreaming {
@@ -32,6 +38,7 @@ export class AzureProvider extends BaseProvider<"azure"> {
     choices = this.transformResponseChoices(response.choices)
     usage = this.transformResponseUsage(response.usage ?? null)
 
+    // TODO: Add the original response here
     return {
       id: response.id,
       choices: choices,
@@ -74,26 +81,46 @@ export class AzureProvider extends BaseProvider<"azure"> {
     } : null
   }
 
-  public async create(
-    params: P
-  ): Q {
-    try {
-      if (params.stream) {
-        const azureParams = this.transformParamsStream(params)
-        // TODO: Streaming chat completion
-      } else {
-        const azureParams = this.transformParamsRegular(params)
-        const result = await this.client.getChatCompletions(
-          azureParams.deploymentName, // Model name
-          azureParams.messages,
-          azureParams.options
-        )
-        const transformedResult = await = this.transformResponse(result)
+  // TODO: Purpose statement + figure out types
+  private async abstract *transformResultingStream(
+      responseStream: P
+  ): AsyncIterable<OpenAI.ChatCompletionChunk> {
+    let transformedResponse: AzureClient.ChatCompletions | null = null
 
-        return transformedResult // TODO: Type cast this appropriately
+    // Let's assume there is only one choice for now ?
+    for await (const response of responseStream) {
+      const delta = response.choices[0].delta?.content
+
+      if (delta !== undefined) {
+        response.choices[0].message = delta
+        transformedResponse = this.transformResponse(response)
+
+        // This omission should probably be in a transformResponseChunk function
+        yield omit(transformedResponse, "usage") as OpenAi.ChatCompletionChunk
       }
-    } catch (error) {
-      console.error(`Error in ${this.name} API request:`, error)
     }
+  }
+
+  // TODO: Purpose statement + figure out types
+  private async clientStreamChatCompletions(providerParams: P): AsyncIterable<Q> {
+    let result: AzureClient.EventStream<AzureClient.ChatCompletions>;
+    result = await this.client.streamChatCompletions(
+      params.deploymentName,
+      azureParams.messages,
+      azureParams.options
+    )
+
+    return result
+  }
+
+  // TODO: Purpose statement + figure out types
+  private async clientChatCompletions(providerParams: P): Q {
+    const result = await this.client.getChatCompletions(
+      params.deploymentName,
+      azureParams.messages,
+      azureParams.options
+    )
+
+    return result
   }
 }
