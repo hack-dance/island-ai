@@ -41,6 +41,8 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
   }
   [key: string]: unknown
 
+  // TODO: Why is this asynchronous ?
+
   /**
    * Transforms the Anthropic API response into an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
    * @param result - The Anthropic API response.
@@ -48,7 +50,7 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
    * @returns A Promise that resolves to an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
    */
   private async transformResponse(
-    result: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage,
+    result: AnthropicChatCompletion
     { stream }: { stream?: boolean } = {}
   ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
     if (!result.id) throw new Error("Response id is undefined")

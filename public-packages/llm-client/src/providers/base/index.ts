@@ -1,10 +1,9 @@
-import { LogLevel, ProviderClient } from "@/types"
-
-export type ProviderCreationParams = ClientOptions & {
-  apiKeyEnvVar: string,
-  providerName: string,
-  logLevel: LogLevel,
-}
+import { 
+  LogLevel, 
+  ProviderClient, 
+  AuthenticationOptions,
+  LLMClientCreateParams
+} from "@/types"
 
 /**
  * Abstract base class that represents a wrapper around a LLM provider client.
@@ -17,27 +16,22 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
   private name: string
   public logLevel: LogLevel
 
-  constructor(p: ProviderCreationParams) {
-    const apiKey = p.opts?.apiKey ?? process.env?.[p.apiKeyEnvVar] ?? null
+  constructor(p: LLMClientCreateParams) {
     this.logLevel = p.opts?.logLevel ?? process.env?.["LOG_LEVEL" as LogLevel] ?? "info"
-
-    if (!apiKey) {
-      throw new Error(
-        `API key is required for {p.providerName} \
-- please provide it in the construct or set it as an \
-environment variable named ${p.apiKeyEnvVar}`
-      )
-    }
-
     this.client = this.createClient()
   }
 
   /**
    * Creates an instance of this provider's official client
    * and authenticates it
+   * @param {AuthenticationOptions} authOpts: An object with 
+   * the necessary data for client authentication (eg. API key, 
+   * token credential, etc.)
    * @return {ProviderClient} The provider client
    */
-  private abstract createClient(): ProviderClient
+  private abstract createClient(
+    authOpts: AuthenticationOptions
+  ): ProviderClient
 
   /**
    * Transforms the given parameters (that follow OpenAI's Chat Completion API with
