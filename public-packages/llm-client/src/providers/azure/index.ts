@@ -83,9 +83,6 @@ see README for information on client authentication"
     }
   }
 
-  /**
-   * TODO: Purpose statement
-   */
   private transformResponseChoices(
     choices: ChatChoice
   ): OpenAI.ChatCompletion.Choice {
@@ -99,9 +96,6 @@ see README for information on client authentication"
     }
   }
 
-  /**
-   * TODO: Purpose statement
-   */
   private transformResponseUsage(
     usage: CompletionsUsage | null
   ): OpenAI.CompletionUsage {
@@ -112,7 +106,6 @@ see README for information on client authentication"
     } : null
   }
 
-  // TODO: Purpose statement + figure out types
   private async abstract *transformResultingStream(
       responseStream: AsyncIterable<AzureChatCompletion>
   ): AsyncIterable<AzureExtendedChatCompletion> {

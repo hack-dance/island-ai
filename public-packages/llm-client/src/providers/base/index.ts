@@ -63,7 +63,6 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
     params: ExtendedChatCompletionParams
   ): ProviderChatCompletionStreamingParams
 
-  // TODO: Purpose statement
   /**
    * Transforms the chat completion response from this provider's API
    * to one that extends the OpenAI Chat Completion API's response.
@@ -76,7 +75,6 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
     response: ProviderChatCompletion
   ): ExtendedChatCompletion | ExtendedChatCompletionChunk
 
-  // TODO: Purpose statement
   /**
    * Transforms the stream resulting from the streaming
    * version of this provider's chat completion API response
