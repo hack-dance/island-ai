@@ -307,6 +307,8 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
   ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic> | ExtendedCompletionAnthropic> {
     try {
       if (params.stream) {
+        // TODO: Throw this in the transformParamsStream function
+
         //@ts-expect-error if tools get passed in even if type errors throw, we should explictly throw here
         if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
           throw new Error("Streaming is not currently supported with tools in the Anthropic API.")

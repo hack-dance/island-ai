@@ -59,7 +59,7 @@ see README for information on client authentication"
 
   private transformResponse(
     response: AzureClient.ChatCompletions
-  ): ExtendedChatCompletion {
+  ): AzureExtendedChatCompletion {
     choices = this.transformResponseChoices(response.choices)
     usage = this.transformResponseUsage(response.usage ?? null)
 
@@ -106,8 +106,8 @@ see README for information on client authentication"
 
   // TODO: Purpose statement + figure out types
   private async abstract *transformResultingStream(
-      responseStream: P
-  ): AsyncIterable<OpenAI.ChatCompletionChunk> {
+      responseStream: AsyncIterable<AzureChatCompletion>
+  ): AsyncIterable<AzureExtendedChatCompletion> {
     let transformedResponse: AzureClient.ChatCompletions | null = null
 
     // Let's assume there is only one choice for now ?
@@ -118,14 +118,16 @@ see README for information on client authentication"
         response.choices[0].message = delta
         transformedResponse = this.transformResponse(response)
 
-        // This omission should probably be in a transformResponseChunk function
-        yield omit(transformedResponse, "usage") as OpenAi.ChatCompletionChunk
+        // TODO: This omission should probably be in a transformResponseChunk function
+        yield omit(transformedResponse, "usage")
       }
     }
   }
 
-  // TODO: Purpose statement + figure out types
-  private async clientStreamChatCompletions(providerParams: P): AsyncIterable<Q> {
+  // TODO: Purpose statement
+  private async clientStreamChatCompletions(
+      providerParams: AzureChatCompletionParams
+  ): AsyncIterable<AzureChatCompletion> {
     let result: AzureClient.EventStream<AzureClient.ChatCompletions>;
     result = await this.client.streamChatCompletions(
       params.deploymentName,
@@ -133,7 +135,7 @@ see README for information on client authentication"
       azureParams.options
     )
 
-    return result
+    return result as AsyncIterable<AzureChatCompletion>
   }
 
   // TODO: Purpose statement + figure out types

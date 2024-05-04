@@ -1,6 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import { OpenAIClient as AzureClient } from "@azure/openai"
+import { 
+  OpenAIClient as AzureClient,
+  ChatCompletionsToolDefinitionUnion as AzureChatCompletionTool
+  ChatCompletionsToolSelectionPresent,
+  ChatCompletionsNamedToolSelectionUnion
+} from "@azure/openai"
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
 
@@ -33,46 +38,52 @@ type SupportedChatCompletionMessageParam = Omit<
       )[]
 }
 
-export type AnthropicChatCompletion = 
-  | Anthropic.Messages.Message
-  | Anthropic.Beta.Tools.Messages.ToolsBetsMessage
-
-export type ExtendedCompletionAnthropic = Partial<OpenAI.ChatCompletion> & {
-  originResponse: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage
-}
-
-export type ExtendedCompletionChunkAnthropic = Partial<OpenAI.ChatCompletionChunk> & {
-  originResponse: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage
-}
-
-export type AnthropicChatCompletionParamsStream = Omit<
+export type AnthropicExtendedChatCompletionParamsStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
   "model" | "messages" | "tools" | "tool_choice"
 > & {
   model: Anthropic.CompletionCreateParams["model"]
   messages: SupportedChatCompletionMessageParam[]
   stream: true
+  // TODO: Why is this necessary
   max_tokens: number
   tools?: undefined
   tool_choice?: undefined
 }
 
-export type AnthropicChatCompletionParamsNonStream = Omit<
+export type AnthropicExtendedChatCompletionParamsNonStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
   "model" | "messages"
 > & {
-  // TODO: The Completions API from Anthropic seems to be deprecated. I'm not even sure
-  // how the sample test in Instructor passes since the claude-3 model is not supported by this
-  // endpoint
   model: Anthropic.CompletionCreateParams["model"]
   messages: SupportedChatCompletionMessageParam[]
   stream?: false | undefined
   max_tokens: number
 }
 
-export type AnthropicChatCompletionParams =
-  | AnthropicChatCompletionParamsStream
-  | AnthropicChatCompletionParamsNonStream
+export type AnthropicExtendedChatCompletionParams =
+  | AnthropicExtendedChatCompletionParamsStream
+  | AnthropicExtendedChatCompletionParamsNonStream
+
+export type AnthropicChatCompletionParams = Anthropic.Beta.Tools.Messages.MessageCreateParamsNonStreaming
+
+export type AnthropicChatCompletion = 
+  | Anthropic.Messages.Message
+  | Anthropic.Beta.Tools.Messages.ToolsBetsMessage
+
+export type AnthropicExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
+  originResponse: AnthropicChatCompletion
+}
+
+export type AnthropicExtendedChatCompletionChunk = Partial<OpenAI.ChatCompletionChunk> & {
+  originResponse: AnthropicChatCompletion
+}
+
+
+export type AnthropicChatCompletionStreamingParams = Anthropic.Messages.MessageCreateParamsStreaming
+
+
+export type AnthropicChatCompletionChunk = Anthropic.MessageStreamEvent
 
 //     ___ _____   __  ______  ______
 //    /   /__  /  / / / / __ \/ ____/
@@ -92,18 +103,34 @@ export type AzureApiKey = {
 // TODO: Does not support Azure Active Directory authentication
 export type AzureAuthenticationOptions = OpenAIAPIKey | AzureApiKey
 
-export type AzureExtendedChatCompletionParams = undefined
+type AzureChatCompletionToolChoice = 
+  | ChatCompletionsToolSelectionPreset 
+  | ChatCompletionsNamedToolSelectionUnion
+
+export type AzureExtendedChatCompletionParams = Omit<
+  Partial<OpenAI.ChatCompletionCreateParams>,
+  "model" | "messages" | "tools" | "tool_choice"
+> & {
+  model: string
+  messages: undefined
+  tools?: AzureChatCompletionTool[]
+  tool_choice?: AzureChatCompletionToolChoice
+}
 
 export type AzureChatCompletionParams = {
-  deploymenetName: string
+  deploymentName: string
   messages: AzureClient.ChatRequestMessageUnion[]
   options: Omit<AzureCleint.GetChatCompletionsOptions, "azureExtensionOptions">
 }
 
-export type AzureChatCompletion = Promise<AzureClient.ChatCompletions>
+export type AzureChatCompletion = AzureClient.ChatCompletions
 
 export type AzureExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
-  originResposne: AzureClient.ChatCompletions
+  originResposne: AzureChatCompletion
+}
+
+export type AzureExtendedChatCompletionChunk = Partial<OpenAI.ChatCompletionChunk> & {
+  originResponse: AzureChatCompletion
 }
 
 //  _____ ________  _________ _____ _   _  ___________ 
@@ -119,43 +146,45 @@ export type AuthenticationOptions =
   | AzureAuthenticationOptions
 
 export type ExtendedChatCompletionParams = 
-  | AnthropicChatCompletionParams
+  | AnthropicExtendedChatCompletionParams 
   | AzureExtendedChatCompletionParams
 
 export type ProviderChatCompletionParams = 
-  | AnthropicFooBar
+  | AnthropicChatCompletionParams
   | AzureChatCompletionParams 
 
 export type ProviderChatCompletionStreamingParams = 
-  | AnthropicFooBar
+  | AnthropicChatCompletionStreamingParams
   | AzureChatCompletionParams
 
 export type ProviderChatCompletion =
   | AnthropicChatCompletion
   | AzureChatCompletion
 
+// TODO: The supposed ProviderChatCompletionStream is
+// an AsyncIterable<ProviderChatCompletionChunk>. Should
+// that be declared explicitly ?
+
 export type ProviderChatCompletionChunk = 
-  | AnthropicFooBar
-  | AzureChatCompletionChunk
+  | AnthropicChatCompletionChunk
+  | AzureChatCompletion
 
 export type ExtendedChatCompletion = 
   | AnthropicExtendedChatCompletion
   | AzureExtendedChatCompletion
 
-// TODO: Update this type to include the Azure provider
-export type OpenAILikeClient<P> = P extends "openai"
-  ? OpenAI
-  : P extends "anthropic"
-    ? Anthropic & {
-        [key: string]: unknown
-        chat: {
-          completions: {
-            create: <P extends AnthropicChatCompletionParams>(
-              params: P
-            ) => P extends { stream: true }
-              ? Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
-              : Promise<ExtendedCompletionAnthropic>
-          }
-        }
-      }
-    : never
+export type ExtendedChatCompletionChunk = 
+  | AnthropicExtendedChatCompletionChunk
+  | AzureExtendedChatCompletionChunk
+
+export type OpenAILikeClient<P extends SupportedProvider> = {
+  chat: {
+    completions: {
+      create: <P extends ExtendedChatCompletionParams>(
+        params: P
+      ) => P extends { stream: true }
+      ? Promise<AsyncIterable<ExtendedChatCompletionChunk>>
+      : Promise<ExtendedChatCompletionChunk>
+    }
+  }
+}
