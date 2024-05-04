@@ -56,6 +56,35 @@ $ bun add llm-polyglot openai
   })
 ```
 
+### Client Authentication
+
+Given the various ways in which client authentcation is done across all supported providers (See [Azure's support for authentication](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai#create-and-authenticate-a-openaiclient)), authentication during client instatiation differs slightly from the OpenAI API.
+
+```typescript
+  const anthropicClient = createLLMClient({
+    provider: "anthropic",
+    authOpts: {
+      anthropicApiKey: "<API key>"
+    }
+  })
+
+  const azureClient = createLLMClient({
+    provider: "anthropic",
+    authOpts: {
+      openAiApiKey: "<API key>"
+    }
+  })
+
+  const azureClient = createLLMClient({
+    provider: "anthropic",
+    authOpts: {
+      azureApiKey: "<API key>"
+      endpoint: "<endpoint>"
+    }
+  })
+```
+
+We do not currently support Azure client authentication using an [Azure Active Directory Credential](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai#using-an-azure-active-directory-credential).
 
 ## Anthropic
 The llm-polyglot library provides support for Anthropic's API, including standard chat completions, streaming chat completions, and function calling. Both input paramaters and responses match exactly those of the OpenAI SDK - for more detailed documentation please see the OpenAI docs: [https://platform.openai.com/docs/api-reference](https://platform.openai.com/docs/api-reference)

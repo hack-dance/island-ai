@@ -1,16 +1,24 @@
+import { BaseProvider } from "@/providers/base"
 import { 
   OpenAIClient as AzureClient, 
   OpenAIKeyCredential, 
-  AzureKeyCredential
+  AzureKeyCredential,
+  ChatChoice,
+  CompletionsUsage
 } from "@azure/openai";
 import { omit } from "@/lib"
 import { 
   LLMClientCreateParams, 
-  AzureAuthenticationOptions 
+  AzureAuthenticationOptions,
+  ExtendedChatCompletionParams,
+  AzureChatCompletionParams,
+  AzureChatCompletion,
+  AzureExtendedChatCompletion,
 } from "@/types"
+import { OpenAI } from "openai"
 
 /**
- * Represents an wrapper around the OpenAIClient from the Azure OpenAI JS
+ * Represents a wrapper around the OpenAIClient from the Azure OpenAI JS
  * client that can be interacted with using the OpenAI API
  */
 export class AzureProvider extends BaseProvider<"azure"> {
@@ -43,7 +51,7 @@ see README for information on client authentication"
 
   private transformParamsStream(
     params: ExtendedChatCompletionParams
-  ): {
+  ): AzureChatCompletionParams {
     return this.transformParamsRegular(params);
   }
 
@@ -57,9 +65,9 @@ see README for information on client authentication"
     }
   }
 
-  private transformResponse(
-    response: AzureClient.ChatCompletions
-  ): AzureExtendedChatCompletion {
+  private async transformResponse(
+    response: AzureChatCompletion
+  ): Promise<AzureExtendedChatCompletion> {
     choices = this.transformResponseChoices(response.choices)
     usage = this.transformResponseUsage(response.usage ?? null)
 
@@ -79,7 +87,7 @@ see README for information on client authentication"
    * TODO: Purpose statement
    */
   private transformResponseChoices(
-    choices: AzureClient.ChatChoice
+    choices: ChatChoice
   ): OpenAI.ChatCompletion.Choice {
     return {
       finish_reason: choices.finishReason,
@@ -95,7 +103,7 @@ see README for information on client authentication"
    * TODO: Purpose statement
    */
   private transformResponseUsage(
-    usage: AzureClient.CompletionsUsage | null
+    usage: CompletionsUsage | null
   ): OpenAI.CompletionUsage {
     return usage ? {
       completion_tokens: response.usage.completionTokens,
@@ -108,7 +116,7 @@ see README for information on client authentication"
   private async abstract *transformResultingStream(
       responseStream: AsyncIterable<AzureChatCompletion>
   ): AsyncIterable<AzureExtendedChatCompletion> {
-    let transformedResponse: AzureClient.ChatCompletions | null = null
+    let transformedResponse: ChatCompletions | null = null
 
     // Let's assume there is only one choice for now ?
     for await (const response of responseStream) {
@@ -124,12 +132,10 @@ see README for information on client authentication"
     }
   }
 
-  // TODO: Purpose statement
   private async clientStreamChatCompletions(
-      providerParams: AzureChatCompletionParams
+    providerParams: AzureChatCompletionParams
   ): AsyncIterable<AzureChatCompletion> {
-    let result: AzureClient.EventStream<AzureClient.ChatCompletions>;
-    result = await this.client.streamChatCompletions(
+    const result = await this.client.streamChatCompletions(
       params.deploymentName,
       azureParams.messages,
       azureParams.options
@@ -138,10 +144,9 @@ see README for information on client authentication"
     return result as AsyncIterable<AzureChatCompletion>
   }
 
-  // TODO: Purpose statement + figure out types
   private async clientChatCompletions(
     providerParams: AzureChatCompletionParams
-  ): Promise<> {
+  ): AzureChatCompletion {
     const result = await this.client.getChatCompletions(
       params.deploymentName,
       azureParams.messages,

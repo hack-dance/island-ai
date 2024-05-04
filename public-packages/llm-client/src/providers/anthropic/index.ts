@@ -1,58 +1,49 @@
 import {
+  LLMClientCreateParams,
+  AnthropicApiKey,
+  AnthropicChatCompletion,
+  AnthropicChatCompletionChunk,
+  AnthropicExtendedChatCompletion,
+  AnthropicExtendedChatCompletionChunk,
   AnthropicChatCompletionParams,
-  AnthropicChatCompletionParamsNonStream,
-  AnthropicChatCompletionParamsStream,
-  ExtendedCompletionAnthropic,
-  ExtendedCompletionChunkAnthropic,
-  OpenAILikeClient
+  AnthropicExtendedChatCompletionParams,
+  AnthropicChatCompletionStreamingParams
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
-import OpenAI, { ClientOptions } from "openai"
+import OpenAI from "openai"
 
 /**
- * AnthropicProvider is a class that provides an interface for interacting with the Anthropic API.
- * It implements the OpenAILikeClient interface and allows users to create chat completions using
- * the Anthropic API.
+ * Represents a wrapper around the Anthropic client from the Anthropic SDK
+ * for TS that can be interacted with using the OpenAI API
  */
-export class AnthropicProvider extends Anthropic implements BaseProviders<"anthropic"> {
-  public apiKey: string
+export class AnthropicProvider extends BaseProvider<"anthropic"> {
 
-  /**
-   * Constructs a new instance of the AnthropicProvider class.
-   * @param opts - An optional ClientOptions object containing the API key.
-   */
-  constructor(
-    opts?: ClientOptions & {
-      logLevel?: LogLevel
-    }
-  ) {
-    const apiKey = opts?.apiKey ?? process.env?.["ANTHROPIC_API_KEY"] ?? null
+  constructor(opts: LLMClientCreateParams) {
+    super(opts)
+  }
 
+  private createClient(
+    authOpts: AnthropicApiKey
+  ): Anthropic {
+    const apiKey = authOpts?.anthropicApiKey ?? process.env?.ANTHROPIC_API_KEY ?? null
+    
     if (!apiKey) {
-      throw new Error(
-        "API key is required for AnthropicProvider - please provide it in the constructor or set it as an environment variable named ANTHROPIC_API_KEY."
+      throw new Error("Invalid authentication provided for Anthropic. Please \
+see README for information on client authentication"
       )
     }
 
-    super({ apiKey })
-
-    this.logLevel = opts?.logLevel ?? this.logLevel
-    this.apiKey = apiKey
+    return new Anthropic({ apiKey })
   }
+
   [key: string]: unknown
 
   // TODO: Why is this asynchronous ?
 
-  /**
-   * Transforms the Anthropic API response into an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
-   * @param result - The Anthropic API response.
-   * @param stream - An optional parameter indicating whether the response is a stream.
-   * @returns A Promise that resolves to an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
-   */
   private async transformResponse(
     result: AnthropicChatCompletion
     { stream }: { stream?: boolean } = {}
-  ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
+  ): Promise<AnthropicExtendedChatCompletion | AnthropicExtendedChatCompletionChunk> {
     if (!result.id) throw new Error("Response id is undefined")
     this.log("debug", "Response:", result)
 
@@ -137,7 +128,7 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
    */
   private transformParamsRegular(
     params: AnthropicChatCompletionParams
-  ): Anthropic.Beta.Tools.Messages.MessageCreateParamsNonStreaming {
+  ): AnthropicChatCompletionParams {
     let tools: Anthropic.Beta.Tools.Tool[] = []
 
     const systemMessages = params.messages.filter(message => message.role === "system")
@@ -199,8 +190,13 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
   }
 
   private transformParamsStream(
-    params: AnthropicChatCompletionParams
-  ): Anthropic.Messages.MessageCreateParamsStreaming {
+    params: AnthropicExtendedChatCompletionParams
+  ): AnthropicChatCompletionStreamingParams {
+    //@ts-expect-error if tools get passed in even if type errors throw, we should explictly throw here
+    if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
+      throw new Error("Streaming is not currently supported with tools in the Anthropic API.")
+    }
+
     const systemMessages = params.messages.filter(message => message.role === "system")
     const messages = params.messages.filter(
       message => message.role === "user" || message.role === "assistant"
@@ -242,10 +238,10 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
    * @param response - The Response object from the Anthropic API.
    * @returns An asynchronous iterable of ExtendedCompletionChunkAnthropic objects.
    */
-  private async *streamChatCompletion(
-    response: AsyncIterable<Anthropic.MessageStreamEvent>
-  ): AsyncIterable<ExtendedCompletionChunkAnthropic> {
-    let finalChatCompletion: ExtendedCompletionChunkAnthropic | null = null
+  private async *transformResultingStream(
+    response: AsyncIterable<AnthropicChatCompletionChunk>
+  ): AsyncIterable<AnthropicExtendedChatCompletionChunk> {
+    let finalChatCompletion: AnthropicExtendedChatCompletionChunk | null = null
 
     for await (const data of response) {
       switch (data.type) {
@@ -253,7 +249,7 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
           this.log("debug", "Message start:", data)
           finalChatCompletion = (await this.transformResponse(data.message, {
             stream: true
-          })) as ExtendedCompletionChunkAnthropic
+          })) as AnthropicExtendedChatCompletionChunk 
 
           yield finalChatCompletion
           continue
@@ -269,7 +265,7 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
               }
             }
 
-            yield finalChatCompletion as ExtendedCompletionChunkAnthropic
+            yield finalChatCompletion as AnthropicExtendedChatCompletionChunk
           }
           continue
 
@@ -280,7 +276,7 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
             finalChatCompletion.choices[0].finish_reason = "stop"
           }
 
-          yield finalChatCompletion as ExtendedCompletionChunkAnthropic
+          yield finalChatCompletion as AnthropicExtendedChatCompletionChunk
           continue
 
         case "message_stop":
@@ -289,67 +285,31 @@ export class AnthropicProvider extends Anthropic implements BaseProviders<"anthr
     }
   }
 
-  /**
-   * Creates a chat completion using the Anthropic API.
-   * @param params - The chat completion parameters.
-   * @returns A Promise that resolves to an ExtendedCompletionAnthropic object or an asynchronous iterable of ExtendedCompletionChunkAnthropic objects if streaming is enabled.
-   */
-  public async create(
-    params: AnthropicChatCompletionParamsStream
-  ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
+  private async clientStreamChatCompletions(
+    anthropicParams: AnthropicChatCompletionStreamingParams
+  ): AsyncIterable<AnthropicChatCompletionChunk> {
+    const result = await this.client.messages.stream({
+      ...anthropicParams
+    })
 
-  public async create(
-    params: AnthropicChatCompletionParamsNonStream
-  ): Promise<ExtendedCompletionAnthropic>
-
-  public async create(
-    params: AnthropicChatCompletionParams
-  ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic> | ExtendedCompletionAnthropic> {
-    try {
-      if (params.stream) {
-        // TODO: Throw this in the transformParamsStream function
-
-        //@ts-expect-error if tools get passed in even if type errors throw, we should explictly throw here
-        if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
-          throw new Error("Streaming is not currently supported with tools in the Anthropic API.")
-        }
-
-        const anthropicParams = this.transformParamsStream(params)
-        this.log("debug", "Starting streaming completion response")
-
-        const messageStream = await this.messages.stream({
-          ...anthropicParams
-        })
-
-        return this.streamChatCompletion(messageStream)
-      } else {
-        const anthropicParams = this.transformParamsRegular(params)
-
-        const result = await this.beta.tools.messages.create(
-          {
-            ...anthropicParams,
-            stream: false
-          },
-          {
-            headers: {
-              "anthropic-beta": "tools-2024-04-04"
-            }
-          }
-        )
-
-        const transformedResult = await this.transformResponse(result)
-
-        return transformedResult as ExtendedCompletionAnthropic
-      }
-    } catch (error) {
-      console.error("Error in Anthropic API request:", error)
-      throw error
-    }
+    return result as AsyncIterable<AnthropicChatCompletionChunk> 
   }
 
-  public chat = {
-    completions: {
-      create: this.create.bind(this)
-    }
+  private async clientChatCompletions(
+    anthropicParams: AnthropicChatCompletionParams
+  ): AnthropicChatCompletion {
+    const result = await this.client.beta.tools.messages.create(
+      {
+        ...anthropicParams,
+        stream: false
+      },
+      {
+        headers: {
+          "anthropic-beta": "tools-2024-04-04"
+        }
+      }
+    )
+
+    return result
   }
 }

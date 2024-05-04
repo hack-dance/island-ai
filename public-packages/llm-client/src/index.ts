@@ -33,7 +33,7 @@ export class LLMClient<P extends SupportedProvider> {
   }
 }
 
-export type LLMClientCreateParams<P extends SupportedProvider> = Omit<ClientOptions, "apiKey"> & {
+export type LLMClientCreateParams<P extends SupportedProvider> = ClientOptions & {
   provider: P
   logLevel: LogLevel
   authOpts: AuthenticationOptions

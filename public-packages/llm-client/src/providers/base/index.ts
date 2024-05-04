@@ -59,26 +59,56 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
    * completion parameters that correspond to the particular model provider's 
    * chat completion streaming API
    */
-  private abstract transformParamsStream<E extends ExtendedChatCompletionParams>(
-    params: E
+  private abstract transformParamsStream(
+    params: ExtendedChatCompletionParams
   ): ProviderChatCompletionStreamingParams
 
-  // TODO: Purpose statement + figure out types
-  private abstract transformResponse(
+  // TODO: Purpose statement
+  /**
+   * Transforms the chat completion response from this provider's API
+   * to one that extends the OpenAI Chat Completion API's response.
+   * @param {ProviderChatCompletion} response - The provider's response
+   * @returns {ExtendedChatCompletion | ExtendedChatCompletionChunk} 
+   * The response transformed to extend OpenAI's Chat Completion API
+   * response
+   */
+  private async abstract transformResponse(
     response: ProviderChatCompletion
-  ): ExtendedChatCompletion
+  ): ExtendedChatCompletion | ExtendedChatCompletionChunk
 
-  // TODO: Purpose statement + figure out types
+  // TODO: Purpose statement
+  /**
+   * Transforms the stream resulting from the streaming
+   * version of this provider's chat completion API response
+   * to a stream of extended OpenAI Chat Completion API responses.
+   * @param {AsyncIterable<ProviderChatCompletionChunk>} responseStream -
+   * The stream resulting from the provider's chat completion streaming
+   * API
+   * @returns {AsyncIterable<ExtendedChatCompletionChunk>} A stream
+   * of chunks that extend OpenAI's ChatCompletionChunk
+   */
   private async abstract *transformResultingStream(
     responseStream: AsyncIterable<ProviderChatCompletionChunk>
   ): AsyncIterable<ExtendedChatCompletionChunk>
 
-  // TODO: Purpose statement + figure out types
+  /**
+   * A wrapper around the call to this provider's client's 
+   * streaming chat completion API
+   * @param {ProviderChatCompletionStreamingParams} providerParams
+   * @returns {AsyncIterable<ProviderChatCompletionChunk>} Assumes that
+   * every provider returns an AsyncIterable of chunks 
+   */
   private async abstract clientStreamChatCompletions(
     providerParams: ProviderChatCompletionStreamingParams
   ): AsyncIterable<ProviderChatCompletionChunk>
 
-  // TODO: Purpose statement + figure out types
+  /**
+   * A wrapper around the call to this provider's client's 
+   * chat completion API
+   * @param {ProviderChatCompletionParams} providerParams
+   * @returns {ProviderChatCompletion} A Promise that
+   * resolves to a chat completion
+   */
   private async abstract clientChatCompletions(
     providerParams: ProviderChatCompletionParams
   ): ProviderChatCompletion
@@ -109,6 +139,7 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
       if (params.stream) {
         const providerParams = this.transformParamsStream(params)
         const messageStream = this.clientStreamChatCompletions(providerParams)
+        this.log("debug", "Starting streaming completion response")
 
         return this.transformResultingStream(messageStream)
       } else {
@@ -116,10 +147,11 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
         const result = await this.clientChatCompletions(providerParams)
         const transformedResult = this.transformResponse(result)
 
-        return transformedResult
+        return transformedResult as ExtendedChatCompletion
       }
     } catch (error) {
       console.error(`Error in ${this.name} API request:`, error)
+      throw error
     }
   }
 

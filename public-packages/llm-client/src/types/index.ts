@@ -67,9 +67,10 @@ export type AnthropicExtendedChatCompletionParams =
 
 export type AnthropicChatCompletionParams = Anthropic.Beta.Tools.Messages.MessageCreateParamsNonStreaming
 
-export type AnthropicChatCompletion = 
+export type AnthropicChatCompletion = Promise<
   | Anthropic.Messages.Message
   | Anthropic.Beta.Tools.Messages.ToolsBetsMessage
+>
 
 export type AnthropicExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
   originResponse: AnthropicChatCompletion
@@ -78,7 +79,6 @@ export type AnthropicExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
 export type AnthropicExtendedChatCompletionChunk = Partial<OpenAI.ChatCompletionChunk> & {
   originResponse: AnthropicChatCompletion
 }
-
 
 export type AnthropicChatCompletionStreamingParams = Anthropic.Messages.MessageCreateParamsStreaming
 
@@ -123,7 +123,7 @@ export type AzureChatCompletionParams = {
   options: Omit<AzureCleint.GetChatCompletionsOptions, "azureExtensionOptions">
 }
 
-export type AzureChatCompletion = AzureClient.ChatCompletions
+export type AzureChatCompletion = Promise<AzureClient.ChatCompletions>
 
 export type AzureExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
   originResposne: AzureChatCompletion
@@ -169,22 +169,26 @@ export type ProviderChatCompletionChunk =
   | AnthropicChatCompletionChunk
   | AzureChatCompletion
 
-export type ExtendedChatCompletion = 
+export type ExtendedChatCompletion = Promise<
   | AnthropicExtendedChatCompletion
   | AzureExtendedChatCompletion
+>
 
-export type ExtendedChatCompletionChunk = 
+export type ExtendedChatCompletionChunk = Promise<
   | AnthropicExtendedChatCompletionChunk
   | AzureExtendedChatCompletionChunk
+>
 
-export type OpenAILikeClient<P extends SupportedProvider> = {
-  chat: {
-    completions: {
-      create: <P extends ExtendedChatCompletionParams>(
-        params: P
-      ) => P extends { stream: true }
-      ? Promise<AsyncIterable<ExtendedChatCompletionChunk>>
-      : Promise<ExtendedChatCompletionChunk>
+export type OpenAILikeClient<P extends SupportedProvider> = P extends "openai"
+  ? OpenAI
+  : {
+    chat: {
+      completions: {
+        create: <P extends ExtendedChatCompletionParams>(
+          params: P
+        ) => P extends { stream: true }
+        ? Promise<AsyncIterable<ExtendedChatCompletionChunk>>
+        : ExtendedChatCompletion
+      }
     }
   }
-}
