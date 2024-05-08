@@ -11,6 +11,7 @@ import {
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import { BaseProvider } from "@/providers/base"
 
 /**
  * Represents a wrapper around the Anthropic client from the Anthropic SDK
@@ -38,10 +39,8 @@ see README for information on client authentication"
 
   [key: string]: unknown
 
-  // TODO: Why is this asynchronous ?
-
   private async transformResponse(
-    result: AnthropicChatCompletion
+    result: AnthropicChatCompletion,
     { stream }: { stream?: boolean } = {}
   ): Promise<AnthropicExtendedChatCompletion | AnthropicExtendedChatCompletionChunk> {
     if (!result.id) throw new Error("Response id is undefined")

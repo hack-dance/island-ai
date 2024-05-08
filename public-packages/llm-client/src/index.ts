@@ -9,7 +9,7 @@ export class LLMClient<P extends SupportedProvider> {
   constructor(
     opts: LLMClientCreateParams
   ) {
-    this.providerInstance = constructProviderInstance(opts)
+    this.providerInstance = this.constructProviderInstance(opts)
   }
 
   public getProviderInstance(): OpenAILikeClient<P> {

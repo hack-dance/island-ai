@@ -67,10 +67,9 @@ export type AnthropicExtendedChatCompletionParams =
 
 export type AnthropicChatCompletionParams = Anthropic.Beta.Tools.Messages.MessageCreateParamsNonStreaming
 
-export type AnthropicChatCompletion = Promise<
+export type AnthropicChatCompletion = 
   | Anthropic.Messages.Message
   | Anthropic.Beta.Tools.Messages.ToolsBetsMessage
->
 
 export type AnthropicExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
   originResponse: AnthropicChatCompletion
@@ -123,7 +122,7 @@ export type AzureChatCompletionParams = {
   options: Omit<AzureCleint.GetChatCompletionsOptions, "azureExtensionOptions">
 }
 
-export type AzureChatCompletion = Promise<AzureClient.ChatCompletions>
+export type AzureChatCompletion = AzureClient.ChatCompletions
 
 export type AzureExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
   originResposne: AzureChatCompletion

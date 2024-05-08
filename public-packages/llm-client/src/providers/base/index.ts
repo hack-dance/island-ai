@@ -13,12 +13,13 @@ import {
  */
 export abstract class BaseProvider<P extends SupportedProvider> implements OpenAILikeClient<P> {
   private client: ProviderClient
-  private name: string
+  public name: string
   public logLevel: LogLevel
 
   constructor(p: LLMClientCreateParams) {
     this.logLevel = p.opts?.logLevel ?? process.env?.["LOG_LEVEL" as LogLevel] ?? "info"
     this.client = this.createClient()
+    this.name = p.provider
   }
 
   /**
@@ -62,6 +63,8 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
   private abstract transformParamsStream(
     params: ExtendedChatCompletionParams
   ): ProviderChatCompletionStreamingParams
+
+  // TODO: Why is this asynchronous ?
 
   /**
    * Transforms the chat completion response from this provider's API
@@ -136,14 +139,14 @@ export abstract class BaseProvider<P extends SupportedProvider> implements OpenA
     try {
       if (params.stream) {
         const providerParams = this.transformParamsStream(params)
-        const messageStream = this.clientStreamChatCompletions(providerParams)
+        const messageStream = await this.clientStreamChatCompletions(providerParams)
         this.log("debug", "Starting streaming completion response")
 
         return this.transformResultingStream(messageStream)
       } else {
         const providerParams = this.transformParamsRegular(params)
         const result = await this.clientChatCompletions(providerParams)
-        const transformedResult = this.transformResponse(result)
+        const transformedResult = await this.transformResponse(result)
 
         return transformedResult as ExtendedChatCompletion
       }
