@@ -5,7 +5,9 @@ import {
   ChatCompletionsToolDefinitionUnion as AzureChatCompletionTool
   ChatCompletionsToolSelectionPresent,
   ChatCompletionsNamedToolSelectionUnion,
-  ChatRequestMessageUnion
+  ChatRequestMessageUnion,
+  ChatCompletion,
+  GetChatCompletionOptions
 } from "@azure/openai"
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
@@ -119,11 +121,11 @@ export type AzureExtendedChatCompletionParams = Omit<
 
 export type AzureChatCompletionParams = {
   deploymentName: string
-  messages: AzureClient.ChatRequestMessageUnion[]
-  options: Omit<AzureCleint.GetChatCompletionsOptions, "azureExtensionOptions">
+  messages: ChatRequestMessageUnion[]
+  options: Omit<GetChatCompletionsOptions, "azureExtensionOptions">
 }
 
-export type AzureChatCompletion = AzureClient.ChatCompletions
+export type AzureChatCompletion = ChatCompletion 
 
 export type AzureExtendedChatCompletion = Partial<OpenAI.ChatCompletion> & {
   originResposne: AzureChatCompletion
