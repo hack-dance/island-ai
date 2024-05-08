@@ -126,7 +126,7 @@ see README for information on client authentication"
    * @returns The transformed Anthropic chat completion parameters.
    */
   private transformParamsRegular(
-    params: AnthropicChatCompletionParams
+    params: AnthropicExtendedChatCompletionParams
   ): AnthropicChatCompletionParams {
     let tools: Anthropic.Beta.Tools.Tool[] = []
 

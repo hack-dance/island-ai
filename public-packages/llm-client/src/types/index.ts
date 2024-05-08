@@ -4,7 +4,8 @@ import {
   OpenAIClient as AzureClient,
   ChatCompletionsToolDefinitionUnion as AzureChatCompletionTool
   ChatCompletionsToolSelectionPresent,
-  ChatCompletionsNamedToolSelectionUnion
+  ChatCompletionsNamedToolSelectionUnion,
+  ChatRequestMessageUnion
 } from "@azure/openai"
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
@@ -111,7 +112,7 @@ export type AzureExtendedChatCompletionParams = Omit<
   "model" | "messages" | "tools" | "tool_choice"
 > & {
   model: string
-  messages: undefined
+  messages: ChatRequestMessageUnion[]
   tools?: AzureChatCompletionTool[]
   tool_choice?: AzureChatCompletionToolChoice
 }

@@ -33,9 +33,9 @@ export class AzureProvider extends BaseProvider<"azure"> {
     authOpts: AzureAuthenticationOptions
   ): AzureClient {
     // TODO: Is the trailing `?? null` needed
-    const openAiApiKey = p.opts?.apiKey ?? process.env?.OPENAI_API_KEY ?? null
-    const azureApiKey = p.opts?.apiKey ?? process.env?.AZURE_API_KEY ?? null
-    const endpoint = p.opts?.endpoint ?? process.env?.AZURE_ENDPOINT ?? null
+    const openAiApiKey = authOpts?.openAiApiKey ?? process.env?.OPENAI_API_KEY ?? null
+    const azureApiKey = authOpts?.azureApiKey ?? process.env?.AZURE_API_KEY ?? null
+    const endpoint = authOpts?.endpoint ?? process.env?.AZURE_ENDPOINT ?? null
 
     if (openAiApiKey) {
       return new AzureClient(OpenAIKeyCredential(apiKey))
@@ -50,17 +50,17 @@ see README for information on client authentication"
   }
 
   private transformParamsStream(
-    params: ExtendedChatCompletionParams
+    params: AzureExtendedChatCompletionParams
   ): AzureChatCompletionParams {
     return this.transformParamsRegular(params);
   }
 
   private transformParamsRegular(
-    params: ExtendedChatCompletionParams
+    params: AzureExtendedChatCompletionParams
   ): AzureChatCompletionParams {
     return {
       deploymentName: params.model,
-      message: params.messages,
+      messages: params.messages,
       options: params.options
     }
   }
@@ -106,8 +106,8 @@ see README for information on client authentication"
     } : null
   }
 
-  private async abstract *transformResultingStream(
-      responseStream: AsyncIterable<AzureChatCompletion>
+  private async *transformResultingStream(
+    responseStream: AsyncIterable<AzureChatCompletion>
   ): AsyncIterable<AzureExtendedChatCompletion> {
     let transformedResponse: ChatCompletions | null = null
 
@@ -126,10 +126,10 @@ see README for information on client authentication"
   }
 
   private async clientStreamChatCompletions(
-    providerParams: AzureChatCompletionParams
+    azureParams: AzureChatCompletionParams
   ): AsyncIterable<AzureChatCompletion> {
     const result = await this.client.streamChatCompletions(
-      params.deploymentName,
+      azureParams.deploymentName,
       azureParams.messages,
       azureParams.options
     )
@@ -138,10 +138,10 @@ see README for information on client authentication"
   }
 
   private async clientChatCompletions(
-    providerParams: AzureChatCompletionParams
+    azureParams: AzureChatCompletionParams
   ): AzureChatCompletion {
     const result = await this.client.getChatCompletions(
-      params.deploymentName,
+      azureParams.deploymentName,
       azureParams.messages,
       azureParams.options
     )
