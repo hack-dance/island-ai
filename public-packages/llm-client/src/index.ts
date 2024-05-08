@@ -1,4 +1,5 @@
 import { AnthropicProvider } from "@/providers/anthropic"
+import { AzureProvider } from "@/providers/azure"
 import { OpenAIProvider } from "@/providers/openai"
 import { OpenAILikeClient, Providers } from "@/types"
 import { ClientOptions } from "openai"

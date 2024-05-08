@@ -59,8 +59,8 @@ see README for information on client authentication"
     params: ExtendedChatCompletionParams
   ): AzureChatCompletionParams {
     return {
-      deploymentName: params.model 
-      message: params.messages
+      deploymentName: params.model,
+      message: params.messages,
       options: params.options
     }
   }
@@ -77,7 +77,7 @@ see README for information on client authentication"
       created: Math.floor(response.getTime() / 1000),
       model: response.model,
       object: OpenAI.ChatCompletion["object"], // Static value it seems
-      system_fingerprint: response.systemFingerprint ?? null 
+      system_fingerprint: response.systemFingerprint ?? null,
       usage: usage,
       originResponse: response
     }
