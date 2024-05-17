@@ -1,6 +1,6 @@
 {
   "name": "evalz",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Model graded evals with typescript",
   "publishConfig": {
     "access": "public"
