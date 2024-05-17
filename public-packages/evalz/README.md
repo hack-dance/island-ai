@@ -30,7 +30,7 @@ pnpm add evalz openai zod @instructor-ai/instructor
 ```
 
 ## Basic Usage
-Creating an Evaluator
+### Creating an Evaluator
 First, create an evaluator for assessing a single aspect of a response, such as its relevance:
 
 ```typescript
