@@ -1,5 +1,11 @@
 # evalz
 
+## 0.0.3
+
+### Patch Changes
+
+- [`0708276`](https://github.com/hack-dance/island-ai/commit/0708276f32ee6de6ccb81de90a54d6d0e3463ec2) Thanks [@roodboi](https://github.com/roodboi)! - Extra check on delta content - make sure we default in cases where its undefined - primarily to help catch new messages for stream usage at the end of a stream
+
 ## 0.0.2
 
 ### Patch Changes
