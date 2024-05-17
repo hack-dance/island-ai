@@ -25,11 +25,24 @@ export type AvgScoreResults = {
 
 export type EvaluationDataItem = z.infer<typeof EvaluationDataItemSchema>
 export type EvaluationDataItemResult = z.infer<typeof EvaluationDataItemResultSchema>
+
 export type EvaluationResponse<T extends ResultsType> = {
   results: EvaluationDataItemResult[]
 } & (T extends "score" ? { scoreResults: AvgScoreResults } : { binaryResults: BinaryResults })
 
 export type ExecuteEvalParams = { data: EvaluationDataItem[] }
+
 export type Evaluator<T extends ResultsType> = ({
   data
 }: ExecuteEvalParams) => Promise<EvaluationResponse<T>>
+
+export type AccuracyEvaluator = ({
+  data
+}: {
+  data: { completion: string; expectedCompletion: string }[]
+}) => Promise<AccuracyEvaluationResponse>
+
+export type AccuracyEvaluationResponse = {
+  results: { completion: string; expectedCompletion: string }[]
+  scoreResults: AvgScoreResults
+}

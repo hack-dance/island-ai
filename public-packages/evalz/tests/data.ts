@@ -34,3 +34,18 @@ export const data = [
       "The natural phenomenon of gravity was known to humanity, but it was Sir Isaac Newton who first proposed the Universal Law of Gravitation in the 17th century."
   }
 ]
+
+export const accuracyData = [
+  {
+    completion: "The capital of France is Paris.",
+    expectedCompletion: "The capital of France is Paris."
+  },
+  {
+    completion: "Paris is the capital of france.",
+    expectedCompletion: "The capital of France is Paris."
+  },
+  {
+    completion: "it's paris.",
+    expectedCompletion: "The capital of France is Paris."
+  }
+]

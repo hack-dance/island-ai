@@ -1,10 +1,11 @@
 import { createEvaluator } from "@/evaluators"
 import { createWeightedEvaluator } from "@/evaluators/weighted"
+import { createAccuracyEvaluator } from "@/index"
 import { omit } from "@/lib"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
 
-import { data } from "./data"
+import { accuracyData, data } from "./data"
 
 const oai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
@@ -19,6 +20,18 @@ function relevanceEval() {
     client: oai,
     model: "gpt-4-turbo",
     evaluationDescription
+  })
+}
+
+function distanceEval() {
+  return createAccuracyEvaluator({
+    accuracyType: "levenshtein"
+  })
+}
+
+function semanticEval() {
+  return createAccuracyEvaluator({
+    accuracyType: "semantic"
   })
 }
 
@@ -60,6 +73,28 @@ describe("Should eval", () => {
       }
     })
   })
+})
+
+test("Accuracy - distance", async () => {
+  const evaluator = distanceEval()
+
+  const result = await evaluator({
+    data: accuracyData
+  })
+
+  expect(result.scoreResults.value).toBeGreaterThan(0.5)
+})
+
+test("Accuracy - semantic", async () => {
+  const evaluator = semanticEval()
+
+  const result = await evaluator({
+    data: accuracyData
+  })
+
+  console.log(result, "semantic results")
+
+  expect(result.scoreResults.value).toBeGreaterThan(0.8)
 })
 
 describe("Weighted eval", () => {
