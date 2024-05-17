@@ -198,5 +198,3 @@ console.log(result.scoreResults);
 
 ## Contributing
 Contributions are welcome! Please submit a pull request or open an issue to propose changes or additions.
-
-You can copy the entire code block as your updated README file. This version includes installation instructions, basic usage examples, a detailed API reference, and guidelines for contributing.
