@@ -1,16 +1,12 @@
 import { EvaluationResponse, Evaluator, ExecuteEvalParams } from "@/types"
 
 /**
- * The 'createWeightedAccuracyEvaluator' creates a weighted evaluator which computes evaluation scores based on the weighted average of multiple evaluators.
- * The weighted evaluator is useful when you want to combine the results of multiple evaluators to create a more comprehensive performance metric.
- *
- * Output:
- * The function's execute method, when called, returns the following information -
- * - results: contains the score for each item in the data array
- * - binaryResult: contains the number of times the agent's response was pass or fail
- * - scoreResults: contains the average, weighted score of all the items in the data array
- *
- * This weighted evaluator offers a more comprehensive perspective than a simple accuracy calculation and helps to understand the nuances in the model's responses. These weights can then be adjusted according to the specific needs to create a more tailored performance metric.
+ * @name createWeightedEvaluator
+ * @description
+ * Create a weighted evaluator that combines the results of multiple evaluators
+ * @param evaluators - A record of evaluators to combine
+ * @param weights - A record of weights for each evaluator
+ * @returns A weighted evaluator
  */
 export function createWeightedEvaluator({
   evaluators,

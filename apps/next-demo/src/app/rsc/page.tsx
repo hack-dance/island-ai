@@ -44,13 +44,15 @@ async function handleDataStream() {
     },
     params: {
       messages: [{ content: "tell me a story, make it up should be funny", role: "user" }],
-      model: "gpt-4"
+      model: "gpt-4",
+      stream: true
     },
     mode: "TOOLS"
   })
 
   const extractionStream = await client.create({
     completionPromise: async () => {
+      // @ts-ignore
       const stream = await oai.chat.completions.create({
         ...params,
         stream: true

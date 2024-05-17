@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     mode: "TOOLS"
   })
 
+  // @ts-ignore
   const extractionStream = await oai.chat.completions.create(params)
 
   return new Response(
