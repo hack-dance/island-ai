@@ -1,5 +1,11 @@
 # stream-hooks
 
+## 1.0.4
+
+### Patch Changes
+
+- [#57](https://github.com/hack-dance/island-ai/pull/57) [`dcd090c`](https://github.com/hack-dance/island-ai/commit/dcd090cc13022488cfcbd99007933b238bd93f74) Thanks [@roodboi](https://github.com/roodboi)! - Adding new evaluator types - lots of documentation and more tests
+
 ## 1.0.0
 
 ### Patch Changes
