@@ -238,157 +238,77 @@ const completion = await anthropicClient.chat.completions.create({
 });
 ```
 
-### Real-World Examples
+### 4. llm-polyglot
+**llm-polyglot** is a universal LLM client that provides support for various LLM providers, ensuring a consistent API interface.
 
-#### Chatbot Evaluation
+**Key Features:**
+-  Extends the official OpenAI SDK.
+-  Supports providers like Anthropic, Together, OpenAI, Microsoft, Anyscale, and Anthropic.
+-  Universal SDK for multiple LLMs with consistent API.
 
-##### Scenario
-A company wants to evaluate the performance of their AI-powered customer support chatbot to ensure it provides relevant and accurate responses to user queries.
+#### Installation
+```bash
+# with pnpm
+$ pnpm add llm-polyglot openai
 
-##### Approach
-1. **Model-Graded Evaluators**: Use relevance, fluency, and completeness evaluators to assess the overall quality of chatbot responses.
-2. **Accuracy Evaluators**: Measure the accuracy of responses by comparing them to a predefined set of expected answers.
-3. **Context Evaluators**: Assess the relevance of responses within the context of previous user interactions.
+# with npm
+$ npm install llm-polyglot openai
 
-##### Example Code
-```typescript
-import { createEvaluator, createAccuracyEvaluator, createContextEvaluator, createWeightedEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({ apiKey: process.env["OPENAI_API_KEY"] });
-
-const relevanceEval = () => createEvaluator({
-  client: oai,
-  model: "gpt-4-turbo",
-  evaluationDescription: "Please rate the relevance of the response from 0 (not at all relevant) to 1 (highly relevant), considering whether the AI stayed on topic and provided a reasonable answer."
-});
-
-const distanceEval = () => createAccuracyEvaluator({
-  weights: { factual: 0.5, semantic: 0.0 }
-});
-
-const fluencyEval = () => createEvaluator({
-  client: oai,
-  model: "gpt-4-turbo",
-  evaluationDescription: "Please rate the fluency of the response from 0 (not fluent) to 1 (very fluent), considering the grammatical correctness and natural flow."
-});
-
-const completenessEval = () => createEvaluator({
-  client: oai,
-  model: "gpt-4-turbo",
-  evaluationDescription: "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
-});
-
-const context Certainly! Continuing from where we left off:
-
-```typescript
-const contextRelevanceEval = () => createContextEvaluator({ type: "relevance" });
-
-const compositeEvaluator = createWeightedEvaluator({
-  evaluators: {
-    relevance: relevanceEval(),
-    fluency: fluencyEval(),
-    completeness: completenessEval(),
-    accuracy: distanceEval(),
-    contextRelevance: contextRelevanceEval()
-  },
-  weights: {
-    relevance: 0.2,
-    fluency: 0.2,
-    completeness: 0.2,
-    accuracy: 0.2,
-    contextRelevance: 0.2
-  }
-});
-
-const data = [
-  {
-    prompt: "How can I reset my password?",
-    completion: "You can reset your password by clicking on the 'Forgot Password' link on the login page.",
-    expectedCompletion: "To reset your password, click on the 'Forgot Password' link on the login page.",
-    contexts: ["User asked, 'How can I reset my password?'", "Support response: 'You can reset your password by clicking on the 'Forgot Password' link on the login page.'"],
-    groundTruth: "The AI response should guide the user on how to reset their password."
-  }
-];
-
-const result = await compositeEvaluator({ data });
-console.log(result.scoreResults);
+# with bun
+$ bun add llm-polyglot openai
 ```
 
-### Document Retrieval System
-
-#### Scenario
-
-A search engine wants to evaluate the relevance and precision of its document retrieval system to ensure it retrieves the most relevant documents for user queries.
-
-#### Approach
-
-1. **Model-Graded Evaluators**: Use relevance and coverage evaluators to assess the relevance and completeness of retrieved documents.
-2. **Accuracy Evaluators**: Measure the accuracy of document summaries by comparing them to reference summaries.
-3. **Context Evaluators**: Assess the precision and recall of retrieved documents within the context of user queries.
-
-#### Example Code
-
+#### Basic Usage
 ```typescript
-import { createEvaluator, createAccuracyEvaluator, createContextEvaluator, createWeightedEvaluator } from "evalz";
+import { createLLMClient } from "llm-polyglot";
+
+const anthropicClient = createLLMClient({
+  provider: "anthropic",
+});
+
+const completion = await anthropicClient.chat.completions.create({
+  model: "claude-3-opus-20240229",
+  max_tokens: 1000,
+  messages: [{ role: "user", content: "hey how are you" }],
+});
+```
+
+### 5. evalz
+**evalz** is a package designed to facilitate both model-graded, accuracy, and context-based evaluations with a focus on structured output.
+
+**Key Features:**
+-  Structured evaluation models using Zod schemas.
+-  Flexible evaluation strategies including score-based and binary evaluations.
+-  Integration with OpenAI for structured model-graded evaluations.
+-  Supports accuracy evaluations using Levenshtein distance or semantic embeddings.
+-  Context-based evaluations measuring precision, recall, and entities recall.
+
+#### Installation
+```bash
+npm install evalz openai zod @instructor-ai/instructor
+```
+
+#### Basic Usage
+```typescript
+import { createEvaluator } from "evalz";
 import OpenAI from "openai";
 
 const oai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+  organization: process.env["OPENAI_ORG_ID"],
 });
 
-const relevanceEval = () => createEvaluator({
-  client: oai,
-  model: "gpt-4-turbo",
-  evaluationDescription: "Please rate the relevance of the document from 0 (not relevant) to 1 (highly relevant), considering how well the document addresses the query."
-});
+// Define a relevance evaluator
+function relevanceEval() {
+  return createEvaluator({
+    client: oai,
+    model: "gpt-4-turbo",
+    evaluationDescription: "Rate the relevance from 0 to 1.",
+  });
+}
 
-const distanceEval = () => createAccuracyEvaluator({
-  weights: { factual: 0.5, semantic: 0.0 }
-});
-
-const coverageEval = () => createEvaluator({
-  client: oai,
-  model: "gpt-4-turbo",
-  evaluationDescription: "Please rate the coverage of the document from 0 (incomplete) to 1 (complete), considering whether the document addresses all parts of the query."
-});
-
-const contextPrecisionEval = () => createContextEvaluator({ type: "precision" });
-const contextRecallEval = () => createContextEvaluator({ type: "recall" });
-
-const compositeEvaluator = createWeightedEvaluator({
-  evaluators: {
-    relevance: relevanceEval(),
-    coverage: coverageEval(),
-    accuracy: distanceEval(),
-    contextPrecision: contextPrecisionEval(),
-    contextRecall: contextRecallEval()
-  },
-  weights: {
-    relevance: 0.25,
-    coverage: 0.25,
-    accuracy: 0.25,
-    contextPrecision: 0.125,
-    contextRecall: 0.125
-  }
-});
-
-const data = [
-  {
-    prompt: "What are the symptoms of COVID-19?",
-    completion: "The most common symptoms of COVID-19 are fever, dry cough, and tiredness.",
-    expectedCompletion: "Symptoms of COVID-19 include fever, dry cough, and tiredness among others.",
-    contexts: ["User query: 'What are the symptoms of COVID-19?'", "Retrieved document: 'The most common symptoms of COVID-19 are fever, dry cough, and tiredness.'"],
-    groundTruth: "The retrieval system should return documents that list the symptoms of COVID-19."
-  }
-];
-
-const result = await compositeEvaluator({ data });
+// Conducting an evaluation
+const evaluator = relevanceEval();
+const result = await evaluator({ data: yourResponseData });
 console.log(result.scoreResults);
 ```
-
-
-
-## Contributing
-Contributions are welcome! Please submit a pull request or open an issue to propose changes or additions.
