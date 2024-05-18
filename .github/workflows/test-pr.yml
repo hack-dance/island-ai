@@ -40,7 +40,8 @@ jobs:
 
       - name: Install Dependencies
         run: bun install
-
+        
+      - run: bun run build
       - run: bun run type-check
       - run: bun run lint
       - run: bun test --timeout=25000
