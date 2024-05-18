@@ -22,7 +22,7 @@ const relevanceEval = () =>
 
 const distanceEval = () =>
   createAccuracyEvaluator({
-    weights: { factual: 0.5, semantic: 0.0 }
+    weights: { factual: 1.0, semantic: 0.0 }
   })
 
 const semanticEval = () =>

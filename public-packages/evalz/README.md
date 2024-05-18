@@ -564,7 +564,7 @@ const relevanceEval = () => createEvaluator({
 });
 
 const distanceEval = () => createAccuracyEvaluator({
-  weights: { factual: 0.5, semantic: 0.0 }
+  weights: { factual: 0.5, semantic: 0.5 }
 });
 
 const semanticEval = () => createAccuracyEvaluator({
@@ -678,6 +678,190 @@ console.log(result3.scoreResults);
 const result4 = await relevanceEvaluator({ data });
 console.log(result4.scoreResults);
 ```
+
+
+## When and Why to Use Different Evaluators
+
+### Model-Graded Evaluators
+-  **When to Use**: Assess the quality of responses based on criteria such as relevance, fluency, and completeness.
+-  **Why to Use**: Provides detailed feedback on different aspects of the response, integrates seamlessly with AI systems, and automates the assessment process.
+-  **Examples**: Evaluating chatbot responses, assessing AI-generated content, and measuring customer support responses.
+
+### Accuracy Evaluators
+-  **When to Use**: Evaluate the similarity between two pieces of text, validate the accuracy of AI-generated content, and compare generated responses to training data.
+-  **Why to Use**: Provides a precise measure of text similarity using advanced embeddings and flexible metrics like Levenshtein distance and cosine similarity.
+-  **Examples**: Evaluating machine translations, comparing text summaries, and measuring grammar corrections.
+
+### Context Evaluators
+-  **When to Use**: Assess the relevance of retrieved documents, measure how well AI-generated answers align with the given context, and evaluate the relevance of categorized content.
+-  **Why to Use**: Provides detailed insights into the contextual relevance of content, evaluates various criteria like precision, recall, and entities recall, and enhances understanding of AI-generated content in context.
+-  **Examples**: Evaluating rag results, measuring document retrieval relevance, and assessing content matching in personalized feeds.
+
+### Composite Weighted Evaluators
+-  **When to Use**: Combine multiple types of evaluations for a comprehensive assessment, including model-graded, accuracy, and context-based evaluations.
+-  **Why to Use**: Provides a holistic evaluation by combining various criteria and applying custom weights to each evaluator.
+-  **Examples**: Evaluating the overall performance of AI-powered systems like chatbots and rag apps.
+
+
+## Real-World Examples
+
+### Chatbot Evaluation
+
+#### Scenario
+
+A company wants to evaluate the performance of their AI-powered customer support chatbot to ensure it provides relevant and accurate responses to user queries.
+
+#### Approach
+
+1. **Model-Graded Evaluators**: Use relevance, fluency, and completeness evaluators to assess the overall quality of chatbot responses.
+2. **Accuracy Evaluators**: Measure the accuracy of responses by comparing them to a predefined set of expected answers.
+3. **Context Evaluators**: Assess the relevance of responses within the context of previous user interactions.
+
+#### Example Code
+
+```typescript
+import { createEvaluator, createAccuracyEvaluator, createContextEvaluator, createWeightedEvaluator } from "evalz";
+
+
+const oai = new OpenAI({
+  apiKey: process.env["OPENAI_API_KEY"]
+});
+
+
+const relevanceEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the relevance of the response from 0 (not at all relevant) to 1 (highly relevant), considering whether the AI stayed on topic and provided a reasonable answer."
+});
+
+const distanceEval = () => createAccuracyEvaluator({
+  weights: { factual: 0.5, semantic: 0.5 }
+});
+
+const fluencyEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the fluency of the response from 0 (not fluent) to 1 (very fluent), considering the grammatical correctness and natural flow."
+});
+
+const completenessEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
+});
+
+const contextRelevanceEval = () => createContextEvaluator({ type: "relevance" });
+const compositeEvaluator = createWeightedEvaluator({
+  evaluators: {
+    relevance: relevanceEval(),
+    fluency: fluencyEval(),
+    completeness: completenessEval(),
+    accuracy: distanceEval(),
+    contextRelevance: contextRelevanceEval()
+  },
+  weights: {
+    relevance: 0.2,
+    fluency: 0.2,
+    completeness: 0.2,
+    accuracy: 0.2,
+    contextRelevance: 0.2
+  }
+});
+
+
+const data = [
+  {
+    prompt: "How can I reset my password?",
+    completion: "You can reset your password by clicking on the 'Forgot Password' link on the login page.",
+    expectedCompletion: "To reset your password, click on the 'Forgot Password' link on the login page.",
+    contexts: ["User asked, 'How can I reset my password?'", "Support response: 'You can reset your password by clicking on the 'Forgot Password' link on the login page.'"],
+    groundTruth: "Please guide the user on resetting their password."
+  }
+];
+
+
+const result = await compositeEvaluator({ data });
+console.log(result.scoreResults);
+```
+
+
+### Document Retrieval System
+
+#### Scenario
+
+A rag wants to evaluate the relevance and precision of its document retrieval system to ensure it retrieves the most relevant documents for user queries.
+
+#### Approach
+
+1. **Model-Graded Evaluators**: Use relevance and coverage evaluators to assess the relevance and completeness of retrieved documents.
+2. **Accuracy Evaluators**: Measure the accuracy of document summaries by comparing them to reference summaries.
+3. **Context Evaluators**: Assess the precision and recall of retrieved documents within the context of user queries.
+
+#### Example Code
+
+```typescript
+import { createEvaluator, createAccuracyEvaluator, createContextEvaluator, createWeightedEvaluator } from "evalz";
+
+
+const oai = new OpenAI({
+  apiKey: process.env["OPENAI_API_KEY"],
+  organization: process.env["OPENAI_ORG_ID"]
+});
+
+
+const relevanceEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the relevance of the document from 0 (not relevant) to 1 (highly relevant), considering how well the document addresses the query."
+});
+
+const distanceEval = () => createAccuracyEvaluator({
+  weights: { factual: 0.5, semantic: 0.5 }
+});
+
+const coverageEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the coverage of the document from 0 (incomplete) to 1 (complete), considering whether the document addresses all parts of the query."
+});
+
+const contextPrecisionEval = () => createContextEvaluator({ type: "precision" });
+const contextRecallEval = () => createContextEvaluator({ type: "recall" });
+
+
+const compositeEvaluator = createWeightedEvaluator({
+  evaluators: {
+    relevance: relevanceEval(),
+    coverage: coverageEval(),
+    accuracy: distanceEval(),
+    contextPrecision: contextPrecisionEval(),
+    contextRecall: contextRecallEval()
+  },
+  weights: {
+    relevance: 0.25,
+    coverage: 0.25,
+    accuracy: 0.25,
+    contextPrecision: 0.125,
+    contextRecall: 0.125
+  }
+});
+
+
+const data = [
+  {
+    prompt: "What are the symptoms of COVID-19?",
+    completion: "The most common symptoms of COVID-19 are fever, dry cough, and tiredness.",
+    expectedCompletion: "Symptoms of COVID-19 include fever, dry cough, and tiredness among others.",
+    contexts: ["User query: 'What are the symptoms of COVID-19?'", "Retrieved document: 'The most common symptoms of COVID-19 are fever, dry cough, and tiredness.'"],
+    groundTruth: "The retrieval system should return documents that list the symptoms of COVID-19."
+  }
+];
+
+
+const result = await compositeEvaluator({ data });
+console.log(result.scoreResults);
+```
+
 
 ## Contributing
 
