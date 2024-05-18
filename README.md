@@ -7,6 +7,9 @@
   <a aria-label="NPM version" href="https://www.npmjs.com/package/zod-stream">
     <img alt="zod-stream" src="https://img.shields.io/npm/v/zod-stream.svg?style=flat-square&logo=npm&labelColor=000000&label=zod-stream">
   </a>
+    <a aria-label="NPM version" href="https://www.npmjs.com/package/evalz">
+    <img alt="evalz" src="https://img.shields.io/npm/v/evalz.svg?style=flat-square&logo=npm&labelColor=000000&label=evalz">
+  </a>
   <a aria-label="NPM version" href="https://www.npmjs.com/package/stream-hooks">
     <img alt="stream-hooks" src="https://img.shields.io/npm/v/stream-hooks.svg?style=flat-square&logo=npm&labelColor=000000&label=stream-hooks">
   </a>
