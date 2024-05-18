@@ -15,7 +15,7 @@ const oai = new OpenAI({
 const relevanceEval = () =>
   createEvaluator({
     client: oai,
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
     evaluationDescription:
       "Please rate the relevance of the response from 0 (not at all relevant) to 1 (highly relevant), considering whether the AI stayed on topic and provided a reasonable answer."
   })
@@ -33,7 +33,7 @@ const semanticEval = () =>
 const fluencyEval = () =>
   createEvaluator({
     client: oai,
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
     evaluationDescription:
       "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
   })
@@ -41,7 +41,7 @@ const fluencyEval = () =>
 const completenessEval = () =>
   createEvaluator({
     client: oai,
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
     evaluationDescription:
       "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
   })
