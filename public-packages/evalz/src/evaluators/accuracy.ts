@@ -1,91 +1,86 @@
-import { AccuracyEvaluationResponse, AccuracyEvaluator } from "@/types"
+import { EvaluationResponse, Evaluator } from "@/types"
 import { distance } from "fastest-levenshtein"
 import OpenAI from "openai"
 
-/**
- * Calculate the dot product of two vectors
- * @param a - First vector
- * @param b - Second vector
- * @returns The dot product
- */
-function dot(a: number[], b: number[]): number {
-  return a.reduce((sum, val, index) => sum + val * b[index], 0)
-}
-
-/**
- * Calculate the cosine similarity between two vectors
- * @param a - First vector
- * @param b - Second vector
- * @returns The cosine similarity (0 to 1)
- */
-function cosineSimilarity(a: number[], b: number[]): number {
-  const dotProduct = dot(a, b)
-  const magnitudeA = Math.sqrt(dot(a, a))
-  const magnitudeB = Math.sqrt(dot(b, b))
-  return magnitudeA && magnitudeB ? dotProduct / (magnitudeA * magnitudeB) : 0
-}
+import { cosineSimilarity } from "@/lib/cosine"
 
 export function createAccuracyEvaluator({
-  accuracyType = "levenshtein"
+  model,
+  weights = { factual: 0.5, semantic: 0.5 }
 }: {
-  accuracyType?: "levenshtein" | "semantic"
-}): AccuracyEvaluator {
+  model?: OpenAI.Embeddings.EmbeddingCreateParams["model"]
+  weights?: { factual: number; semantic: number }
+}): Evaluator<"score"> {
   const execute = async ({
     data
   }: {
-    data: { completion: string; expectedCompletion: string }[]
-  }): Promise<AccuracyEvaluationResponse> => {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    data: { completion: string; expectedCompletion?: string }[]
+  }): Promise<EvaluationResponse<"score">> => {
+    const openai = new OpenAI({ apiKey: process.env["OPENAI_API_KEY"] })
 
     const evaluationResults = await Promise.all(
       data.map(async item => {
         const { completion, expectedCompletion } = item
 
-        let score = 0
-
-        switch (accuracyType) {
-          case "levenshtein": {
-            const levDist = distance(completion, expectedCompletion)
-            score = 1 - levDist / Math.max(completion.length, expectedCompletion.length)
-            break
-          }
-          case "semantic": {
-            const [completionEmbedding, expectedEmbedding] = await Promise.all([
-              openai.embeddings.create({ input: [completion], model: "text-embedding-3-small" }),
-              openai.embeddings.create({
-                input: [expectedCompletion],
-                model: "text-embedding-3-small"
-              })
-            ])
-
-            score = cosineSimilarity(
-              completionEmbedding.data[0].embedding,
-              expectedEmbedding.data[0].embedding
-            )
-            break
-          }
-          default:
-            score = 0
+        if (!completion || !expectedCompletion) {
+          console.warn("Completion or expected completion is missing.")
+          return undefined
         }
 
-        return {
-          completion,
-          expectedCompletion,
-          score
+        try {
+          const factualDistance = distance(completion, expectedCompletion)
+          const factualScore =
+            1 - factualDistance / Math.max(completion.length, expectedCompletion.length)
+
+          const [completionEmbedding, expectedEmbedding] = await Promise.all([
+            openai.embeddings.create({
+              input: [completion],
+              model: model ?? "text-embedding-ada-002"
+            }),
+            openai.embeddings.create({
+              input: [expectedCompletion],
+              model: model ?? "text-embedding-ada-002"
+            })
+          ])
+
+          const semanticScore = cosineSimilarity(
+            completionEmbedding.data[0].embedding,
+            expectedEmbedding.data[0].embedding
+          )
+
+          const score = weights.factual * factualScore + weights.semantic * semanticScore
+
+          return {
+            item: {
+              completion,
+              expectedCompletion
+            },
+            score
+          }
+        } catch (error) {
+          console.error("Error in accuracy evaluation:", error)
+          return undefined
         }
       })
     )
 
+    const validResults = evaluationResults.filter(
+      (e): e is NonNullable<typeof e> => e !== undefined
+    )
+
     const avgScore =
-      evaluationResults.reduce((sum, { score = 0 }) => sum + score, 0) / evaluationResults.length
+      validResults.length > 0
+        ? validResults.reduce((sum, { score }) => sum + score, 0) / validResults.length
+        : 0
 
     return {
-      results: evaluationResults,
+      results: validResults,
       scoreResults: {
         value: avgScore
       }
     }
   }
 
+  execute.evalType = "accuracy" as const
   return execute
 }

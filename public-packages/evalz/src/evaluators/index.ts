@@ -26,6 +26,7 @@ export function createEvaluator<T extends ResultsType>({
     throw new Error("Evaluation description was not provided.")
   }
 
+  //@ts-expect-error
   const instructorClient = createInstructor<OpenAI>({
     client,
     mode: "TOOLS"
@@ -108,6 +109,8 @@ export function createEvaluator<T extends ResultsType>({
 
     return resultObject as unknown as EvaluationResponse<T>
   }
+
+  execute.evalType = "model-graded" as const
 
   return execute
 }

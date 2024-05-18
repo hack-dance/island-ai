@@ -1,15 +1,17 @@
 import { z } from "zod"
 
-export const EvaluationDataItemSchema = z.object({
-  prompt: z.string(),
+export const BaseEvaluationDataItemSchema = z.object({
+  prompt: z.string().optional(),
   completion: z.string(),
-  expectedCompletion: z.string().optional()
+  expectedCompletion: z.string().optional(),
+  contexts: z.array(z.string()).optional(),
+  groundTruth: z.string().optional()
 })
 
+export const EvaluationDataItemSchema = BaseEvaluationDataItemSchema
+
 export const EvaluationDataItemResultSchema = z.object({
-  score: z.object({
-    value: z.number()
-  }),
+  score: z.number(),
   item: EvaluationDataItemSchema
 })
 
@@ -32,17 +34,18 @@ export type EvaluationResponse<T extends ResultsType> = {
 
 export type ExecuteEvalParams = { data: EvaluationDataItem[] }
 
-export type Evaluator<T extends ResultsType> = ({
+interface EvalFunction extends Function {
+  evalType: "model-graded" | "accuracy" | `context-${ContextEvaluatorType}` | "weighted"
+}
+
+export type _Evaluator<T extends ResultsType> = ({
   data
 }: ExecuteEvalParams) => Promise<EvaluationResponse<T>>
 
-export type AccuracyEvaluator = ({
-  data
-}: {
-  data: { completion: string; expectedCompletion: string }[]
-}) => Promise<AccuracyEvaluationResponse>
+export interface Evaluator<T extends ResultsType> extends _Evaluator<T>, EvalFunction {}
 
-export type AccuracyEvaluationResponse = {
-  results: { completion: string; expectedCompletion: string }[]
-  scoreResults: AvgScoreResults
-}
+export type ContextEvaluatorType = "entities-recall" | "precision" | "recall" | "relevance"
+
+export type ContextEvaluator = Evaluator<"score">
+
+export type AccuracyEvaluator = Evaluator<"score">

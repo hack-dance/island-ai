@@ -1,51 +1,57 @@
-export const data = [
+// contextData.ts
+export const contextData = [
   {
-    prompt: "Who were the key figures in the American civil war?",
-    completion:
-      "Key figures in the American Civil War included President Abraham Lincoln from the North, Confederate President Jefferson Davis, General Robert E. Lee from the South, and General Ulysses S. Grant from the North."
+    prompt: "When was the first super bowl?",
+    completion: "The first super bowl was held on January 15, 1967.",
+    groundTruth: "The first super bowl was held on January 15, 1967.",
+    contexts: [
+      "The First AFL–NFL World Championship Game was an American football game played on January 15, 1967, at the Los Angeles Memorial Coliseum in Los Angeles.",
+      "This first championship game is retroactively referred to as Super Bowl I."
+    ]
   },
   {
-    prompt: "What was the Roman Empire?",
-    completion:
-      "The Roman Empire was a vast and powerful civilization that emerged in Italy around 27 BC, and lasted till 476 AD. Its domain extended over three continents, Europe, Asia, and Africa."
-  },
-  {
-    prompt: "Tell me about the Renaissance.",
-    completion:
-      "The Renaissance spanned from the 14th to the 17th century, this was a fervent period of European cultural, artistic, political and economic 'rebirth' following the Middle Ages. Key figures such as Leonardo Da Vinci and Michelangelo made significant contributions."
-  },
-  {
-    prompt: "What led to the fall of the Berlin Wall?",
-    completion:
-      "The Berlin Wall fell in 1989, largely due to political pressure from key international leaders, growing civil unrest in East Germany, and the economic disparity manifest by the prosperity of West Germany."
-  },
-  {
-    prompt: "When was the Magna Carta signed?",
-    completion: "The Magna Carta was signed on June 15 1215, in Runnymede, England."
-  },
-  {
-    prompt: "Who was Confucius?",
-    completion:
-      "Confucius was an influential Chinese philosopher, teacher and political figure known for his popular adages and for his models of social interaction. His philosophy, known as Confucianism, is crucial for understanding Chinese culture today."
-  },
-  {
-    prompt: "Who discovered gravity?",
-    completion:
-      "The natural phenomenon of gravity was known to humanity, but it was Sir Isaac Newton who first proposed the Universal Law of Gravitation in the 17th century."
+    prompt: "Who won the most Super Bowls?",
+    completion: "The New England Patriots have won the most Super Bowls.",
+    groundTruth: "The New England Patriots have won the Super Bowl a record six times.",
+    contexts: [
+      "The New England Patriots have won the Super Bowl a record six times.",
+      "Other notable teams include the Pittsburgh Steelers with six and the San Francisco 49ers with five."
+    ]
   }
 ]
 
+// accuracyData.ts
+
 export const accuracyData = [
   {
-    completion: "The capital of France is Paris.",
-    expectedCompletion: "The capital of France is Paris."
+    completion: "The first superbowl was held on January 15th, 1967.",
+    expectedCompletion: "The first superbowl was held on January 15, 1967."
   },
   {
-    completion: "Paris is the capital of france.",
-    expectedCompletion: "The capital of France is Paris."
+    completion: "The New England Patriots hold the record with six Super Bowl wins.",
+    expectedCompletion: "The New England Patriots have won the Super Bowl a record six times."
   },
   {
-    completion: "it's paris.",
-    expectedCompletion: "The capital of France is Paris."
+    completion: "The Eiffel Tower is located in Berlin.",
+    expectedCompletion: "The Eiffel Tower is located in Paris."
+  }
+]
+
+// data.ts
+
+export const data = [
+  {
+    prompt: "What were the key causes of the Great Depression?",
+    completion:
+      "The Great Depression was caused by a combination of factors including the stock market crash of 1929, bank failures, and high unemployment rates.",
+    expectedCompletion:
+      "The key causes of the Great Depression include the stock market crash of 1929, bank failures, and high unemployment rates."
+  },
+  {
+    prompt: "Describe the significance of the moon landing in 1969.",
+    completion:
+      "The moon landing in 1969 was significant as it marked the first time humans set foot on the moon, showcasing the technological advancements of the time.",
+    expectedCompletion:
+      "The moon landing in 1969 was significant because it was the first time humans landed on the moon, demonstrating significant technological achievements."
   }
 ]
