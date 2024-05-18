@@ -1,5 +1,13 @@
 # evalz
 
+## 0.1.0
+
+### Minor Changes
+
+- [#57](https://github.com/hack-dance/island-ai/pull/57) [`eddf0ef`](https://github.com/hack-dance/island-ai/commit/eddf0ef4cfef5f401287f30f8da3038f23ae22e9) Thanks [@roodboi](https://github.com/roodboi)! - adding accuracy evals
+
+- [#57](https://github.com/hack-dance/island-ai/pull/57) [`dcd090c`](https://github.com/hack-dance/island-ai/commit/dcd090cc13022488cfcbd99007933b238bd93f74) Thanks [@roodboi](https://github.com/roodboi)! - Adding new evaluator types - lots of documentation and more tests
+
 ## 0.0.3
 
 ### Patch Changes
