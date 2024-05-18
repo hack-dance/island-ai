@@ -18,4 +18,5 @@ const withMDX = createMDX({
     rehypePlugins: [[rehypePrettyCode, options]]
   }
 })
+
 export default withMDX(nextConfig)

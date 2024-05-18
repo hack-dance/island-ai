@@ -98,8 +98,7 @@
   "peerDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "latest",
-    "next": "v14.0.4"
+    "lucide-react": "latest"
   },
   "dependencies": {
     "@uiw/react-color": "^2.0.5",
