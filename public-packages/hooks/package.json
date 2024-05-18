@@ -34,7 +34,7 @@
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
   },
   "devDependencies": {
-    "zod-stream": "^1.0.0",
+    "zod-stream": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/tailwind-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
@@ -51,7 +51,7 @@
     "tsup": "^8.0.1"
   },
   "peerDependencies": {
-    "zod-stream": "^1.0.0",
+    "zod-stream": "^1.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zod": ">=3.22.4"

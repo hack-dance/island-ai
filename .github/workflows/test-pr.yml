@@ -39,8 +39,9 @@ jobs:
           node-version: 20.9.0
 
       - name: Install Dependencies
-        run: bun i
-
+        run: bun install
+        
+      - run: bun run build
       - run: bun run type-check
       - run: bun run lint
       - run: bun test --timeout=25000
