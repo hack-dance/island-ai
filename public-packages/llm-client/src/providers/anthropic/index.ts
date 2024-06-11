@@ -75,7 +75,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    * @returns A Promise that resolves to an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
    */
   private async transformResponse(
-    result: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage,
+    result: Anthropic.Messages.Message,
     { stream }: { stream?: boolean } = {}
   ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
     if (!result.id) throw new Error("Response id is undefined")
@@ -105,7 +105,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     if (!stream) {
       const toolUseBlocks = result.content.filter(
         block => block.type === "tool_use"
-      ) as Anthropic.Beta.Tools.ToolUseBlock[]
+      ) as Anthropic.ToolUseBlock[]
 
       const resultTextBlocks = result.content.filter(
         block => block.type === "text"
@@ -162,14 +162,14 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    */
   private transformParamsRegular(
     params: AnthropicChatCompletionParams
-  ): Anthropic.Beta.Tools.Messages.MessageCreateParamsNonStreaming {
-    let tools: Anthropic.Beta.Tools.Tool[] = []
+  ): Anthropic.Messages.MessageCreateParams {
+    let tools: Anthropic.Tool[] = []
 
     const systemMessages = params.messages.filter(message => message.role === "system")
 
     const messages = params.messages.filter(
       message => message.role === "user" || message.role === "assistant"
-    ) as Anthropic.Beta.Tools.ToolsBetaMessageParam[]
+    ) as Anthropic.MessageParam[]
 
     const system = systemMessages?.length
       ? systemMessages.map(message => message.content).join("\n")
@@ -196,15 +196,6 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
       }))
     }
 
-    if (
-      "tool_choice" in params &&
-      typeof params.tool_choice === "object" &&
-      "function" in params.tool_choice
-    ) {
-      messages[messages.length - 1].content +=
-        `\n\nUse the ${params.tool_choice.function.name} tool in your response`
-    }
-
     return {
       model: params.model,
       tools,
@@ -219,46 +210,16 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
       temperature: params.temperature ?? undefined,
       top_p: params.top_p ?? undefined,
       top_k: params.n ?? undefined,
-      stream: false
-    }
-  }
-
-  private transformParamsStream(
-    params: AnthropicChatCompletionParams
-  ): Anthropic.Messages.MessageCreateParamsStreaming {
-    const systemMessages = params.messages.filter(message => message.role === "system")
-    const messages = params.messages.filter(
-      message => message.role === "user" || message.role === "assistant"
-    ) as Anthropic.MessageParam[]
-
-    const system = systemMessages?.length
-      ? systemMessages.map(message => message.content).join("\n")
-      : ""
-
-    if (systemMessages.length) {
-      console.warn(
-        "Anthropic does not support system messages - concatenating them all into a single 'system' property."
-      )
-    }
-
-    if (!params.max_tokens) {
-      throw new Error("max_tokens is required")
-    }
-
-    return {
-      model: params.model,
-      system: system?.length ? system : undefined,
-      messages,
-      max_tokens: params.max_tokens,
-      stop_sequences: params.stop
-        ? Array.isArray(params.stop)
-          ? params.stop
-          : [params.stop]
-        : undefined,
-      temperature: params.temperature ?? undefined,
-      top_p: params.top_p ?? undefined,
-      top_k: params.n ?? undefined,
-      stream: true
+      stream: params?.stream ?? false,
+      tool_choice:
+        "tool_choice" in params &&
+        typeof params.tool_choice === "object" &&
+        "function" in params.tool_choice
+          ? {
+              type: "tool",
+              name: params.tool_choice.function.name
+            }
+          : undefined
     }
   }
 
@@ -284,7 +245,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           continue
 
         case "content_block_delta":
-          if (data.delta && data.delta.text) {
+          if (data.delta && data.delta.type === "text_delta" && data.delta?.text) {
             if (finalChatCompletion && finalChatCompletion.choices) {
               if (data.delta.text) {
                 finalChatCompletion.choices[0].delta = {
@@ -296,6 +257,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
 
             yield finalChatCompletion as ExtendedCompletionChunkAnthropic
           }
+
           continue
 
         case "content_block_stop":
@@ -340,13 +302,9 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     params: AnthropicChatCompletionParams
   ): Promise<AsyncIterable<ExtendedCompletionChunkAnthropic> | ExtendedCompletionAnthropic> {
     try {
-      if (params.stream) {
-        //@ts-expect-error if tools get passed in even if type errors throw, we should explictly throw here
-        if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
-          throw new Error("Streaming is not currently supported with tools in the Anthropic API.")
-        }
+      const anthropicParams = this.transformParamsRegular(params)
 
-        const anthropicParams = this.transformParamsStream(params)
+      if (params.stream) {
         this.log("debug", "Starting streaming completion response")
 
         const messageStream = await this.messages.stream({
@@ -355,19 +313,10 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
 
         return this.streamChatCompletion(messageStream)
       } else {
-        const anthropicParams = this.transformParamsRegular(params)
-
-        const result = await this.beta.tools.messages.create(
-          {
-            ...anthropicParams,
-            stream: false
-          },
-          {
-            headers: {
-              "anthropic-beta": "tools-2024-04-04"
-            }
-          }
-        )
+        const result = await this.messages.create({
+          ...anthropicParams,
+          stream: false
+        })
 
         const transformedResult = await this.transformResponse(result)
 
