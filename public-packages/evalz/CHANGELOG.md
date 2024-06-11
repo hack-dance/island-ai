@@ -1,5 +1,11 @@
 # evalz
 
+## 0.1.2
+
+### Patch Changes
+
+- [`f123f7d`](https://github.com/hack-dance/island-ai/commit/f123f7d147f30d4ce4ac169809e97e2207d831b2) Thanks [@roodboi](https://github.com/roodboi)! - update build
+
 ## 0.1.0
 
 ### Minor Changes
