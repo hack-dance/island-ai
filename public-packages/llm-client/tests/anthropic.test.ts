@@ -199,6 +199,7 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
         const completion = await anthropicClient.chat.completions.create({
           model,
           max_tokens: 1000,
+          stream: true,
           messages: [
             {
               role: "user",
@@ -206,8 +207,12 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
             }
           ]
         })
+        let final = ""
+        for await (const message of completion) {
+          final += message.choices?.[0].delta?.content ?? ""
+        }
 
-        expect((completion?.choices ?? [])[0].message.content).toInclude("Paris")
+        expect(final).toInclude("Paris")
       })
     })
 
@@ -245,7 +250,7 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
       for await (const message of completion) {
         final += message.choices?.[0].delta?.content ?? ""
       }
-      console.log(final)
+
       expect(final).toBeString()
     })
 

@@ -308,6 +308,15 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           yield finalChatCompletion as ExtendedCompletionChunkAnthropic
           continue
 
+        case "message_delta":
+          if (finalChatCompletion && finalChatCompletion?.usage) {
+            finalChatCompletion.usage.completion_tokens = data?.usage?.output_tokens
+            finalChatCompletion.usage.total_tokens =
+              finalChatCompletion.usage.prompt_tokens + data?.usage?.output_tokens
+          }
+
+          continue
+
         case "message_stop":
           this.log("debug", "Message stop:", data)
       }
