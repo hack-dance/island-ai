@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 1.0.1
+
+### Patch Changes
+
+- [`8866730`](https://github.com/hack-dance/island-ai/commit/8866730aa7f59cdaa9b9671563966ab79ca43a7a) Thanks [@roodboi](https://github.com/roodboi)! - Update stream usage collection for anthropic provider
+
 ## 1.0.0
 
 ### Major Changes
@@ -22,5 +28,4 @@
 
 ### Patch Changes
 
-- [#39](https://github.com/hack-dance/island-ai/pull/39) [`f5acc1784925c2726eeb3fd0a9f491ab0c6f5758`](https://github.com/hack-dance/island-ai/commit/f5acc1784925c2726eeb3fd0a9f491ab0c6f5758) Thanks [@roodboi](https://github.com/roodboi)! - protect against parsing tokens if we have hit an ended state in schema-stream.
-  add initial function calling support in lly-polyglot
+- [#39](https://github.com/hack-dance/island-ai/pull/39) [`f5acc1784925c2726eeb3fd0a9f491ab0c6f5758`](https://github.com/hack-dance/island-ai/commit/f5acc1784925c2726eeb3fd0a9f491ab0c6f5758) Thanks [@roodboi](https://github.com/roodboi)! - protect against parsing tokens if we have hit an ended state in schema-stream. add initial function calling support in lly-polyglot
