@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 2.0.0
+
+### Major Changes
+
+- [#60](https://github.com/hack-dance/island-ai/pull/60) [`92434c6`](https://github.com/hack-dance/island-ai/commit/92434c62a3dcf53f073ccbbc56abea8e652f201d) Thanks [@roodboi](https://github.com/roodboi)! - update anthropic tool use api to use new stable + streaming json
+
 ## 1.0.1
 
 ### Patch Changes
