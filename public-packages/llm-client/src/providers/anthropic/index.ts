@@ -258,6 +258,19 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
             yield finalChatCompletion as ExtendedCompletionChunkAnthropic
           }
 
+          if (data.delta && data.delta.type === "input_json_delta") {
+            if (finalChatCompletion && finalChatCompletion.choices) {
+              if (data.delta.partial_json) {
+                finalChatCompletion.choices[0].delta = {
+                  content:
+                    (finalChatCompletion.choices?.[0]?.delta?.content ?? "") +
+                    data.delta.partial_json,
+                  role: "assistant"
+                }
+              }
+            }
+          }
+
           continue
 
         case "content_block_stop":

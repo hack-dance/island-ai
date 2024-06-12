@@ -102,7 +102,6 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
 
         let final = ""
         for await (const message of completion) {
-          console.log(JSON.stringify(message, null, 2))
           final += message.choices?.[0].delta?.content ?? ""
         }
 
