@@ -12,29 +12,27 @@ type SupportedChatCompletionMessageParam = Omit<
     | (
         | Anthropic.Messages.TextBlockParam
         | Anthropic.Messages.ImageBlockParam
-        | Anthropic.Beta.Tools.Messages.ToolUseBlockParam
-        | Anthropic.Beta.Tools.Messages.ToolResultBlockParam
+        | Anthropic.Messages.ToolUseBlockParam
+        | Anthropic.Messages.ToolResultBlockParam
       )[]
 }
 
 export type ExtendedCompletionAnthropic = Partial<OpenAI.ChatCompletion> & {
-  originResponse: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage
+  originResponse: Anthropic.Messages.Message | Anthropic.Messages.ToolResultBlockParam
 }
 
 export type ExtendedCompletionChunkAnthropic = Partial<OpenAI.ChatCompletionChunk> & {
-  originResponse: Anthropic.Messages.Message | Anthropic.Beta.Tools.Messages.ToolsBetaMessage
+  originResponse: Anthropic.Messages.Message | Anthropic.Messages.ToolResultBlockParam
 }
 
 export type AnthropicChatCompletionParamsStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
-  "model" | "messages" | "tools" | "tool_choice"
+  "model" | "messages"
 > & {
   model: Anthropic.CompletionCreateParams["model"]
   messages: SupportedChatCompletionMessageParam[]
   stream: true
   max_tokens: number
-  tools?: undefined
-  tool_choice?: undefined
 }
 
 export type AnthropicChatCompletionParamsNonStream = Omit<

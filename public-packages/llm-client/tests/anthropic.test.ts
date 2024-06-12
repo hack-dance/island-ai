@@ -62,6 +62,52 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
         })
       })
 
+      test("Function Calling Stream", async () => {
+        const completion = await anthropicClient.chat.completions.create({
+          model,
+          max_tokens: 1000,
+          stream: true,
+          messages: [
+            {
+              role: "user",
+              content: "My name is Dimitri Kennedy."
+            }
+          ],
+          tool_choice: {
+            type: "function",
+            function: {
+              name: "say_hello"
+            }
+          },
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "say_hello",
+                description: "Say hello",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    name: {
+                      type: "string"
+                    }
+                  },
+                  required: ["name"],
+                  additionalProperties: false
+                }
+              }
+            }
+          ]
+        })
+
+        let final = ""
+        for await (const message of completion) {
+          final += message.choices?.[0].delta?.content ?? ""
+        }
+
+        console.log(final)
+      })
+
       test("Function Calling complex schema", async () => {
         const completion = await anthropicClient.chat.completions.create({
           model,
