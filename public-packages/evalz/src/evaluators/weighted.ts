@@ -73,7 +73,7 @@ export function createWeightedEvaluator({
               return result?.results?.[0]?.score
                 ? {
                     score: result?.results?.[0]?.score,
-                    evaluator: evaluator.name,
+                    evaluator: key,
                     evaluatorType: evaluator.evalType
                   }
                 : undefined
