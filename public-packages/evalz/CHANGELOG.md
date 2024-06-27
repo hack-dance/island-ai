@@ -1,5 +1,11 @@
 # evalz
 
+## 0.1.3
+
+### Patch Changes
+
+- [`c07432c`](https://github.com/hack-dance/island-ai/commit/c07432ca7cf66ba9a2507d66aa8f8fc46d617347) Thanks [@roodboi](https://github.com/roodboi)! - adding type and additional info to "scores in the composite item response"
+
 ## 0.1.2
 
 ### Patch Changes
