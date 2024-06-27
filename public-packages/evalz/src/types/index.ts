@@ -12,6 +12,15 @@ export const EvaluationDataItemSchema = BaseEvaluationDataItemSchema
 
 export const EvaluationDataItemResultSchema = z.object({
   score: z.number(),
+  scores: z
+    .array(
+      z.object({
+        score: z.number(),
+        evaluator: z.string(),
+        evaluatorType: z.string()
+      })
+    )
+    .optional(),
   item: EvaluationDataItemSchema
 })
 

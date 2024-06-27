@@ -70,7 +70,13 @@ export function createWeightedEvaluator({
                     ]
                   })
 
-              return result?.results?.[0]?.score ?? undefined
+              return result?.results?.[0]?.score
+                ? {
+                    score: result?.results?.[0]?.score,
+                    evaluator: evaluator.name,
+                    evaluatorType: evaluator.evalType
+                  }
+                : undefined
             } catch (error) {
               console.error(`Error evaluating ${key}:`, error)
               return undefined
@@ -92,7 +98,7 @@ export function createWeightedEvaluator({
         }
 
         const weightedScore = Object.keys(weights).reduce(
-          (sum, key, index) => sum + weights[key] * (validResults[index] ?? 0),
+          (sum, key, index) => sum + weights[key] * (validResults?.[index]?.score ?? 0),
           0
         )
 
