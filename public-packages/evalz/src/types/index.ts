@@ -32,6 +32,7 @@ export type BinaryResults = {
 
 export type AvgScoreResults = {
   value: number
+  individual?: Record<string, number>
 }
 
 export type EvaluationDataItem = z.infer<typeof EvaluationDataItemSchema>
@@ -39,9 +40,7 @@ export type EvaluationDataItemResult = z.infer<typeof EvaluationDataItemResultSc
 
 export type EvaluationResponse<T extends ResultsType> = {
   results: EvaluationDataItemResult[]
-} & (T extends "score"
-  ? { scoreResults: AvgScoreResults; individual?: Record<string, number> }
-  : { binaryResults: BinaryResults })
+} & (T extends "score" ? { scoreResults: AvgScoreResults } : { binaryResults: BinaryResults })
 
 export type ExecuteEvalParams = { data: EvaluationDataItem[] }
 
