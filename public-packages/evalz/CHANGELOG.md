@@ -1,5 +1,11 @@
 # evalz
 
+## 0.1.5
+
+### Patch Changes
+
+- [`f5f21f0`](https://github.com/hack-dance/island-ai/commit/f5f21f0a547e8fd667372d468835fe476f1c624b) Thanks [@roodboi](https://github.com/roodboi)! - "make sure to use averaged score in weighted items + pass through the averaged individual scores"
+
 ## 0.1.4
 
 ### Patch Changes
