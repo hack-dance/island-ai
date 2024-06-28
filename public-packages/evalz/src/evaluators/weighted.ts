@@ -41,6 +41,7 @@ export function createWeightedEvaluator({
         const evaluatorResults = await Promise.all(
           Object.keys(evaluators).map(async key => {
             const evaluator = evaluators[key]
+
             const isAccuracyEvaluator = evaluator.evalType === "accuracy"
             const isModelGradedEvaluator = evaluator.evalType === "model-graded"
             const isContextEvaluator = evaluator.evalType?.startsWith("context-")
@@ -70,9 +71,9 @@ export function createWeightedEvaluator({
                     ]
                   })
 
-              return result?.results?.[0]?.score
+              return result?.scoreResults?.value !== undefined
                 ? {
-                    score: result?.results?.[0]?.score,
+                    score: result?.scoreResults?.value,
                     evaluator: key,
                     evaluatorType: evaluator.evalType
                   }
@@ -119,13 +120,24 @@ export function createWeightedEvaluator({
         ? validResults.reduce((sum, { score = 0 }) => sum + score, 0) / validResults.length
         : 0
 
+    const individualAvgScores = Object.keys(evaluators).reduce(
+      (acc, key) => {
+        const scores = validResults.map(vr => vr.scores.find(s => s.evaluator === key)?.score ?? 0)
+        const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length
+        acc[key] = avgScore
+        return acc
+      },
+      {} as Record<string, number>
+    )
+
     return {
       results: validResults.map(er => ({
         ...er,
         score: er.score
       })),
       scoreResults: {
-        value: weightedScore
+        value: weightedScore,
+        individual: individualAvgScores
       }
     }
   }
