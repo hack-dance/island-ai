@@ -1,5 +1,11 @@
 # evalz
 
+## 0.1.4
+
+### Patch Changes
+
+- [`544a487`](https://github.com/hack-dance/island-ai/commit/544a48762b299d23e68b5e7e082065e001961e12) Thanks [@roodboi](https://github.com/roodboi)! - update evalz valname in weighted to use the key not hte name
+
 ## 0.1.3
 
 ### Patch Changes
