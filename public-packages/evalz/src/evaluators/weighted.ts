@@ -125,6 +125,7 @@ export function createWeightedEvaluator({
         const scores = validResults.map(vr => vr.scores.find(s => s.evaluator === key)?.score ?? 0)
         const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length
         acc[key] = avgScore
+
         return acc
       },
       {} as Record<string, number>
