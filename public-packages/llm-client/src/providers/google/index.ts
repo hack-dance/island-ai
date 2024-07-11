@@ -1,47 +1,32 @@
-import ProviderLogger from "@/logger"
-import { consoleTransport } from "@/logger/transports/console"
-import {
-  ExtendedCompletionChunkGoogle,
-  ExtendedCompletionGoogle,
-  GoogleCacheCreateParams,
-  GoogleChatCompletionParams,
-  GoogleChatCompletionParamsNonStream,
-  GoogleChatCompletionParamsStream,
-  LogLevel,
-  OpenAILikeClient,
-  Role
-} from "@/types"
-import {
-  Content,
-  EnhancedGenerateContentResponse,
-  FunctionCallingMode,
-  FunctionDeclarationsTool,
-  GenerateContentRequest,
-  GoogleGenerativeAI,
-  GoogleGenerativeAIError,
-  TextPart,
-  Tool
-} from "@google/generative-ai"
-import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generative-ai/server"
+import { LogLevel, OpenAILikeClient } from "@/types"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import { ClientOptions } from "openai"
-import { isEmpty } from "ramda"
+
+type ChatMessageType = {
+  role: string
+  content: string
+}
+
+type CompletionsCreateParams = {
+  model: string
+  messages: ChatMessageType[]
+  stream?: boolean
+}
 
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
-  private googleCacheManager
-  private logger: ProviderLogger
 
   constructor(
     opts?: ClientOptions & {
       logLevel?: LogLevel
     }
   ) {
-    const apiKey = opts?.apiKey ?? process.env?.["GEMINI_API_KEY"] ?? null
+    const apiKey = opts?.apiKey ?? process.env?.["GOOGLE_API_KEY"] ?? null
 
     if (!apiKey) {
       throw new Error(
-        "API key is required for GeminiProvider - please provide it in the constructor or set it as an environment variable named GEMINI_API_KEY."
+        "API key is required for GoogleProvider - please provide it in the constructor or set it as an environment variable named GEMINI_API_KEY."
       )
     }
 
@@ -49,299 +34,38 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
-    this.googleCacheManager = new GoogleAICacheManager(apiKey)
-    this.logger = new ProviderLogger("GEMINI-CLIENT")
-    this.logger.addTransport(consoleTransport)
   }
 
-  /**
-   * Transforms the OpenAI chat completion parameters into Google chat completion parameters.
-   * @param params - The OpenAI chat completion parameters.
-   * @returns The transformed Google chat completion parameters.
-   */
-  private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
-    let function_declarations: FunctionDeclarationsTool[] = []
-    const allowedFunctionNames: string[] = []
-
-    const { systemMessages, nonSystemMessages } = params.messages.reduce<{
-      systemMessages: typeof params.messages
-      nonSystemMessages: typeof params.messages
-    }>(
-      (acc, message) => {
-        if (message.role === "system") {
-          acc.systemMessages.push(message)
-        } else {
-          acc.nonSystemMessages.push(message)
-        }
-        return acc
-      },
-      { systemMessages: [], nonSystemMessages: [] }
-    )
-
-    // conform messages to Google's Content[] type
-    // they use "model" and "user" instead of "assistant" and "user", and also have no "system" role
-    const contents: Content[] = nonSystemMessages.map(message => {
-      const textPart: TextPart = {
-        text: message.content.toString()
-      }
-      return {
-        role: message.role === "assistant" ? "model" : "user",
-        parts: [textPart]
-      }
-    })
-
-    // cache data doesn't support tools or system messages (yet)
-    if (params.additionalProperties?.["cacheName"]) {
-      return {
-        contents
-      }
-    }
-
-    const hasTools = !isEmpty(params?.tools)
-    if (hasTools) {
-      const tools = params.tools ?? []
-
-      function_declarations = tools.map(tool => {
-        allowedFunctionNames.push(tool.function.name)
-
-        return {
-          name: tool.function.name ?? "",
-          description: tool.function.description ?? "",
-          parameters: tool.function.parameters
-        } as FunctionDeclarationsTool
-      })
-    }
-
-    const systemInstruction =
-      systemMessages.length > 0
-        ? {
-            parts: systemMessages.map(message => ({ text: message.content.toString() })),
-            role: "system"
-          }
-        : undefined
-
-    return {
-      contents,
-      ...(function_declarations?.length
-        ? {
-            tools: [{ function_declarations } as Tool],
-            toolConfig: {
-              functionCallingConfig: {
-                mode: FunctionCallingMode.ANY,
-                allowedFunctionNames
-              }
-            }
-          }
-        : {}),
-      systemInstruction
-    }
-  } //AIzaSyBc5nvuE1pzsecuSvdapaOQ5FXh3F4CDbw
-
-  /**
-   * Transforms the Google API response into an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
-   * @param response - The Google API response.
-   * @param stream - An optional parameter indicating whether the response is a stream.
-   * @returns A Promise that resolves to an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
-   */
-  private async transformResponse(
-    response: EnhancedGenerateContentResponse,
-    { stream }: { stream?: boolean } = {}
-  ): Promise<ExtendedCompletionGoogle | ExtendedCompletionChunkGoogle> {
-    const responseText = response.text()
-    const functionCalls = response.functionCalls()
-
-    const tool_calls = functionCalls?.map((block, index) => ({
-      index,
-      id: "",
-      type: "function",
-      function: {
-        name: block.name,
-        arguments: JSON.stringify(block.args)
-      }
-    }))
-
-    const transformedResponse = {
-      id: "",
-      originResponse: response,
-      usage: {
-        prompt_tokens: response.usageMetadata?.promptTokenCount ?? 0,
-        completion_tokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-        total_tokens:
-          (response.usageMetadata?.promptTokenCount ?? 0) +
-          (response.usageMetadata?.candidatesTokenCount ?? 0)
-      }
-    }
-
-    const responseDataChunk = {
-      role: "assistant" as Role,
-      content: responseText,
-      ...(tool_calls?.length ? { tool_calls } : {})
-    }
-
-    const finish_reason = tool_calls?.length ? "tool_calls" : "stop"
-
-    if (stream) {
-      return {
-        ...transformedResponse,
-        object: "chat.completion.chunk",
-        choices: [
-          {
-            delta: responseDataChunk,
-            finish_reason,
-            index: 0
-          }
-        ]
-      } as ExtendedCompletionChunkGoogle
-    } else {
-      return {
-        ...transformedResponse,
-        object: "chat.completion",
-        choices: [
-          {
-            message: responseDataChunk,
-            finish_reason,
-            index: 0,
-            logprobs: null
-          }
-        ]
-      } as ExtendedCompletionGoogle
-    }
-  }
-
-  /**
-   * Streams the chat completion response from the Google API.
-   * @param response - The Response object from the Google API.
-   * @returns An asynchronous iterable of ExtendedCompletionChunkGoogle objects.
-   */
-  private async *streamChatCompletion(
-    stream: AsyncIterable<EnhancedGenerateContentResponse>
-  ): AsyncIterable<ExtendedCompletionChunkGoogle> {
-    for await (const chunk of stream) {
-      yield (await this.transformResponse(chunk, { stream: true })) as ExtendedCompletionChunkGoogle
-    }
-  }
-
-  /**
-   * Creates a chat completion using the Google AI API.
-   * @param params - The chat completion parameters.
-   * @returns A Promise that resolves to an ExtendedCompletionGoogle object or an asynchronous iterable of ExtendedCompletionChunkGoogle objects if streaming is enabled.
-   */
-  public async create(
-    params: GoogleChatCompletionParamsStream
-  ): Promise<AsyncIterable<ExtendedCompletionChunkGoogle>>
-
-  public async create(
-    params: GoogleChatCompletionParamsNonStream
-  ): Promise<ExtendedCompletionGoogle>
-
-  public async create(
-    params: GoogleChatCompletionParams
-  ): Promise<ExtendedCompletionGoogle | AsyncIterable<ExtendedCompletionChunkGoogle>> {
+  public async create(params: CompletionsCreateParams) {
     try {
-      if (!params?.model || !params?.messages?.length) {
-        throw new Error("model and messages are required")
-      }
+      console.log({ params })
 
-      const googleParams = this.transformParams(params)
-
-      let generativeModel
-      if (params.additionalProperties?.["cacheName"]) {
-        // if there's a cacheName, get model using cached content
-        // note: need pay-as-you-go account - caching not available on free tier
-        const cache = await this.googleCacheManager.get(
-          params.additionalProperties?.["cacheName"]?.toString()
-        )
-
-        generativeModel = this.getGenerativeModelFromCachedContent(cache)
-      } else {
-        // regular, non-cached model
-        generativeModel = this.getGenerativeModel({ model: params?.model })
-      }
+      const generativeModel = this.getGenerativeModel({ model: params?.model })
 
       if (params?.stream) {
-        this.logger.log(this.logLevel, "Starting streaming completion response")
-
-        const result = await generativeModel.generateContentStream(googleParams)
-
-        if (!result?.stream) {
-          throw new Error("generateContentStream failed")
+        const result = await generativeModel.generateContentStream(params?.messages?.[0]?.content)
+        // Print text as it comes in.
+        for await (const chunk of result.stream) {
+          const chunkText = chunk.text()
+          console.log(chunkText)
         }
-
-        return this.streamChatCompletion(result.stream)
+        return result
       } else {
-        const result = await generativeModel.generateContent(googleParams)
-
-        if (!result?.response) {
-          throw new Error("generateContent failed")
-        }
-
-        const transformedResult = await this.transformResponse(result.response, {
-          stream: false
-        })
-        transformedResult.model = params.model
-
-        return transformedResult as ExtendedCompletionGoogle
+        const result = await generativeModel.generateContent(params?.messages?.[0]?.content)
+        const response = result.response
+        const text = response.text()
+        console.log(text)
+        return text
       }
     } catch (error) {
-      this.logger.log(this.logLevel, new Error("Error in Google API request:", { cause: error }))
+      console.error("Error in Google API request:", error)
       throw error
-    }
-  }
-
-  /**
-   * Add content to the Google AI cache manager
-   * @param params - the same params as used in chat.completion.create plus ttlSeconds
-   * @returns the cache manager create response (which includes the cache name to use later)
-   */
-  public async createCacheManager(params: GoogleCacheCreateParams) {
-    const googleParams = this.transformParams(params)
-
-    try {
-      return await this.googleCacheManager.create({
-        ttlSeconds: params.ttlSeconds,
-        model: params.model,
-        ...googleParams
-      })
-    } catch (err: unknown) {
-      let error = err as Error
-
-      if (err instanceof GoogleGenerativeAIError) {
-        error = new Error(
-          "Failed to create Gemini cache manager, ensure your API key supports caching (i.e. pay-as-you-go)"
-        )
-        error.stack = (err as Error).stack
-      }
-
-      this.logger.log(this.logLevel, error)
-
-      throw err
     }
   }
 
   public chat = {
     completions: {
       create: this.create.bind(this)
-    }
-  }
-
-  /** Interface for Google AI Cache Manager */
-  public cacheManager = {
-    create: this.createCacheManager.bind(this),
-    get: async (cacheName: string) => {
-      return await this.googleCacheManager.get(cacheName)
-    },
-    list: async () => {
-      return await this.googleCacheManager.list()
-    },
-    update: async (cacheName: string, params: GoogleCacheCreateParams) => {
-      const googleParams = this.transformParams(params)
-      return await this.googleCacheManager.update(
-        cacheName,
-        googleParams as CachedContentUpdateParams
-      )
-    },
-    delete: async (cacheName: string) => {
-      return await this.googleCacheManager.delete(cacheName)
     }
   }
 }

@@ -2,7 +2,12 @@ import { AnthropicProvider } from "@/providers/anthropic"
 import { GoogleProvider } from "@/providers/google"
 import { OpenAIProvider } from "@/providers/openai"
 import { OpenAILikeClient, Providers } from "@/types"
+import { TextDecoderStream, TextEncoderStream } from "@/utils/polyfills"
 import { ClientOptions } from "openai"
+
+// polyfills
+globalThis.TextEncoderStream ||= TextEncoderStream
+globalThis.TextDecoderStream ||= TextDecoderStream
 
 export class LLMClient<P extends Providers> {
   private providerInstance: OpenAILikeClient<P>
