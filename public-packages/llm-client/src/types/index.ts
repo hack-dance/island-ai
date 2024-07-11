@@ -1,7 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import OpenAI from "openai"
 
-export type Providers = "openai" | "anthropic"
+export type Providers = "openai" | "anthropic" | "google"
+
+export type LogLevel = "debug" | "info" | "warn" | "error"
 
 type SupportedChatCompletionMessageParam = Omit<
   OpenAI.ChatCompletionCreateParams["messages"][number],
@@ -49,19 +52,51 @@ export type AnthropicChatCompletionParams =
   | AnthropicChatCompletionParamsStream
   | AnthropicChatCompletionParamsNonStream
 
-export type OpenAILikeClient<P> = P extends "openai"
+/** Google types */
+export type GoogleChatCompletionParamsStream = Omit<
+  Partial<OpenAI.ChatCompletionCreateParams>,
+  "messages"
+> & {
+  messages: SupportedChatCompletionMessageParam[]
+  stream: true
+  max_tokens: number
+}
+
+export type GoogleChatCompletionParamsNonStream = Omit<
+  Partial<OpenAI.ChatCompletionCreateParams>,
+  "messages"
+> & {
+  messages: SupportedChatCompletionMessageParam[]
+  stream?: false | undefined
+  max_tokens: number
+}
+
+export type GoogleChatCompletionParams =
+  | GoogleChatCompletionParamsStream
+  | GoogleChatCompletionParamsNonStream
+
+/** General type for providers */
+export type OpenAILikeClient<P> = P extends "openai" | "azure"
   ? OpenAI
-  : P extends "anthropic"
-    ? Anthropic & {
-        [key: string]: unknown
+  : P extends "google"
+    ? GoogleGenerativeAI & {
         chat: {
           completions: {
-            create: <P extends AnthropicChatCompletionParams>(
-              params: P
-            ) => P extends { stream: true }
-              ? Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
-              : Promise<ExtendedCompletionAnthropic>
+            create: unknown
           }
         }
       }
-    : never
+    : P extends "anthropic"
+      ? Anthropic & {
+          [key: string]: unknown
+          chat: {
+            completions: {
+              create: <P extends AnthropicChatCompletionParams>(
+                params: P
+              ) => P extends { stream: true }
+                ? Promise<AsyncIterable<ExtendedCompletionChunkAnthropic>>
+                : Promise<ExtendedCompletionAnthropic>
+            }
+          }
+        }
+      : never

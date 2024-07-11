@@ -1,7 +1,13 @@
 import { AnthropicProvider } from "@/providers/anthropic"
+import { GoogleProvider } from "@/providers/google"
 import { OpenAIProvider } from "@/providers/openai"
 import { OpenAILikeClient, Providers } from "@/types"
+import { TextDecoderStream, TextEncoderStream } from "@/utils/polyfills"
 import { ClientOptions } from "openai"
+
+// polyfills
+globalThis.TextEncoderStream ||= TextEncoderStream
+globalThis.TextDecoderStream ||= TextDecoderStream
 
 export class LLMClient<P extends Providers> {
   private providerInstance: OpenAILikeClient<P>
@@ -11,10 +17,16 @@ export class LLMClient<P extends Providers> {
       provider: P
     }
   ) {
-    if (opts?.provider === "openai") {
-      this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
-    } else {
-      this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+    switch (opts?.provider) {
+      case "anthropic":
+        this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+        break
+      case "google":
+        this.providerInstance = new GoogleProvider(opts) as unknown as OpenAILikeClient<P>
+        break
+      case "openai":
+      default:
+        this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
     }
 
     const proxyHandler: ProxyHandler<OpenAILikeClient<P>> = {
