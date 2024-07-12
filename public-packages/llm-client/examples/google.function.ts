@@ -16,3 +16,41 @@ const completion = await googleClient.chat.completions.create({
 })
 
 console.log(JSON.stringify(completion, null, 2))
+
+const completion2 = await googleClient.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  max_tokens: 1000,
+  messages: [
+    {
+      role: "user",
+      content: "My name is Spartacus."
+    }
+  ],
+  tool_choice: {
+    type: "function",
+    function: {
+      name: "say_hello"
+    }
+  },
+  tools: [
+    {
+      type: "function",
+      function: {
+        name: "say_hello",
+        description: "Say hello",
+        parameters: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string"
+            }
+          },
+          required: ["name"]
+          //additionalProperties: false
+        }
+      }
+    }
+  ]
+})
+
+console.log(JSON.stringify(completion2, null, 2))

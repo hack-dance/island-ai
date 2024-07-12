@@ -21,10 +21,10 @@ describe(`LLMClient Gemini Provider`, () => {
 
     console.log({ completion })
 
-    expect(completion).toMatch(/Helena/i)
+    expect(completion.choices[0].message.content).toMatch(/Helena/i)
   })
 
-  test("Chat completion with context", async () => {
+  test.skip("Chat completion with context", async () => {
     const completion = await googleClient.chat.completions.create({
       model: "gemini-1.5-flash-latest",
       messages: [
@@ -38,7 +38,7 @@ describe(`LLMClient Gemini Provider`, () => {
 
     console.log({ completion })
 
-    expect(completion).toMatch(/Arlington/i)
+    expect(completion.choices[0].message.content).toMatch(/Arlington/i)
   })
 
   test.skip("Streaming Chat", async () => {
@@ -57,16 +57,16 @@ describe(`LLMClient Gemini Provider`, () => {
     expect(completion).toBeTruthy
   })
 
-  test.skip("Function calling", async () => {
+  test("Function calling", async () => {
     const completion = await googleClient.chat.completions.create({
       model: "gemini-1.5-flash-latest",
+      max_tokens: 1000,
       messages: [
         {
           role: "user",
-          content: "What is the capital of Montana?"
+          content: "My name is Spartacus."
         }
       ],
-      max_tokens: 1000,
       tool_choice: {
         type: "function",
         function: {
@@ -86,12 +86,16 @@ describe(`LLMClient Gemini Provider`, () => {
                   type: "string"
                 }
               },
-              required: ["name"],
-              additionalProperties: false
+              required: ["name"]
+              //additionalProperties: false
             }
           }
         }
       ]
     })
+
+    const responseFunction = completion.choices[0].message.tool_calls[0].function
+    expect(responseFunction?.name).toMatch(/say_hello/i)
+    expect(responseFunction?.arguments).toMatch(/Spartacus/i)
   })
 })

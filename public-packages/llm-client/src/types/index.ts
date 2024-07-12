@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GenerateContentResult, GoogleGenerativeAI } from "@google/generative-ai"
 import OpenAI from "openai"
 
 export type Providers = "openai" | "anthropic" | "google"
@@ -74,6 +74,10 @@ export type GoogleChatCompletionParamsNonStream = Omit<
 export type GoogleChatCompletionParams =
   | GoogleChatCompletionParamsStream
   | GoogleChatCompletionParamsNonStream
+
+export type ExtendedCompletionGoogle = Partial<OpenAI.ChatCompletion> & {
+  originResponse: GenerateContentResult
+}
 
 /** General type for providers */
 export type OpenAILikeClient<P> = P extends "openai" | "azure"
