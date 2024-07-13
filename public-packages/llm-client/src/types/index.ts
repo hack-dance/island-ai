@@ -1,10 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk"
-import { GenerateContentResult, GoogleGenerativeAI } from "@google/generative-ai"
+import { EnhancedGenerateContentResponse, GoogleGenerativeAI } from "@google/generative-ai"
 import OpenAI from "openai"
 
 export type Providers = "openai" | "anthropic" | "google"
-
 export type LogLevel = "debug" | "info" | "warn" | "error"
+export type Role = "system" | "user" | "assistant" | "tool"
 
 type SupportedChatCompletionMessageParam = Omit<
   OpenAI.ChatCompletionCreateParams["messages"][number],
@@ -76,7 +76,11 @@ export type GoogleChatCompletionParams =
   | GoogleChatCompletionParamsNonStream
 
 export type ExtendedCompletionGoogle = Partial<OpenAI.ChatCompletion> & {
-  originResponse: GenerateContentResult
+  originResponse: EnhancedGenerateContentResponse
+}
+
+export type ExtendedCompletionChunkGoogle = Partial<OpenAI.ChatCompletionChunk> & {
+  originResponse: EnhancedGenerateContentResponse
 }
 
 /** General type for providers */
@@ -86,7 +90,11 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure"
     ? GoogleGenerativeAI & {
         chat: {
           completions: {
-            create: unknown
+            create: <P extends GoogleChatCompletionParams>(
+              params: P
+            ) => P extends { stream: true }
+              ? Promise<AsyncIterable<ExtendedCompletionChunkGoogle>>
+              : Promise<ExtendedCompletionGoogle>
           }
         }
       }

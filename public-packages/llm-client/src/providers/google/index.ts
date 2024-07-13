@@ -1,25 +1,52 @@
 import {
+  ExtendedCompletionChunkGoogle,
   ExtendedCompletionGoogle,
   GoogleChatCompletionParams,
+  GoogleChatCompletionParamsNonStream,
+  GoogleChatCompletionParamsStream,
   LogLevel,
-  OpenAILikeClient
+  OpenAILikeClient,
+  Role
 } from "@/types"
 import {
   Content,
-  FunctionCall,
+  EnhancedGenerateContentResponse,
   FunctionCallingMode,
   FunctionDeclarationsTool,
   GenerateContentRequest,
-  GenerateContentResult,
   GoogleGenerativeAI,
   TextPart,
   Tool
 } from "@google/generative-ai"
-import OpenAI, { ClientOptions } from "openai"
+import { ClientOptions } from "openai"
 
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
+
+  private log<T extends unknown[]>(level: LogLevel, ...args: T) {
+    const timestamp = new Date().toISOString()
+    switch (level) {
+      case "debug":
+        if (this.logLevel === "debug") {
+          console.debug(`[LLM-CLIENT--GOOGLE-CLIENT:DEBUG] ${timestamp}:`, ...args)
+        }
+        break
+      case "info":
+        if (this.logLevel === "debug" || this.logLevel === "info") {
+          console.info(`[LLM-CLIENT--GOOGLE-CLIENT:INFO] ${timestamp}:`, ...args)
+        }
+        break
+      case "warn":
+        if (this.logLevel === "debug" || this.logLevel === "info" || this.logLevel === "warn") {
+          console.warn(`[LLM-CLIENT--GOOGLE-CLIENT:WARN] ${timestamp}:`, ...args)
+        }
+        break
+      case "error":
+        console.error(`[LLM-CLIENT--GOOGLE-CLIENT:ERROR] ${timestamp}:`, ...args)
+        break
+    }
+  }
 
   constructor(
     opts?: ClientOptions & {
@@ -48,7 +75,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
     let function_declarations: FunctionDeclarationsTool[] = []
 
-    // borrowed from Anthropic
+    // TODO - add system messages to request
     // const systemMessages = params.messages.filter(message => message.role === "system")
     // const system = systemMessages?.length
     //   ? systemMessages.map(message => message.content).join("\n")
@@ -98,99 +125,128 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   }
 
   /**
-   * Transforms the Google API response into an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
-   * @param result - The Anthropic API response.
+   * Transforms the Google API response into an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
+   * @param response - The Google API response.
    * @param stream - An optional parameter indicating whether the response is a stream.
-   * @returns A Promise that resolves to an ExtendedCompletionAnthropic or ExtendedCompletionChunkAnthropic object.
+   * @returns A Promise that resolves to an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
    */
   private async transformResponse(
-    result: GenerateContentResult,
-    {
-      stream,
-      functionCalls,
-      responseText
-    }: { stream?: boolean; functionCalls?: FunctionCall[]; responseText?: string } = {}
-  ): Promise<ExtendedCompletionGoogle> {
-    const candidate = result.response?.candidates?.[0] // TODO: should we handle multiple candidates?
-    console.log({ candidate })
+    response: EnhancedGenerateContentResponse,
+    { stream }: { stream?: boolean } = {}
+  ): Promise<ExtendedCompletionGoogle | ExtendedCompletionChunkGoogle> {
+    const responseText = response.text()
+    const functionCalls = response.functionCalls()
+
+    const tool_calls = functionCalls?.map((block, index) => ({
+      index,
+      id: "",
+      type: "function",
+      function: {
+        name: block.name,
+        arguments: JSON.stringify(block.args)
+      }
+    }))
 
     const transformedResponse = {
-      //id: result.id,
-      originResponse: result,
-      //model: result.model,
+      id: "",
+      originResponse: response,
+      //model: result.model, //TODO: add model
       usage: {
-        prompt_tokens: result.response.usageMetadata?.promptTokenCount ?? 0,
-        completion_tokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+        prompt_tokens: response.usageMetadata?.promptTokenCount ?? 0,
+        completion_tokens: response.usageMetadata?.candidatesTokenCount ?? 0,
         total_tokens:
-          (result.response.usageMetadata?.promptTokenCount ?? 0) +
-          (result.response.usageMetadata?.candidatesTokenCount ?? 0)
+          (response.usageMetadata?.promptTokenCount ?? 0) +
+          (response.usageMetadata?.candidatesTokenCount ?? 0)
       }
     }
 
-    if (!stream) {
-      const tool_calls = functionCalls?.map((block, index) => ({
-        id: index,
-        type: "function",
-        function: {
-          name: block.name,
-          arguments: JSON.stringify(block.args)
-        }
-      }))
+    const responseDataChunk = {
+      role: "assistant" as Role,
+      content: responseText,
+      ...(tool_calls?.length ? { tool_calls } : {})
+    }
 
+    const finish_reason = tool_calls?.length ? "tool_calls" : "stop"
+
+    if (stream) {
+      return {
+        ...transformedResponse,
+        object: "chat.completion.chunk",
+        choices: [
+          {
+            delta: responseDataChunk,
+            finish_reason,
+            index: 0
+          }
+        ]
+      } as ExtendedCompletionChunkGoogle
+    } else {
       return {
         ...transformedResponse,
         object: "chat.completion",
         choices: [
           {
-            message: {
-              role: "assistant",
-              content: responseText,
-              ...(tool_calls?.length ? { tool_calls } : {})
-            },
-            finish_reason: tool_calls?.length ? "tool_calls" : "stop",
+            message: responseDataChunk,
+            finish_reason,
             index: 0,
             logprobs: null
-          } as OpenAI.ChatCompletion.Choice
+          }
         ]
-      }
+      } as ExtendedCompletionGoogle
     }
-    // TODO: handle streaming responses
   }
 
-  public async create(params: GoogleChatCompletionParams) {
-    try {
-      console.log({ params })
+  /**
+   * Streams the chat completion response from the Google API.
+   * @param response - The Response object from the Google API.
+   * @returns An asynchronous iterable of ExtendedCompletionChunkGoogle objects.
+   */
+  private async *streamChatCompletion(
+    stream: AsyncIterable<EnhancedGenerateContentResponse>
+  ): AsyncIterable<ExtendedCompletionChunkGoogle> {
+    for await (const chunk of stream) {
+      yield (await this.transformResponse(chunk, { stream: true })) as ExtendedCompletionChunkGoogle
+    }
+  }
 
+  public async create(
+    params: GoogleChatCompletionParamsStream
+  ): Promise<AsyncIterable<ExtendedCompletionChunkGoogle>>
+
+  public async create(
+    params: GoogleChatCompletionParamsNonStream
+  ): Promise<ExtendedCompletionGoogle>
+
+  public async create(
+    params: GoogleChatCompletionParams
+  ): Promise<ExtendedCompletionGoogle | AsyncIterable<ExtendedCompletionChunkGoogle>> {
+    try {
       if (!params?.model || !params?.messages?.length) {
         throw new Error("model and messages are required")
       }
 
       const googleParams = this.transformParams(params)
-
-      // console.log({ googleParams: Bun.inspect(googleParams) })
-
       const generativeModel = this.getGenerativeModel({ model: params?.model })
 
       if (params?.stream) {
+        this.log("debug", "Starting streaming completion response")
+
         const result = await generativeModel.generateContentStream(googleParams)
-        for await (const chunk of result.stream) {
-          const chunkText = chunk.text()
-          console.log(chunkText)
+
+        if (!result?.stream) {
+          throw new Error("generateContentStream failed")
         }
-        return result
+
+        return this.streamChatCompletion(result.stream)
       } else {
         const result = await generativeModel.generateContent(googleParams)
-        const response = result.response
-        const responseText = response.text()
-        const functionCalls = response.functionCalls()
-        // if (functionCalls && functionCalls.length) {
-        //   console.log(JSON.stringify(functionCalls, null, 2))
-        // }
 
-        const transformedResult = await this.transformResponse(result, {
-          stream: false,
-          functionCalls,
-          responseText
+        if (!result?.response) {
+          throw new Error("generateContent failed")
+        }
+
+        const transformedResult = await this.transformResponse(result.response, {
+          stream: false
         })
 
         return transformedResult as ExtendedCompletionGoogle
