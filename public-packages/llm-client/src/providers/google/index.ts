@@ -18,11 +18,13 @@ import {
   TextPart,
   Tool
 } from "@google/generative-ai"
+import { GoogleAICacheManager } from "@google/generative-ai/server"
 import { ClientOptions } from "openai"
 
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
+  public cacheManager
 
   private log<T extends unknown[]>(level: LogLevel, ...args: T) {
     const timestamp = new Date().toISOString()
@@ -65,6 +67,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
+    this.cacheManager = new GoogleAICacheManager(apiKey)
   }
 
   /**
@@ -74,16 +77,6 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    */
   private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
     let function_declarations: FunctionDeclarationsTool[] = []
-
-    const systemMessages = params.messages.filter(message => message.role === "system")
-    // the type of systemInstruction is string | Part | Content - but this structure seems to be the only one that works
-    const systemInstruction =
-      systemMessages.length > 0
-        ? {
-            parts: systemMessages.map(message => ({ text: message.content.toString() })),
-            role: "system"
-          }
-        : undefined
 
     // conform messages to Google's Content[] type
     // they use "model" and "user" instead of "assistant" and "user", and also have no "system" role
@@ -99,6 +92,13 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         }
       })
 
+    // cache data doesn't support tools or system messages (yet)
+    if (params.additionalProperties?.["cacheName"]) {
+      return {
+        contents
+      }
+    }
+
     if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
       function_declarations = params.tools.map(
         tool =>
@@ -109,6 +109,16 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
           }) as FunctionDeclarationsTool
       )
     }
+
+    const systemMessages = params.messages.filter(message => message.role === "system")
+    // the type of systemInstruction is string | Part | Content - but this structure seems to be the only one that works
+    const systemInstruction =
+      systemMessages.length > 0
+        ? {
+            parts: systemMessages.map(message => ({ text: message.content.toString() })),
+            role: "system"
+          }
+        : undefined
 
     return {
       contents,
@@ -224,7 +234,20 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       }
 
       const googleParams = this.transformParams(params)
-      const generativeModel = this.getGenerativeModel({ model: params?.model })
+
+      let generativeModel
+      if (params.additionalProperties?.["cacheName"]) {
+        // if there's a cacheName, get model using cached content
+        // note: need pay-as-you-go account - not available on free tier
+        const cache = await this.cacheManager.get(
+          params.additionalProperties?.["cacheName"]?.toString()
+        )
+
+        generativeModel = this.getGenerativeModelFromCachedContent(cache)
+      } else {
+        // regular, non-cached model
+        generativeModel = this.getGenerativeModel({ model: params?.model })
+      }
 
       if (params?.stream) {
         this.log("debug", "Starting streaming completion response")
@@ -260,5 +283,19 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     completions: {
       create: this.create.bind(this)
     }
+  }
+
+  // add content to cache manager, using same params as chat completion plus ttlSeconds
+  public async createCacheManager(
+    params: GoogleChatCompletionParams & {
+      ttlSeconds: number
+    }
+  ) {
+    const googleParams = this.transformParams(params)
+    return await this.cacheManager.create({
+      ttlSeconds: params.ttlSeconds,
+      model: params.model,
+      ...googleParams
+    })
   }
 }

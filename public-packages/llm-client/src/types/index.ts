@@ -1,12 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk"
-import { EnhancedGenerateContentResponse, GoogleGenerativeAI } from "@google/generative-ai"
+import {
+  CachedContent,
+  EnhancedGenerateContentResponse,
+  GoogleGenerativeAI
+} from "@google/generative-ai"
 import OpenAI from "openai"
 
 export type Providers = "openai" | "anthropic" | "google"
 export type LogLevel = "debug" | "info" | "warn" | "error"
 export type Role = "system" | "user" | "assistant" | "tool"
 
-type SupportedChatCompletionMessageParam = Omit<
+export type SupportedChatCompletionMessageParam = Omit<
   OpenAI.ChatCompletionCreateParams["messages"][number],
   "content"
 > & {
@@ -60,6 +64,9 @@ export type GoogleChatCompletionParamsStream = Omit<
   messages: SupportedChatCompletionMessageParam[]
   stream: true
   max_tokens: number
+  additionalProperties?: {
+    cacheName?: string
+  }
 }
 
 export type GoogleChatCompletionParamsNonStream = Omit<
@@ -69,6 +76,9 @@ export type GoogleChatCompletionParamsNonStream = Omit<
   messages: SupportedChatCompletionMessageParam[]
   stream?: false | undefined
   max_tokens: number
+  additionalProperties?: {
+    cacheName?: string
+  }
 }
 
 export type GoogleChatCompletionParams =
@@ -97,6 +107,11 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure"
               : Promise<ExtendedCompletionGoogle>
           }
         }
+        createCacheManager: (
+          params: GoogleChatCompletionParams & {
+            ttlSeconds: number
+          }
+        ) => Promise<CachedContent>
       }
     : P extends "anthropic"
       ? Anthropic & {
