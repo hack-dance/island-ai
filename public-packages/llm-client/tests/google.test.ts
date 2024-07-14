@@ -146,4 +146,22 @@ describe(`LLMClient Gemini Provider`, () => {
       console.log("choice: ", message.choices?.[0])
     }
   })
+
+  test("Chat with system messages", async () => {
+    const completion = await googleClient.chat.completions.create({
+      model: "gemini-1.5-flash-latest",
+      messages: [
+        { role: "system", content: "You only speak French." },
+        { role: "system", content: "You only speak in rhymes." },
+        {
+          role: "user",
+          content: "What is the capital of Montana?"
+        }
+      ],
+      max_tokens: 1000
+    })
+
+    console.log(completion?.choices?.[0].message.content)
+    expect(completion?.choices?.[0].message.content).toMatch(/capitale/i)
+  })
 })

@@ -75,17 +75,15 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
     let function_declarations: FunctionDeclarationsTool[] = []
 
-    // TODO - add system messages to request
-    // const systemMessages = params.messages.filter(message => message.role === "system")
-    // const system = systemMessages?.length
-    //   ? systemMessages.map(message => message.content).join("\n")
-    //   : ""
-
-    // if (systemMessages.length) {
-    //   console.warn(
-    //     "Google does not support system messages - concatenating them all into a single 'system' property."
-    //   )
-    // }
+    const systemMessages = params.messages.filter(message => message.role === "system")
+    // the type of systemInstruction is string | Part | Content - but this structure seems to be the only one that works
+    const systemInstruction =
+      systemMessages.length > 0
+        ? {
+            parts: systemMessages.map(message => ({ text: message.content.toString() })),
+            role: "system"
+          }
+        : undefined
 
     // conform messages to Google's Content[] type
     // they use "model" and "user" instead of "assistant" and "user", and also have no "system" role
@@ -120,7 +118,8 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
           mode: FunctionCallingMode.ANY,
           allowedFunctionNames: ["say_hello"]
         }
-      }
+      },
+      systemInstruction
     }
   }
 
@@ -150,7 +149,6 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     const transformedResponse = {
       id: "",
       originResponse: response,
-      //model: result.model, //TODO: add model
       usage: {
         prompt_tokens: response.usageMetadata?.promptTokenCount ?? 0,
         completion_tokens: response.usageMetadata?.candidatesTokenCount ?? 0,
@@ -248,6 +246,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         const transformedResult = await this.transformResponse(result.response, {
           stream: false
         })
+        transformedResult.model = params.model
 
         return transformedResult as ExtendedCompletionGoogle
       }
