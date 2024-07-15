@@ -92,7 +92,8 @@ for (let i = 0; i < 32001; i++) {
 const cacheResult = await googleClient.createCacheManager({
   ttlSeconds: 600,
   model: "models/gemini-1.5-pro-001",
-  messages: [{ role: "user", content: longContentString }]
+  messages: [{ role: "user", content: longContentString }],
+  max_tokens: 1000
 })
 
 // Get name from cache result

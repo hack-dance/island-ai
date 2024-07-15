@@ -1,6 +1,7 @@
 import {
   ExtendedCompletionChunkGoogle,
   ExtendedCompletionGoogle,
+  GooggleCacheCreateParams,
   GoogleChatCompletionParams,
   GoogleChatCompletionParamsNonStream,
   GoogleChatCompletionParamsStream,
@@ -286,11 +287,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   }
 
   // add content to cache manager, using same params as chat completion plus ttlSeconds
-  public async createCacheManager(
-    params: GoogleChatCompletionParams & {
-      ttlSeconds: number
-    }
-  ) {
+  public async createCacheManager(params: GooggleCacheCreateParams) {
     const googleParams = this.transformParams(params)
     return await this.cacheManager.create({
       ttlSeconds: params.ttlSeconds,

@@ -93,6 +93,10 @@ export type ExtendedCompletionChunkGoogle = Partial<OpenAI.ChatCompletionChunk> 
   originResponse: EnhancedGenerateContentResponse
 }
 
+export type GooggleCacheCreateParams = GoogleChatCompletionParams & {
+  ttlSeconds: number
+}
+
 /** General type for providers */
 export type OpenAILikeClient<P> = P extends "openai" | "azure"
   ? OpenAI
@@ -107,11 +111,7 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure"
               : Promise<ExtendedCompletionGoogle>
           }
         }
-        createCacheManager: (
-          params: GoogleChatCompletionParams & {
-            ttlSeconds: number
-          }
-        ) => Promise<CachedContent>
+        createCacheManager: (params: GooggleCacheCreateParams) => Promise<CachedContent>
       }
     : P extends "anthropic"
       ? Anthropic & {
