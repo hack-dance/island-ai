@@ -218,6 +218,11 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     }
   }
 
+  /**
+   * Creates a chat completion using the Google API.
+   * @param params - The chat completion parameters.
+   * @returns A Promise that resolves to an ExtendedCompletionGoogle object or an asynchronous iterable of ExtendedCompletionChunkGoogle objects if streaming is enabled.
+   */
   public async create(
     params: GoogleChatCompletionParamsStream
   ): Promise<AsyncIterable<ExtendedCompletionChunkGoogle>>
@@ -239,7 +244,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       let generativeModel
       if (params.additionalProperties?.["cacheName"]) {
         // if there's a cacheName, get model using cached content
-        // note: need pay-as-you-go account - not available on free tier
+        // note: need pay-as-you-go account - caching not available on free tier
         const cache = await this.cacheManager.get(
           params.additionalProperties?.["cacheName"]?.toString()
         )
@@ -286,7 +291,11 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     }
   }
 
-  // add content to cache manager, using same params as chat completion plus ttlSeconds
+  /**
+   * Add content to the Google AI cache manager
+   * @param params - the same params as used in chat.completion.create plus ttlSeconds
+   * @returns the cache manager create response (which includes the cache name to use later)
+   */
   public async createCacheManager(params: GooggleCacheCreateParams) {
     const googleParams = this.transformParams(params)
     return await this.cacheManager.create({

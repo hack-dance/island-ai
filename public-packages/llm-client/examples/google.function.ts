@@ -109,7 +109,7 @@ const completion4 = await googleClient.chat.completions.create({
       content: "What do purple cats drink?"
     }
   ],
-  max_tokens: 1000,
+  max_tokens: 10000,
   additionalProperties: {
     cacheName
   }
