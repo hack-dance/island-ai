@@ -78,6 +78,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    */
   private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
     let function_declarations: FunctionDeclarationsTool[] = []
+    const allowedFunctionNames: string[] = []
 
     // conform messages to Google's Content[] type
     // they use "model" and "user" instead of "assistant" and "user", and also have no "system" role
@@ -101,14 +102,14 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     }
 
     if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
-      function_declarations = params.tools.map(
-        tool =>
-          ({
-            name: tool.function.name ?? "",
-            description: tool.function.description ?? "",
-            parameters: tool.function.parameters
-          }) as FunctionDeclarationsTool
-      )
+      function_declarations = params.tools.map(tool => {
+        allowedFunctionNames.push(tool.function.name)
+        return {
+          name: tool.function.name ?? "",
+          description: tool.function.description ?? "",
+          parameters: tool.function.parameters
+        } as FunctionDeclarationsTool
+      })
     }
 
     const systemMessages = params.messages.filter(message => message.role === "system")
@@ -123,13 +124,17 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     return {
       contents,
-      tools: [{ function_declarations } as Tool],
-      toolConfig: {
-        functionCallingConfig: {
-          mode: FunctionCallingMode.ANY,
-          allowedFunctionNames: ["say_hello"]
-        }
-      },
+      ...(function_declarations?.length
+        ? {
+            tools: [{ function_declarations } as Tool],
+            toolConfig: {
+              functionCallingConfig: {
+                mode: FunctionCallingMode.ANY,
+                allowedFunctionNames
+              }
+            }
+          }
+        : {}),
       systemInstruction
     }
   }
@@ -219,7 +224,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   }
 
   /**
-   * Creates a chat completion using the Google API.
+   * Creates a chat completion using the Google AI API.
    * @param params - The chat completion parameters.
    * @returns A Promise that resolves to an ExtendedCompletionGoogle object or an asynchronous iterable of ExtendedCompletionChunkGoogle objects if streaming is enabled.
    */
