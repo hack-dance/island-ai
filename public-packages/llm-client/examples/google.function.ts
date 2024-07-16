@@ -4,56 +4,68 @@ const googleClient = createLLMClient({
   provider: "google"
 })
 
-const completion = await googleClient.chat.completions.create({
-  model: "gemini-1.5-flash-latest",
-  messages: [
-    {
-      role: "user",
-      content: "How much does a soul weigh?"
-    }
-  ],
-  max_tokens: 1000
-})
+//
+// Simple Chat
+//
 
-console.log(JSON.stringify(completion, null, 2))
+// const completion = await googleClient.chat.completions.create({
+//   model: "gemini-1.5-flash-latest",
+//   messages: [
+//     {
+//       role: "user",
+//       content: "How much does a soul weigh?"
+//     }
+//   ],
+//   max_tokens: 1000
+// })
 
-const completion2 = await googleClient.chat.completions.create({
-  model: "gemini-1.5-flash-latest",
-  max_tokens: 1000,
-  messages: [
-    {
-      role: "user",
-      content: "My name is Spartacus."
-    }
-  ],
-  tool_choice: {
-    type: "function",
-    function: {
-      name: "say_hello"
-    }
-  },
-  tools: [
-    {
-      type: "function",
-      function: {
-        name: "say_hello",
-        description: "Say hello",
-        parameters: {
-          type: "object",
-          properties: {
-            name: {
-              type: "string"
-            }
-          },
-          required: ["name"]
-          //additionalProperties: false
-        }
-      }
-    }
-  ]
-})
+// console.log(JSON.stringify(completion, null, 2))
 
-console.log(JSON.stringify(completion2, null, 2))
+//
+// Function calling
+//
+
+// const completion2 = await googleClient.chat.completions.create({
+//   model: "gemini-1.5-flash-latest",
+//   max_tokens: 1000,
+//   messages: [
+//     {
+//       role: "user",
+//       content: "My name is Spartacus."
+//     }
+//   ],
+//   tool_choice: {
+//     type: "function",
+//     function: {
+//       name: "say_hello"
+//     }
+//   },
+//   tools: [
+//     {
+//       type: "function",
+//       function: {
+//         name: "say_hello",
+//         description: "Say hello",
+//         parameters: {
+//           type: "object",
+//           properties: {
+//             name: {
+//               type: "string"
+//             }
+//           },
+//           required: ["name"]
+//           //additionalProperties: false
+//         }
+//       }
+//     }
+//   ]
+// })
+
+// console.log(JSON.stringify(completion2, null, 2))
+
+//
+// Streaming chat
+//
 
 // const completion3 = await googleClient.chat.completions.create({
 //   model: "gemini-1.5-flash-latest",
@@ -76,10 +88,10 @@ console.log(JSON.stringify(completion2, null, 2))
 //   //final += message.choices?.[0].delta?.content ?? ""
 // }
 
-//////////////////////
-
+////////////////////////////////////////
 // content caching
 // note: need pay-as-you-go account - not available on free tier
+////////////////////////////////////////
 
 // Generate a very long string
 let longContentString = ""
@@ -89,7 +101,8 @@ for (let i = 0; i < 32001; i++) {
 }
 
 // Add content to cache
-const cacheResult = await googleClient.createCacheManager({
+const cacheResult = await googleClient.cacheManager.create({
+  //const cacheResult = await googleClient.createCacheManager({
   ttlSeconds: 600,
   model: "models/gemini-1.5-pro-001",
   messages: [{ role: "user", content: longContentString }],
@@ -97,7 +110,22 @@ const cacheResult = await googleClient.createCacheManager({
 })
 
 // Get name from cache result
-const cacheName = cacheResult?.name
+const cacheName = cacheResult?.name ?? ""
+console.log("Cache name: ", cacheName)
+
+// List caches
+const cacheListResult = await googleClient.cacheManager.list()
+console.log("cacheListResult: ", JSON.stringify(cacheListResult, null, 2))
+
+// Delete cache
+// await googleClient.cacheManager.delete(cacheName)
+// cacheListResult = await googleClient.cacheManager.list()
+// console.log("cacheListResult after delete: ", JSON.stringify(cacheListResult, null, 2))
+
+// Delete all caches
+// cacheListResult?.cachedContents?.forEach(async cache => {
+//   if (cache.name) await googleClient.cacheManager.delete(cache.name)
+// })
 
 // Pass name into additionalProperties
 const completion4 = await googleClient.chat.completions.create({

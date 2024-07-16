@@ -111,7 +111,13 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure"
               : Promise<ExtendedCompletionGoogle>
           }
         }
-        createCacheManager: (params: GooggleCacheCreateParams) => Promise<CachedContent>
+        cacheManager: {
+          create: (params: GooggleCacheCreateParams) => Promise<CachedContent>
+          get: (cacheName: string) => Promise<CachedContent>
+          list: () => Promise<{ cachedContents: CachedContent[] }>
+          delete: (cacheName: string) => Promise<void>
+          update: (cacheName: string, params: GooggleCacheCreateParams) => Promise<CachedContent>
+        }
       }
     : P extends "anthropic"
       ? Anthropic & {

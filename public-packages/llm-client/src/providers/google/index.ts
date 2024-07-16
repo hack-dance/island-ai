@@ -19,13 +19,13 @@ import {
   TextPart,
   Tool
 } from "@google/generative-ai"
-import { GoogleAICacheManager } from "@google/generative-ai/server"
+import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generative-ai/server"
 import { ClientOptions } from "openai"
 
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
-  public cacheManager
+  private googleCacheManager
 
   private log<T extends unknown[]>(level: LogLevel, ...args: T) {
     const timestamp = new Date().toISOString()
@@ -68,7 +68,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
-    this.cacheManager = new GoogleAICacheManager(apiKey)
+    this.googleCacheManager = new GoogleAICacheManager(apiKey)
   }
 
   /**
@@ -250,7 +250,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       if (params.additionalProperties?.["cacheName"]) {
         // if there's a cacheName, get model using cached content
         // note: need pay-as-you-go account - caching not available on free tier
-        const cache = await this.cacheManager.get(
+        const cache = await this.googleCacheManager.get(
           params.additionalProperties?.["cacheName"]?.toString()
         )
 
@@ -290,12 +290,6 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     }
   }
 
-  public chat = {
-    completions: {
-      create: this.create.bind(this)
-    }
-  }
-
   /**
    * Add content to the Google AI cache manager
    * @param params - the same params as used in chat.completion.create plus ttlSeconds
@@ -303,10 +297,37 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    */
   public async createCacheManager(params: GooggleCacheCreateParams) {
     const googleParams = this.transformParams(params)
-    return await this.cacheManager.create({
+    return await this.googleCacheManager.create({
       ttlSeconds: params.ttlSeconds,
       model: params.model,
       ...googleParams
     })
+  }
+
+  public chat = {
+    completions: {
+      create: this.create.bind(this)
+    }
+  }
+
+  /** Interface for Google AI Cache Manager */
+  public cacheManager = {
+    create: this.createCacheManager.bind(this),
+    get: async (cacheName: string) => {
+      return await this.googleCacheManager.get(cacheName)
+    },
+    list: async () => {
+      return await this.googleCacheManager.list()
+    },
+    update: async (cacheName: string, params: GooggleCacheCreateParams) => {
+      const googleParams = this.transformParams(params)
+      return await this.googleCacheManager.update(
+        cacheName,
+        googleParams as CachedContentUpdateParams
+      )
+    },
+    delete: async (cacheName: string) => {
+      return await this.googleCacheManager.delete(cacheName)
+    }
   }
 }
