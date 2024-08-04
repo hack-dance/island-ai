@@ -1,11 +1,16 @@
 # schema-stream
 
+## 3.2.0
+
+### Minor Changes
+
+- [#67](https://github.com/hack-dance/island-ai/pull/67) [`d2a1ee5`](https://github.com/hack-dance/island-ai/commit/d2a1ee5f04e5f95f0755c3ad39766573b29962ca) Thanks [@roodboi](https://github.com/roodboi)! - updating required peer dep on zod to better align with all other packages as well as the one required ecternal zod to json schema dependency.
+
 ## 3.1.0
 
 ### Minor Changes
 
-- [#39](https://github.com/hack-dance/island-ai/pull/39) [`f5acc1784925c2726eeb3fd0a9f491ab0c6f5758`](https://github.com/hack-dance/island-ai/commit/f5acc1784925c2726eeb3fd0a9f491ab0c6f5758) Thanks [@roodboi](https://github.com/roodboi)! - protect against parsing tokens if we have hit an ended state in schema-stream.
-  add initial function calling support in lly-polyglot
+- [#39](https://github.com/hack-dance/island-ai/pull/39) [`f5acc1784925c2726eeb3fd0a9f491ab0c6f5758`](https://github.com/hack-dance/island-ai/commit/f5acc1784925c2726eeb3fd0a9f491ab0c6f5758) Thanks [@roodboi](https://github.com/roodboi)! - protect against parsing tokens if we have hit an ended state in schema-stream. add initial function calling support in lly-polyglot
 
 ## 3.0.0
 

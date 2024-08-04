@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 2.1.0
+
+### Minor Changes
+
+- [#67](https://github.com/hack-dance/island-ai/pull/67) [`d2a1ee5`](https://github.com/hack-dance/island-ai/commit/d2a1ee5f04e5f95f0755c3ad39766573b29962ca) Thanks [@roodboi](https://github.com/roodboi)! - updating required peer dep on zod to better align with all other packages as well as the one required ecternal zod to json schema dependency.
+
 ## 2.0.0
 
 ### Major Changes
