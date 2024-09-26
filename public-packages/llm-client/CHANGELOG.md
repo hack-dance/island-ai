@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 2.2.0
+
+### Minor Changes
+
+- [#72](https://github.com/hack-dance/island-ai/pull/72) [`6610b0f`](https://github.com/hack-dance/island-ai/commit/6610b0ff1ffd783a59508ebddf91a8745b573ed2) Thanks [@roodboi](https://github.com/roodboi)! - updated to use latest tool calling format
+
 ## 2.1.0
 
 ### Minor Changes
