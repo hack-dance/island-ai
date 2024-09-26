@@ -138,21 +138,9 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           } as OpenAI.ChatCompletion.Choice
         ]
       }
-    } else {
-      return {
-        ...transformedResponse,
-        object: "chat.completion.chunk",
-        choices: [
-          {
-            delta: {
-              content: ""
-            },
-            finish_reason: null,
-            index: 0
-          }
-        ]
-      }
     }
+
+    return transformedResponse
   }
 
   /**
@@ -233,71 +221,84 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
   ): AsyncIterable<ExtendedCompletionChunkAnthropic> {
     let finalChatCompletion: ExtendedCompletionChunkAnthropic | null = null
 
-    for await (const data of response) {
-      switch (data.type) {
+    for await (const event of response) {
+      switch (event.type) {
         case "message_start":
-          this.log("debug", "Message start:", data)
-          finalChatCompletion = (await this.transformResponse(data.message, {
-            stream: true
-          })) as ExtendedCompletionChunkAnthropic
+          this.log("debug", "Message start:", event)
+          finalChatCompletion = {
+            id: event.message.id,
+            object: "chat.completion.chunk",
+            created: Date.now(),
+            model: event.message.model,
+            choices: [
+              {
+                index: 0,
+                delta: { role: "assistant" },
+                finish_reason: null
+              }
+            ],
+            usage: {
+              prompt_tokens: event.message.usage.input_tokens,
+              completion_tokens: 0,
+              total_tokens: event.message.usage.input_tokens
+            },
+            originResponse: event.message
+          }
 
           yield finalChatCompletion
-          continue
+          break
+
+        case "content_block_start":
+          this.log("debug", "Content block start:", event)
+          break
 
         case "content_block_delta":
-          if (data.delta && data.delta.type === "text_delta" && data.delta?.text) {
-            if (finalChatCompletion && finalChatCompletion.choices) {
-              if (data.delta.text) {
-                finalChatCompletion.choices[0].delta = {
-                  content: data.delta.text,
-                  role: "assistant"
-                }
+          if (finalChatCompletion && finalChatCompletion.choices) {
+            if (event.delta.type === "text_delta") {
+              finalChatCompletion.choices[0].delta = {
+                content: event.delta.text,
+                role: "assistant"
+              }
+            } else if (event.delta.type === "input_json_delta") {
+              finalChatCompletion.choices[0].delta = {
+                content: event.delta.partial_json,
+                role: "assistant"
               }
             }
 
-            yield finalChatCompletion as ExtendedCompletionChunkAnthropic
+            yield finalChatCompletion
           }
-
-          if (data.delta && data.delta.type === "input_json_delta") {
-            if (finalChatCompletion && finalChatCompletion.choices) {
-              if (data.delta.partial_json) {
-                finalChatCompletion.choices[0].delta = {
-                  content:
-                    (finalChatCompletion.choices?.[0]?.delta?.content ?? "") +
-                    data.delta.partial_json,
-                  role: "assistant"
-                }
-              }
-            }
-          }
-
-          continue
+          break
 
         case "content_block_stop":
-          this.log("debug", "Content block stop:", data)
-
-          if (finalChatCompletion && finalChatCompletion.choices) {
-            finalChatCompletion.choices[0].finish_reason = "stop"
-          }
-
-          yield finalChatCompletion as ExtendedCompletionChunkAnthropic
-          continue
+          this.log("debug", "Content block stop:", event)
+          break
 
         case "message_delta":
-          if (finalChatCompletion && finalChatCompletion?.usage) {
-            finalChatCompletion.usage.completion_tokens = data?.usage?.output_tokens
+          if (finalChatCompletion && finalChatCompletion.usage) {
+            finalChatCompletion.usage.completion_tokens = event.usage?.output_tokens || 0
             finalChatCompletion.usage.total_tokens =
-              finalChatCompletion.usage.prompt_tokens + data?.usage?.output_tokens
+              finalChatCompletion.usage.prompt_tokens + finalChatCompletion.usage.completion_tokens
           }
-
-          continue
+          break
 
         case "message_stop":
-          this.log("debug", "Message stop:", data)
+          this.log("debug", "Message stop:", event)
+          if (finalChatCompletion && finalChatCompletion.choices) {
+            finalChatCompletion.choices[0].finish_reason = "stop"
+            finalChatCompletion.choices[0].delta = {
+              content: null,
+              role: "assistant"
+            }
+            yield finalChatCompletion
+          }
+          break
+
+        default:
+          this.log("warn", "Unknown event type:", event)
       }
     }
   }
-
   /**
    * Creates a chat completion using the Anthropic API.
    * @param params - The chat completion parameters.

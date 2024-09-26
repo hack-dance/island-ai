@@ -3,13 +3,12 @@ import { omit } from "@/lib"
 import Anthropic from "@anthropic-ai/sdk"
 import { describe, expect, test } from "bun:test"
 
-for await (const model of ["claude-3-opus-20240229", "claude-3-sonnet-20240229"] as const) {
+for await (const model of ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"] as const) {
   await createTestCase(model)
 }
 
 const anthropicClient = createLLMClient({
-  provider: "anthropic",
-  logLevel: "error"
+  provider: "anthropic"
 })
 
 async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) {
@@ -105,12 +104,13 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
           final += message.choices?.[0].delta?.content ?? ""
         }
 
-        console.log(final)
+        expect(final).toBe(`{\"name\": \"Dimitri Kennedy\"}`)
       })
 
-      test("Function Calling complex schema", async () => {
+      test("Function Calling STREAM - complex schema", async () => {
         const completion = await anthropicClient.chat.completions.create({
           model,
+          stream: true,
           max_tokens: 1000,
           messages: [
             {
@@ -209,36 +209,14 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
           ]
         })
 
-        //@ts-expect-error fails because its optionally undefiened, which is fine - if we fail we fail
-        expect(omit(["id"], completion?.choices?.[0]?.message.tool_calls?.[0])).toEqual({
-          type: "function",
-          function: {
-            name: "process_user_data",
-            arguments: JSON.stringify({
-              userDetails: {
-                firstName: "John",
-                lastName: "Doe",
-                contactDetails: {
-                  email: "john.doe@example.com",
-                  phoneNumber: "555-1234"
-                }
-              },
-              jobHistory: [
-                {
-                  companyName: "Acme Corp",
-                  role: "Software Engineer",
-                  years: 5
-                },
-                {
-                  companyName: "Globex Inc.",
-                  role: "Lead Developer",
-                  years: 3
-                }
-              ],
-              skills: ["Programming", "Leadership", "Communication"]
-            })
-          }
-        })
+        let final = ""
+        for await (const message of completion) {
+          final += message.choices?.[0].delta?.content ?? ""
+        }
+
+        expect(final).toBe(
+          `{\"userDetails\": {\"firstName\": \"John\", \"lastName\": \"Doe\", \"contactDetails\": {\"email\": \"john.doe@example.com\", \"phoneNumber\": \"555-1234\"}}, \"jobHistory\": [{\"companyName\": \"Acme Corp\", \"role\": \"Software Engineer\", \"years\": 5}, {\"companyName\": \"Globex Inc.\", \"role\": \"Lead Developer\", \"years\": 3}], \"skills\": [\"Programming\", \"Leadership\", \"Communication\"]}`
+        )
       })
 
       test("Standard stream", async () => {
