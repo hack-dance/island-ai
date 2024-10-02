@@ -51,8 +51,8 @@ $ bun add zod-stream zod openai
 #### Basic Usage
 
 ```typescript
-import { OAIStream } from "zod-stream/OAIStream";
-import { withResponseModel } from "zod-stream/response-model";
+import { OAIStream } from "zod-stream";
+import { withResponseModel } from "zod-stream";
 import OpenAI from "openai";
 import { z } from "zod";
 
