@@ -59,7 +59,7 @@ export type AnthropicChatCompletionParams =
 /** Google types */
 export type GoogleChatCompletionParamsStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
-  "messages"
+  "messages" | "model"
 > & {
   messages: SupportedChatCompletionMessageParam[]
   stream: true
@@ -67,11 +67,12 @@ export type GoogleChatCompletionParamsStream = Omit<
   additionalProperties?: {
     cacheName?: string
   }
+  model: GeminiGenerativeModels | string
 }
 
 export type GoogleChatCompletionParamsNonStream = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
-  "messages"
+  "messages" | "model"
 > & {
   messages: SupportedChatCompletionMessageParam[]
   stream?: false | undefined
@@ -79,6 +80,7 @@ export type GoogleChatCompletionParamsNonStream = Omit<
   additionalProperties?: {
     cacheName?: string
   }
+  model: GeminiGenerativeModels
 }
 
 export type GoogleChatCompletionParams =
@@ -93,9 +95,19 @@ export type ExtendedCompletionChunkGoogle = Partial<OpenAI.ChatCompletionChunk> 
   originResponse: EnhancedGenerateContentResponse
 }
 
-export type GooggleCacheCreateParams = GoogleChatCompletionParams & {
+export type GoogleCacheCreateParams = GoogleChatCompletionParams & {
   ttlSeconds: number
 }
+
+export type GeminiGenerativeModels =
+  | "gemini-1.5-pro"
+  | "gemini-1.5-pro-latest"
+  | "gemini-1.5-flash-8b"
+  | "gemini-1.5-flash-8b-latest"
+  | "gemini-1.5-flash"
+  | "gemini-1.5-flash-latest"
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  | (string & {})
 
 /** General type for providers */
 export type OpenAILikeClient<P> = P extends "openai" | "azure"
@@ -112,11 +124,11 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure"
           }
         }
         cacheManager: {
-          create: (params: GooggleCacheCreateParams) => Promise<CachedContent>
+          create: (params: GoogleCacheCreateParams) => Promise<CachedContent>
           get: (cacheName: string) => Promise<CachedContent>
           list: () => Promise<{ cachedContents: CachedContent[] }>
           delete: (cacheName: string) => Promise<void>
-          update: (cacheName: string, params: GooggleCacheCreateParams) => Promise<CachedContent>
+          update: (cacheName: string, params: GoogleCacheCreateParams) => Promise<CachedContent>
         }
       }
     : P extends "anthropic"

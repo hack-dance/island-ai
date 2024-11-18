@@ -3,7 +3,7 @@ import { consoleTransport } from "@/logger/transports/console"
 import {
   ExtendedCompletionChunkGoogle,
   ExtendedCompletionGoogle,
-  GooggleCacheCreateParams,
+  GoogleCacheCreateParams,
   GoogleChatCompletionParams,
   GoogleChatCompletionParamsNonStream,
   GoogleChatCompletionParamsStream,
@@ -135,7 +135,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         : {}),
       systemInstruction
     }
-  }
+  } //AIzaSyBc5nvuE1pzsecuSvdapaOQ5FXh3F4CDbw
 
   /**
    * Transforms the Google API response into an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
@@ -293,7 +293,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    * @param params - the same params as used in chat.completion.create plus ttlSeconds
    * @returns the cache manager create response (which includes the cache name to use later)
    */
-  public async createCacheManager(params: GooggleCacheCreateParams) {
+  public async createCacheManager(params: GoogleCacheCreateParams) {
     const googleParams = this.transformParams(params)
 
     try {
@@ -333,7 +333,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     list: async () => {
       return await this.googleCacheManager.list()
     },
-    update: async (cacheName: string, params: GooggleCacheCreateParams) => {
+    update: async (cacheName: string, params: GoogleCacheCreateParams) => {
       const googleParams = this.transformParams(params)
       return await this.googleCacheManager.update(
         cacheName,

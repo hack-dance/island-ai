@@ -151,12 +151,46 @@ describe(`LLMClient Gemini Provider`, () => {
         { role: "system", content: "You only speak in rhymes." },
         {
           role: "user",
-          content: "What is the capital of Montana?"
+          content:
+            "What is the capital of Montana? Be sure to use the word capital in your response."
         }
       ],
       max_tokens: 1000
     })
 
     expect(completion?.choices?.[0].message.content).toMatch(/capitale/i)
+  })
+
+  test("Chat with cache context", async () => {
+    // First create some cached content
+    // gemini-1.5-flash-latest somehow doesn't support caching OOTB (11/18/24)
+    const cacheResponse = await googleClient.cacheManager.create({
+      model: "gemini-1.5-flash-8b",
+      messages: [
+        {
+          role: "user",
+          content: "What is the capital of Montana?"
+        }
+      ],
+      ttlSeconds: 3600, // Cache for 1 hour,
+      max_tokens: 1000
+    })
+
+    // Now use the cached content in a new completion
+    const completion = await googleClient.chat.completions.create({
+      model: "gemini-1.5-flash-8b",
+      messages: [
+        {
+          role: "user",
+          content: "What state is it in?"
+        }
+      ],
+      additionalProperties: {
+        cacheName: cacheResponse.name
+      },
+      max_tokens: 1000
+    })
+
+    expect(completion?.choices?.[0].message.content).toMatch(/Montana/i)
   })
 })
