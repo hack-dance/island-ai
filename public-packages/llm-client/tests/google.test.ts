@@ -19,7 +19,6 @@ describe(`LLMClient Gemini Provider`, () => {
       max_tokens: 1000
     })
 
-    console.log(completion?.choices?.[0].message.content)
     expect(completion?.choices?.[0].message.content).toMatch(/Helena/i)
   })
 
@@ -35,7 +34,6 @@ describe(`LLMClient Gemini Provider`, () => {
       max_tokens: 1000
     })
 
-    console.log(completion?.choices?.[0].message.content)
     expect(completion?.choices?.[0].message.content).toMatch(/Arlington/i)
   })
 
@@ -45,8 +43,7 @@ describe(`LLMClient Gemini Provider`, () => {
       messages: [
         {
           role: "user",
-          //content: "Write a soliloquy about the humidity."
-          content: "Write an essay about the chemical composition of dirt."
+          content: "Write a brief essay about the chemical composition of dirt."
         }
       ],
       max_tokens: 1000,
@@ -55,10 +52,9 @@ describe(`LLMClient Gemini Provider`, () => {
 
     let final = ""
     for await (const message of completion) {
-      console.log("choice: ", message.choices?.[0])
       final += message.choices?.[0].delta?.content ?? ""
     }
-    console.log(final)
+    expect(final).toBeString()
   })
 
   test("Function calling", async () => {
@@ -91,7 +87,6 @@ describe(`LLMClient Gemini Provider`, () => {
                 }
               },
               required: ["name"]
-              //additionalProperties: false
             }
           }
         }
@@ -99,7 +94,6 @@ describe(`LLMClient Gemini Provider`, () => {
     })
 
     const responseFunction = completion?.choices?.[0]?.message.tool_calls?.[0].function
-    console.log({ responseFunction })
     expect(responseFunction?.name).toMatch(/say_hello/i)
     expect(responseFunction?.arguments).toMatch(/Spartacus/i)
   })
@@ -135,16 +129,18 @@ describe(`LLMClient Gemini Provider`, () => {
                 }
               },
               required: ["name"]
-              //additionalProperties: false
             }
           }
         }
       ]
     })
 
+    let final = ""
     for await (const message of completion) {
-      console.log("choice: ", message.choices?.[0])
+      final += message.choices?.[0].delta?.content ?? ""
     }
+
+    console.log(final)
   })
 
   test("Chat with system messages", async () => {
@@ -161,7 +157,6 @@ describe(`LLMClient Gemini Provider`, () => {
       max_tokens: 1000
     })
 
-    console.log(completion?.choices?.[0].message.content)
     expect(completion?.choices?.[0].message.content).toMatch(/capitale/i)
   })
 })

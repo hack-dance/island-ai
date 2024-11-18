@@ -1,3 +1,5 @@
+import ProviderLogger from "@/logger"
+import { consoleTransport } from "@/logger/transports/console"
 import {
   ExtendedCompletionChunkGoogle,
   ExtendedCompletionGoogle,
@@ -16,51 +18,30 @@ import {
   FunctionDeclarationsTool,
   GenerateContentRequest,
   GoogleGenerativeAI,
+  GoogleGenerativeAIError,
   TextPart,
   Tool
 } from "@google/generative-ai"
 import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generative-ai/server"
 import { ClientOptions } from "openai"
+import { isEmpty } from "ramda"
 
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
   private googleCacheManager
-
-  private log<T extends unknown[]>(level: LogLevel, ...args: T) {
-    const timestamp = new Date().toISOString()
-    switch (level) {
-      case "debug":
-        if (this.logLevel === "debug") {
-          console.debug(`[LLM-CLIENT--GOOGLE-CLIENT:DEBUG] ${timestamp}:`, ...args)
-        }
-        break
-      case "info":
-        if (this.logLevel === "debug" || this.logLevel === "info") {
-          console.info(`[LLM-CLIENT--GOOGLE-CLIENT:INFO] ${timestamp}:`, ...args)
-        }
-        break
-      case "warn":
-        if (this.logLevel === "debug" || this.logLevel === "info" || this.logLevel === "warn") {
-          console.warn(`[LLM-CLIENT--GOOGLE-CLIENT:WARN] ${timestamp}:`, ...args)
-        }
-        break
-      case "error":
-        console.error(`[LLM-CLIENT--GOOGLE-CLIENT:ERROR] ${timestamp}:`, ...args)
-        break
-    }
-  }
+  private logger: ProviderLogger
 
   constructor(
     opts?: ClientOptions & {
       logLevel?: LogLevel
     }
   ) {
-    const apiKey = opts?.apiKey ?? process.env?.["GOOGLE_API_KEY"] ?? null
+    const apiKey = opts?.apiKey ?? process.env?.["GEMINI_API_KEY"] ?? null
 
     if (!apiKey) {
       throw new Error(
-        "API key is required for GoogleProvider - please provide it in the constructor or set it as an environment variable named GEMINI_API_KEY."
+        "API key is required for GeminiProvider - please provide it in the constructor or set it as an environment variable named GEMINI_API_KEY."
       )
     }
 
@@ -69,6 +50,8 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
     this.googleCacheManager = new GoogleAICacheManager(apiKey)
+    this.logger = new ProviderLogger("GEMINI-CLIENT")
+    this.logger.addTransport(consoleTransport)
   }
 
   /**
@@ -80,19 +63,32 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     let function_declarations: FunctionDeclarationsTool[] = []
     const allowedFunctionNames: string[] = []
 
+    const { systemMessages, nonSystemMessages } = params.messages.reduce<{
+      systemMessages: typeof params.messages
+      nonSystemMessages: typeof params.messages
+    }>(
+      (acc, message) => {
+        if (message.role === "system") {
+          acc.systemMessages.push(message)
+        } else {
+          acc.nonSystemMessages.push(message)
+        }
+        return acc
+      },
+      { systemMessages: [], nonSystemMessages: [] }
+    )
+
     // conform messages to Google's Content[] type
     // they use "model" and "user" instead of "assistant" and "user", and also have no "system" role
-    const contents: Content[] = params.messages
-      .filter(message => message.role !== "system")
-      .map(message => {
-        const textPart: TextPart = {
-          text: message.content.toString()
-        }
-        return {
-          role: message.role === "assistant" ? "model" : "user",
-          parts: [textPart]
-        }
-      })
+    const contents: Content[] = nonSystemMessages.map(message => {
+      const textPart: TextPart = {
+        text: message.content.toString()
+      }
+      return {
+        role: message.role === "assistant" ? "model" : "user",
+        parts: [textPart]
+      }
+    })
 
     // cache data doesn't support tools or system messages (yet)
     if (params.additionalProperties?.["cacheName"]) {
@@ -101,9 +97,13 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       }
     }
 
-    if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
-      function_declarations = params.tools.map(tool => {
+    const hasTools = !isEmpty(params?.tools)
+    if (hasTools) {
+      const tools = params.tools ?? []
+
+      function_declarations = tools.map(tool => {
         allowedFunctionNames.push(tool.function.name)
+
         return {
           name: tool.function.name ?? "",
           description: tool.function.description ?? "",
@@ -112,8 +112,6 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       })
     }
 
-    const systemMessages = params.messages.filter(message => message.role === "system")
-    // the type of systemInstruction is string | Part | Content - but this structure seems to be the only one that works
     const systemInstruction =
       systemMessages.length > 0
         ? {
@@ -261,7 +259,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       }
 
       if (params?.stream) {
-        this.log("debug", "Starting streaming completion response")
+        this.logger.log(this.logLevel, "Starting streaming completion response")
 
         const result = await generativeModel.generateContentStream(googleParams)
 
@@ -285,7 +283,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         return transformedResult as ExtendedCompletionGoogle
       }
     } catch (error) {
-      console.error("Error in Google API request:", error)
+      this.logger.log(this.logLevel, new Error("Error in Google API request:", { cause: error }))
       throw error
     }
   }
@@ -297,11 +295,27 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    */
   public async createCacheManager(params: GooggleCacheCreateParams) {
     const googleParams = this.transformParams(params)
-    return await this.googleCacheManager.create({
-      ttlSeconds: params.ttlSeconds,
-      model: params.model,
-      ...googleParams
-    })
+
+    try {
+      return await this.googleCacheManager.create({
+        ttlSeconds: params.ttlSeconds,
+        model: params.model,
+        ...googleParams
+      })
+    } catch (err: unknown) {
+      let error = err as Error
+
+      if (err instanceof GoogleGenerativeAIError) {
+        error = new Error(
+          "Failed to create Gemini cache manager, ensure your API key supports caching (i.e. pay-as-you-go)"
+        )
+        error.stack = (err as Error).stack
+      }
+
+      this.logger.log(this.logLevel, error)
+
+      throw err
+    }
   }
 
   public chat = {

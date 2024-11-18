@@ -133,3 +133,18 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure"
           }
         }
       : never
+
+/** Logging client */
+export type LogTransport = (
+  level: LogLevel,
+  message: string | Error,
+  timestamp: string | number | Date,
+  prefix?: string
+) => void
+
+export type ConsoleTransportEntry = {
+  id: string
+  timestamp: string | number | Date
+  level: LogLevel
+  message: string | Error
+}
