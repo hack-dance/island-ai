@@ -21,6 +21,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ANYSCALE_API_KEY: ${{ secrets.ANYSCALE_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTRHOPIC_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
     steps:
       - uses: actions/checkout@v3

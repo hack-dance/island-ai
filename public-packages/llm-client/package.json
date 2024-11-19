@@ -36,6 +36,7 @@
   "keywords": [
     "llm",
     "openai",
+    "gemini",
     "streaming",
     "anthropic",
     "llm client",
@@ -50,10 +51,12 @@
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": "^0.22.0",
+    "@google/generative-ai": "^0.21.0",
     "openai": ">=4.28.0"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.22.0",
+    "@google/generative-ai": "^0.21.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^1.10.12",
