@@ -243,7 +243,7 @@ const completion = await anthropicClient.chat.completions.create({
 
 **Key Features:**
 -  Extends the official OpenAI SDK.
--  Supports providers like Anthropic, Together, OpenAI, Microsoft, Anyscale, and Anthropic.
+-  Supports providers like Anthropic, Together, OpenAI, Gemini, Microsoft, Anyscale, and Anthropic.
 -  Universal SDK for multiple LLMs with consistent API.
 
 #### Installation
