@@ -135,7 +135,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         : {}),
       systemInstruction
     }
-  } //AIzaSyBc5nvuE1pzsecuSvdapaOQ5FXh3F4CDbw
+  }
 
   /**
    * Transforms the Google API response into an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
