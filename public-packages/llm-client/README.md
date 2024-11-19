@@ -160,7 +160,7 @@ To use any of the above functionality, the schema is effectively the same since 
 
 To use Context Caching you need to create a cache before you call generate via `googleClient.cacheManager.create({})` like so:
 
-```
+```typescript
 const cacheResponse = await googleClient.cacheManager.create({
       model: "gemini-1.5-flash-8b",
       messages: [
@@ -189,6 +189,29 @@ const cacheResponse = await googleClient.cacheManager.create({
     })
 ```
 
+### Gemini OpenAI Compatibility
+Gemini does support [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#node.js) for it's Node client but given that it's in beta and it has some limitations around structured output and images we're not using it directly in this library.
+
+That said, you can use it quite easily with llm-polyglot if you like.
+
+Here's a sample:
+
+```typescript
+const googleClient = createLLMClient({
+  provider: "openai",
+  apiKey: "gemini_api_key",
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
+})
+
+
+const completion = await openai.chat.completions.create({
+  model: "gemini-1.5-flash",
+  max_tokens: 1000,
+  messages: [
+    { role: "user", content: "My name is Dimitri Kennedy." }
+  ]
+});
+```
 
 
 ## OpenAI
