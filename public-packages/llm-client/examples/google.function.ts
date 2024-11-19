@@ -4,89 +4,84 @@ const googleClient = createLLMClient({
   provider: "google"
 })
 
-//
-// Simple Chat
-//
+/*************************
+ * Simple Chat
+ *************************/
+const completion = await googleClient.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [
+    {
+      role: "user",
+      content: "How much does a soul weigh?"
+    }
+  ],
+  max_tokens: 1000
+})
 
-// const completion = await googleClient.chat.completions.create({
-//   model: "gemini-1.5-flash-latest",
-//   messages: [
-//     {
-//       role: "user",
-//       content: "How much does a soul weigh?"
-//     }
-//   ],
-//   max_tokens: 1000
-// })
+console.log(JSON.stringify(completion, null, 2))
 
-// console.log(JSON.stringify(completion, null, 2))
+/*************************
+ * Simple Chat
+ *************************/
+const simpleChat = await googleClient.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  max_tokens: 1000,
+  messages: [
+    {
+      role: "user",
+      content: "My name is Spartacus."
+    }
+  ],
+  tool_choice: {
+    type: "function",
+    function: {
+      name: "say_hello"
+    }
+  },
+  tools: [
+    {
+      type: "function",
+      function: {
+        name: "say_hello",
+        description: "Say hello",
+        parameters: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string"
+            }
+          },
+          required: ["name"]
+          //additionalProperties: false
+        }
+      }
+    }
+  ]
+})
 
-//
-// Function calling
-//
+console.log(JSON.stringify(simpleChat, null, 2))
 
-// const completion2 = await googleClient.chat.completions.create({
-//   model: "gemini-1.5-flash-latest",
-//   max_tokens: 1000,
-//   messages: [
-//     {
-//       role: "user",
-//       content: "My name is Spartacus."
-//     }
-//   ],
-//   tool_choice: {
-//     type: "function",
-//     function: {
-//       name: "say_hello"
-//     }
-//   },
-//   tools: [
-//     {
-//       type: "function",
-//       function: {
-//         name: "say_hello",
-//         description: "Say hello",
-//         parameters: {
-//           type: "object",
-//           properties: {
-//             name: {
-//               type: "string"
-//             }
-//           },
-//           required: ["name"]
-//           //additionalProperties: false
-//         }
-//       }
-//     }
-//   ]
-// })
+/*************************
+ * Streaming Chat
+ *************************/
+const streamingChat = await googleClient.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [
+    {
+      role: "user",
+      content: "Write an essay about the chemical composition of dirt."
+    }
+  ],
+  max_tokens: 1000,
+  stream: true
+})
 
-// console.log(JSON.stringify(completion2, null, 2))
-
-//
-// Streaming chat
-//
-
-// const completion3 = await googleClient.chat.completions.create({
-//   model: "gemini-1.5-flash-latest",
-//   messages: [
-//     {
-//       role: "user",
-//       //content: "Write a soliloquy about the humidity."
-//       content: "Write an essay about the chemical composition of dirt."
-//     }
-//   ],
-//   max_tokens: 1000,
-//   stream: true
-// })
-
-//expect(completion).toBeTruthy
-//let final = ""
-// console.log({ completion3 })
-// for await (const message of completion3) {
-//   console.log({ message })
-//   //final += message.choices?.[0].delta?.content ?? ""
-// }
+let final = ""
+console.log({ streamingChat })
+for await (const message of streamingChat) {
+  console.log({ message })
+  final += message.choices?.[0].delta?.content ?? ""
+}
 
 ////////////////////////////////////////
 // content caching

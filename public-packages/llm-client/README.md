@@ -19,7 +19,7 @@
 
 
 <p align="center">
-  A universal LLM client - extends the official openai sdk to provide support for providers that do not adhere to the same api and format, like Anthropic or Azure. One universal sdk for all the top LLMs from Together, OpenAI, Microsoft, Anyscale and Anthropic
+  A universal LLM client - extends the official openai sdk to provide support for providers that do not adhere to the same api and format, like Anthropic or Azure. One universal sdk for all the top LLMs from Together, Gemini, OpenAI, Microsoft, Anyscale and Anthropic
 </p>
 
 ## Installation
@@ -140,12 +140,63 @@ const completion = await anthropicClient.chat.completions.create({
 The tool_choice option specifies the function to call, and the tools option defines the available functions and their parameters. The response from the Anthropic API will include the function call and its arguments in the tool_calls field.
 
 
-OpenAI
+## Gemini
+The llm-polyglot library provides support for Google's Gemini API including:
+  * standard chat completions
+  * streaming chat completions
+  * function calling
+  * context caching support for better token optimization (must be a paid API key)
+
+
+The Google generative-ai sdk is required when using the google provider - we only use the types provided by the sdk.
+```bash
+  bun add @google/generative-ai-sdk
+```
+
+To use any of the above functionality, the schema is effectively the same since we translate the OpenAI params spec into Gemini's model spec.
+
+### Context Caching
+[Context Caching](https://ai.google.dev/gemini-api/docs/caching?lang=python) is a feature specific to Gemini that helps cut down on duplicate token usage by allowing you to create a cache with a TTL with which you can provide context to the model that you've already obtained from elsewhere.
+
+To use Context Caching you need to create a cache before you call generate via `googleClient.cacheManager.create({})` like so:
+
+```
+const cacheResponse = await googleClient.cacheManager.create({
+      model: "gemini-1.5-flash-8b",
+      messages: [
+        {
+          role: "user",
+          content: "What is the capital of Montana?"
+        }
+      ],
+      ttlSeconds: 3600, // Cache for 1 hour,
+      max_tokens: 1000
+    })
+
+    // Now use the cached content in a new completion
+    const completion = await googleClient.chat.completions.create({
+      model: "gemini-1.5-flash-8b",
+      messages: [
+        {
+          role: "user",
+          content: "What state is it in?"
+        }
+      ],
+      additionalProperties: {
+        cacheName: cacheResponse.name
+      },
+      max_tokens: 1000
+    })
+```
+
+
+
+## OpenAI
 The llm-polyglot library also provides support for the OpenAI API, which is the default provider and will just proxy directly to the OpenAI sdk.
 
 
-Contributing
+## Contributing
 Contributions are welcome! Please open an issue or submit a pull request if you have any improvements, bug fixes, or new features to add.
 
-License
+## License
 This project is licensed under the MIT License.
