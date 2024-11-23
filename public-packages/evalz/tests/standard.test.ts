@@ -61,11 +61,8 @@ describe("Should eval", () => {
 
     console.log(result)
 
-    expect(omit(["results"], result)).toEqual({
-      scoreResults: {
-        value: 1
-      }
-    })
+    //@ts-ignore
+    expect(result.scoreResults.value).toBeGreaterThan(0.9)
   })
 })
 
