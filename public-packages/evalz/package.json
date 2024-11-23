@@ -43,7 +43,7 @@
   ],
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
-  "homepage": "https://island.novy.work",
+  "homepage": "https://island.hack.dance",
   "peerDependencies": {
     "@instructor-ai/instructor": "latest",
     "openai": ">=4.28.0",

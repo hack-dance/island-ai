@@ -2,7 +2,7 @@
   "name": "stream-hooks",
   "version": "2.0.0",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
-  "homepage": "https://island.novy.work",
+  "homepage": "https://island.hack.dance",
   "repository": {
     "directory": "public-packages/hooks",
     "type": "git",

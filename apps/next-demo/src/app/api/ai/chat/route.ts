@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     response_model: { schema: resolvedSchema, name: "Extract" },
     params: {
       messages,
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       stream: true
     },
     mode: "TOOLS"
