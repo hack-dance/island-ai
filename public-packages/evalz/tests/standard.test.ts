@@ -1,7 +1,6 @@
 import { createEvaluator } from "@/evaluators"
 import { createWeightedEvaluator } from "@/evaluators/weighted"
 import { createAccuracyEvaluator, createContextEvaluator } from "@/index"
-import { omit } from "@/lib"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
 
