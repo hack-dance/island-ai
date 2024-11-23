@@ -1,49 +1,36 @@
 import Link from "next/link"
-import { Github, Linkedin, Twitter } from "lucide-react"
+import { BrandGithub, BrandLinkedin, BrandTwitter } from "@mynaui/icons-react"
 
-export async function Footer() {
+export const Footer = () => {
   return (
-    <footer className="w-full py-12 border-t border-accent/70 bg-background">
-      <div className="container px-4 md:px-6">
-        <div className="grid gap-8 md:grid-cols-3 grid-cols-2">
-          <div className="space-y-2 mx-auto">
-            <h3 className="text-xs tracking-widest uppercase font-okineBold">BUILT BY</h3>
-            <Link className="font-okineBold text-xl" href="">
-              Hack Dance
+    <footer className="w-full">
+      <div className="container">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <nav className="text-muted-foreground flex flex-wrap items-center space-x-4 text-xs font-medium">
+            <Link
+              className="hover:underline uppercase text-sm font-okineBold"
+              href="https://hack.dance"
+              target="_blank"
+            >
+              HACK DANCE
             </Link>
-          </div>
-          <div className="space-y-2 mx-auto">
-            <h3 className="text-xs tracking-widest uppercase font-okineBold">Connect</h3>
-            <ul className="flex flex-col space-y-2">
-              <li>
-                <div className="flex items-center justify-center gap-4">
-                  <Link href="https://www.linkedin.com/in/dimitri-kennedy/" target="_blank">
-                    <Linkedin className="w-5 h-5" />
-                  </Link>
-                  <Link href="https://www.github.com/hack-dance/island-ai" target="_blank">
-                    <Github className="w-5 h-5" />
-                  </Link>
-                  <Link href="https://www.twitter.com/dimitrikennedy/" target="_blank">
-                    <Twitter className="w-5 h-5" />
-                  </Link>
-                </div>
-              </li>
-            </ul>
-          </div>
+          </nav>
 
-          <div className="max-w-[420px] mx-auto flex flex-col items-center justify-center space-y-6 h-full mt-4 md:-mt-4 col-start-1 col-end-3 md:col-start-auto md:col-end-auto">
-            <article>
-              <small></small>
-              <small></small>
-              <p className="text-xs"></p>
-            </article>
-          </div>
+          <nav className="text-muted-foreground flex items-center gap-4">
+            <Link href="https://www.linkedin.com/company/hack-dance" target="_blank">
+              <BrandLinkedin className="size-5" />
+            </Link>
+            <Link href="https://www.github.com/hack-dance/island-ai" target="_blank">
+              <BrandGithub className="size-5" />
+            </Link>
+            <Link href="https://www.twitter.com/dimitrikennedy/" target="_blank">
+              <BrandTwitter className="size-5" />
+            </Link>
+          </nav>
         </div>
-
-        <div className="px-4 flex justify-between items-center mt-8 border-t border-gray-accent/70 pt-8 text-foreground/60 text-sm space-y-2">
-          <div>
-            <p>Hack Dance © 2023</p>
-          </div>
+        <div className="flex items-center justify-between py-4">
+          <p className="text-muted-foreground text-xs">© 2020 Hack Dance, LLC.</p>
+          <div></div>
         </div>
       </div>
     </footer>
