@@ -34,7 +34,7 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
 
   const Content = dynamic(() => import(`@/docs/${doc.id}.mdx`), {
     loading: () => (
-      <div className="mt-[200px] h-full w-full flex justify-center items-center mt-8">
+      <div className="mt-[200px] h-full w-full flex justify-center items-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading...
