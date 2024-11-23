@@ -9,7 +9,7 @@ export async function Footer() {
           <div className="space-y-2 mx-auto">
             <h3 className="text-xs tracking-widest uppercase font-okineBold">BUILT BY</h3>
             <Link className="font-okineBold text-xl" href="">
-              NOVY
+              Hack Dance
             </Link>
           </div>
           <div className="space-y-2 mx-auto">
@@ -42,7 +42,7 @@ export async function Footer() {
 
         <div className="px-4 flex justify-between items-center mt-8 border-t border-gray-accent/70 pt-8 text-foreground/60 text-sm space-y-2">
           <div>
-            <p>Novy © 2023</p>
+            <p>Hack Dance © 2023</p>
           </div>
         </div>
       </div>

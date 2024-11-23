@@ -44,7 +44,7 @@
   ],
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
-  "homepage": "https://island.novy.work",
+  "homepage": "https://island.hack.dance",
   "dependencies": {
     "json-schema": "^0.4.0"
   },

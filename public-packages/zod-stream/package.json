@@ -42,7 +42,7 @@
   ],
   "license": "MIT",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
-  "homepage": "https://island.novy.work",
+  "homepage": "https://island.hack.dance",
   "dependencies": {
     "schema-stream": "^3.2.0",
     "zod-to-json-schema": "^3.23.1"
