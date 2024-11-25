@@ -1,4 +1,5 @@
 import { AnthropicProvider } from "@/providers/anthropic"
+import { GoogleProvider } from "@/providers/google"
 import { OpenAIProvider } from "@/providers/openai"
 import { OpenAILikeClient, Providers } from "@/types"
 import { ClientOptions } from "openai"
@@ -11,10 +12,16 @@ export class LLMClient<P extends Providers> {
       provider: P
     }
   ) {
-    if (opts?.provider === "openai") {
-      this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
-    } else {
-      this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+    switch (opts?.provider) {
+      case "anthropic":
+        this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
+        break
+      case "google":
+        this.providerInstance = new GoogleProvider(opts) as unknown as OpenAILikeClient<P>
+        break
+      case "openai":
+      default:
+        this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
     }
 
     const proxyHandler: ProxyHandler<OpenAILikeClient<P>> = {
