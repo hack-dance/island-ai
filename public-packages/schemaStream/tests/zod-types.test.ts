@@ -2,6 +2,7 @@ import { SchemaStream } from "@/utils/streaming-json-parser"
 import { describe, expect, test } from "bun:test"
 import { lensPath, view } from "ramda"
 import { z, ZodObject, ZodRawShape } from "zod"
+import type { ZodIssue } from "zod"
 
 const checkPathValue = (obj: object, path: (string | number)[]) => {
   const lens = lensPath(path)
@@ -13,6 +14,7 @@ const checkPathValue = (obj: object, path: (string | number)[]) => {
 
 async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: object) {
   let completed: (string | number)[][] = []
+  let errors: ZodIssue[] = []
 
   const parser = new SchemaStream(schema, {
     onKeyComplete({ completedPaths }) {
@@ -20,7 +22,12 @@ async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: ob
     }
   })
 
-  const stream = parser.parse()
+  const stream = parser.parse({
+    onSchemaInvalid: zodError => {
+      errors = zodError.errors
+    }
+  })
+
   const decoder = new TextDecoder()
   const encoder = new TextEncoder()
 
@@ -63,7 +70,7 @@ async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: ob
     result = value
   }
 
-  return { result: JSON.parse(decoder.decode(result)), completed }
+  return { result: JSON.parse(decoder.decode(result)), errors, completed }
 }
 
 describe("schema stream types", () => {
@@ -191,5 +198,21 @@ describe("schema stream types", () => {
     completed.forEach(path => {
       expect(checkPathValue(data, path)).toBe(true)
     })
+  })
+
+  test("zod with incorrect schema", async () => {
+    const schema = z
+      .object({
+        someString: z.string().default("test"),
+        someNumber: z.number().default(420)
+      })
+      .strict()
+
+    const data = {
+      cats: 48
+    }
+
+    const { errors } = await runTest(schema, data)
+    expect(errors).not.toBeEmpty()
   })
 })

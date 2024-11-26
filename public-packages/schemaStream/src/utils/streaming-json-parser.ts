@@ -1,4 +1,4 @@
-import { lensPath, set, view } from "ramda"
+import { isNil, lensPath, set, view } from "ramda"
 import { z, ZodObject, ZodOptional, ZodRawShape, ZodTypeAny } from "zod"
 
 import JSONParser from "./json-parser"
@@ -65,9 +65,11 @@ type OnKeyCompleteCallback = (data: OnKeyCompleteCallbackParams) => void | undef
 
 export class SchemaStream {
   private schemaInstance: NestedObject
+  private schemaType: SchemaType
   private activePath: (string | number | undefined)[] = []
   private completedPaths: (string | number | undefined)[][] = []
   private onKeyComplete?: OnKeyCompleteCallback
+  private isStrictSchema: Boolean
 
   /**
    * Constructs a new instance of the `SchemaStream` class.
@@ -84,8 +86,10 @@ export class SchemaStream {
   ) {
     const { defaultData, onKeyComplete, typeDefaults } = opts
 
+    this.schemaType = schema
     this.schemaInstance = this.createBlankObject(schema, defaultData, typeDefaults)
     this.onKeyComplete = onKeyComplete
+    this.isStrictSchema = this.schemaType._def.unknownKeys === "strict"
   }
 
   /**
@@ -222,7 +226,8 @@ export class SchemaStream {
     opts: {
       stringBufferSize?: number
       handleUnescapedNewLines?: boolean
-    } = { stringBufferSize: 0, handleUnescapedNewLines: true }
+      onSchemaInvalid?: (error: z.ZodError) => void
+    } = { stringBufferSize: 0, handleUnescapedNewLines: true, onSchemaInvalid: () => null }
   ) {
     const textEncoder = new TextEncoder()
 
@@ -233,6 +238,14 @@ export class SchemaStream {
 
     parser.onToken = this.handleToken.bind(this)
     parser.onValue = () => void 0
+    parser.onEnd = () => {
+      if (this.isStrictSchema) {
+        const validationResult = this.schemaType.safeParse(this.schemaInstance)
+        if (!validationResult.success) {
+          opts.onSchemaInvalid?.(validationResult.error)
+        }
+      }
+    }
 
     const stream = new TransformStream({
       transform: async (chunk, controller): Promise<void> => {
