@@ -1,4 +1,4 @@
-import { isNil, lensPath, set, view } from "ramda"
+import { lensPath, set, view } from "ramda"
 import { z, ZodObject, ZodOptional, ZodRawShape, ZodTypeAny } from "zod"
 
 import JSONParser from "./json-parser"
