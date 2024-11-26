@@ -399,6 +399,8 @@ We welcome contributions! Check out:
 - [GitHub Issues](https://github.com/hack-dance/island-ai/issues)
 - [Twitter](https://twitter.com/dimitrikennedy)
 
+> Credits: Internal JSON parser logic adapted from [streamparser-json](https://github.com/juanjoDiaz/streamparser-json).
+
 ## License
 
 MIT © [hack.dance](https://hack.dance)
