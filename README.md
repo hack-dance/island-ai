@@ -89,6 +89,29 @@ const schema = z.object({
   }))
 });
 
+// Get a readable stream of json (from an api or otherwise)
+async function getSomeStreamOfJson(
+  jsonString: string
+): Promise<{ body: ReadableStream }> {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder()
+      const jsonBytes = encoder.encode(jsonString)
+
+      for (let i = 0; i < jsonBytes.length; ) {
+        const chunkSize = Math.floor(Math.random() * 5) + 2
+        const chunk = jsonBytes.slice(i, i + chunkSize)
+        controller.enqueue(chunk)
+        i += chunkSize
+      }
+      controller.close()
+    },
+  })
+
+  return { body: stream }
+}
+
+
 // Create parser with completion tracking
 const parser = new SchemaStream(schema, {
   onKeyComplete({ completedPaths }) {
@@ -96,16 +119,28 @@ const parser = new SchemaStream(schema, {
   }
 });
 
+// Get the readabale stream to parse
+const readableStream = await getSomeStreamOfJson(
+  `{"someString": "Hello schema-stream", "someNumber": 42000000}`
+)
+
 // Parse streaming data
 const stream = parser.parse();
 readableStream.pipeThrough(stream);
 
 // Get typed results
 const reader = stream.readable.getReader();
+const decoder = new TextDecoder()
+let result = {}
+let complete = false
+
 while (true) {
   const { value, done } = await reader.read();
-  if (done) break;
-  const result = JSON.parse(decoder.decode(value));
+  complete = done
+  
+  if (complete) break;
+  
+  result = JSON.parse(decoder.decode(value));
   // result is fully typed based on schema
 }
 ```
