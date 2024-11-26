@@ -248,7 +248,57 @@ function DataViewer() {
 }
 ```
 
-### 4. llm-polyglot
+### 4. evalz
+
+Structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and integrated with OpenAI and Instructor, it enables both automated evaluation and human-in-the-loop assessment workflows.
+
+**Key Features:**
+
+- 🎯 **Model-Graded Evaluation**: Leverage LLMs to assess response quality
+- 📊 **Accuracy Measurement**: Compare outputs using semantic and lexical similarity
+- 🔍 **Context Validation**: Evaluate responses against source materials
+- ⚖️ **Composite Assessment**: Combine multiple evaluation types with custom weights
+
+```typescript
+// Combine different evaluator types
+const compositeEval = createWeightedEvaluator({
+  evaluators: {
+    entities: createContextEvaluator({ type: "entities-recall" }),
+    accuracy: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.9,   // High weight on exact matches
+        semantic: 0.1    // Low weight on similar terms
+      }
+    }),
+    quality: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate quality"
+    })
+  },
+  weights: {
+    entities: 0.3,
+    accuracy: 0.4,
+    quality: 0.3
+  }
+});
+
+// Must provide all required fields for each evaluator type
+await compositeEval({
+  data: [{
+    prompt: "Summarize the earnings call",
+    completion: "CEO Jane Smith announced 15% growth",
+    expectedCompletion: "The CEO reported strong growth",
+    groundTruth: "CEO discussed Q3 performance",
+    contexts: [
+      "CEO Jane Smith presented Q3 results",
+      "Company saw 15% growth in Q3 2023"
+    ]
+  }]
+});
+```
+
+### 5. llm-polyglot
 
 A universal LLM client that extends the OpenAI SDK to provide consistent interfaces across different providers that may not follow the OpenAI API specification.
 

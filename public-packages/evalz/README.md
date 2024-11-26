@@ -241,7 +241,12 @@ await relevanceEval({ data: [data] });  // Checks contextual relevance
 const compositeEval = createWeightedEvaluator({
   evaluators: {
     entities: createContextEvaluator({ type: "entities-recall" }),
-    accuracy: createAccuracyEvaluator({}),
+    accuracy: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.9,   // High weight on exact matches
+        semantic: 0.1    // Low weight on similar terms
+      }
+    }),
     quality: createEvaluator({
       client: oai,
       model: "gpt-4-turbo",
@@ -601,7 +606,7 @@ Creates a basic evaluator for assessing AI-generated content based on custom cri
 **Parameters**
 
 • client: OpenAI instance.
-• model: OpenAI model to use (e.g., "gpt-4-turbo").
+• model: OpenAI model to use (e.g., "gpt-4o").
 • evaluationDescription: Description guiding the evaluation criteria.
 • `resultsType`: Type of results to return ("score" or "binary").
 • `messages`: Additional messages to include in the OpenAI API call.
@@ -989,7 +994,6 @@ Part of the Island AI toolkit:
 - [`schema-stream`](https://www.npmjs.com/package/schema-stream): Streaming JSON parser
 - [`zod-stream`](https://www.npmjs.com/package/zod-stream): Structured streaming
 - [`stream-hooks`](https://www.npmjs.com/package/stream-hooks): React streaming hooks
-- [`evalz`](https://www.npmjs.com/package/evalz): LLM evaluation
 - [`llm-polyglot`](https://www.npmjs.com/package/llm-polyglot): Universal LLM client
 - [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
 
