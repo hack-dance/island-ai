@@ -731,6 +731,17 @@ function AnalysisComponent() {
 }
 ```
 
+## Integration with Island AI
+
+Part of the Island AI toolkit:
+
+- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Structured streaming
+- [`stream-hooks`](https://www.npmjs.com/package/stream-hooks): React streaming hooks
+- [`schema-stream`](https://www.npmjs.com/package/schema-stream): Streaming JSON parser
+- [`evalz`](https://www.npmjs.com/package/evalz): LLM evaluation
+- [`llm-polyglot`](https://www.npmjs.com/package/llm-polyglot): Universal LLM client
+- [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
+
 ## Contributing
 
 We welcome contributions! Check out:
