@@ -1,5 +1,6 @@
-<img src="https://island.hack.dance/island_light.svg" alt="Island AI" width="200" style="margin: 0 auto 24px; display: block;" />
-
+<div align="center">
+  <img src="https://island.hack.dance/island_light.svg" alt="Island AI" width="200" style="margin: 0 auto 24px; display: block;" />
+</div>
 <br />
 
 <p align="center"><i>> A TypeScript toolkit for building structured LLM data handling pipelines</i></p>
