@@ -1,15 +1,16 @@
+import ProviderLogger from "@/logger"
+import { consoleTransport } from "@/logger/transports/console"
 import {
   AnthropicChatCompletionParams,
   AnthropicChatCompletionParamsNonStream,
   AnthropicChatCompletionParamsStream,
   ExtendedCompletionAnthropic,
   ExtendedCompletionChunkAnthropic,
+  LogLevel,
   OpenAILikeClient
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
 import OpenAI, { ClientOptions } from "openai"
-
-export type LogLevel = "debug" | "info" | "warn" | "error"
 
 /**
  * AnthropicProvider is a class that provides an interface for interacting with the Anthropic API.
@@ -19,30 +20,7 @@ export type LogLevel = "debug" | "info" | "warn" | "error"
 export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"anthropic"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
-
-  private log<T extends unknown[]>(level: LogLevel, ...args: T) {
-    const timestamp = new Date().toISOString()
-    switch (level) {
-      case "debug":
-        if (this.logLevel === "debug") {
-          console.debug(`[LLM-CLIENT--ANTHROPIC-CLIENT:DEBUG] ${timestamp}:`, ...args)
-        }
-        break
-      case "info":
-        if (this.logLevel === "debug" || this.logLevel === "info") {
-          console.info(`[LLM-CLIENT--ANTHROPIC-CLIENT:INFO] ${timestamp}:`, ...args)
-        }
-        break
-      case "warn":
-        if (this.logLevel === "debug" || this.logLevel === "info" || this.logLevel === "warn") {
-          console.warn(`[LLM-CLIENT--ANTHROPIC-CLIENT:WARN] ${timestamp}:`, ...args)
-        }
-        break
-      case "error":
-        console.error(`[LLM-CLIENT--ANTHROPIC-CLIENT:ERROR] ${timestamp}:`, ...args)
-        break
-    }
-  }
+  private logger: ProviderLogger
 
   /**
    * Constructs a new instance of the AnthropicProvider class.
@@ -65,6 +43,8 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
 
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
+    this.logger = new ProviderLogger("GEMINI-CLIENT")
+    this.logger.addTransport(consoleTransport)
   }
   [key: string]: unknown
 
@@ -79,15 +59,15 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     { stream }: { stream?: boolean } = {}
   ): Promise<ExtendedCompletionAnthropic | ExtendedCompletionChunkAnthropic> {
     if (!result.id) throw new Error("Response id is undefined")
-    this.log("debug", "Response:", result)
+    this.logger.log("debug", `Response: ${result}`)
 
     result.content.forEach(content => {
       content.type === "tool_use"
-        ? this.log("debug", "JSON Summary:", JSON.stringify(content.input, null, 2))
-        : this.log(
+        ? this.logger.log("debug", `JSON Summary: ${JSON.stringify(content.input, null, 2)}`)
+        : this.logger.log(
             "debug",
-            "No JSON summary found in the response.",
-            JSON.stringify(content, null, 2)
+            `No JSON summary found in the response. 
+            ${JSON.stringify(content, null, 2)}`
           )
     })
 
@@ -224,7 +204,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     for await (const event of response) {
       switch (event.type) {
         case "message_start":
-          this.log("debug", "Message start:", event)
+          this.logger.log("debug", `Message start: ${event}`)
           finalChatCompletion = {
             id: event.message.id,
             object: "chat.completion.chunk",
@@ -249,7 +229,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           break
 
         case "content_block_start":
-          this.log("debug", "Content block start:", event)
+          this.logger.log("debug", `Content block start: ${event}`)
           break
 
         case "content_block_delta":
@@ -271,7 +251,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           break
 
         case "content_block_stop":
-          this.log("debug", "Content block stop:", event)
+          this.logger.log("debug", `Content block stop: ${event}`)
           break
 
         case "message_delta":
@@ -283,7 +263,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           break
 
         case "message_stop":
-          this.log("debug", "Message stop:", event)
+          this.logger.log("debug", `Message stop: ${event}`)
           if (finalChatCompletion && finalChatCompletion.choices) {
             finalChatCompletion.choices[0].finish_reason = "stop"
             finalChatCompletion.choices[0].delta = {
@@ -295,7 +275,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
           break
 
         default:
-          this.log("warn", "Unknown event type:", event)
+          this.logger.log("warn", `Unknown event type: ${event}`)
       }
     }
   }
@@ -319,7 +299,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
       const anthropicParams = this.transformParamsRegular(params)
 
       if (params.stream) {
-        this.log("debug", "Starting streaming completion response")
+        this.logger.log("debug", "Starting streaming completion response")
 
         const messageStream = await this.messages.stream({
           ...anthropicParams
@@ -337,7 +317,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
         return transformedResult as ExtendedCompletionAnthropic
       }
     } catch (error) {
-      console.error("Error in Anthropic API request:", error)
+      this.logger.error(new Error("Error in Anthropic API request:", { cause: error }))
       throw error
     }
   }
