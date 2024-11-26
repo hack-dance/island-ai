@@ -112,38 +112,65 @@ npm install schema-stream zod
 #### Basic Usage
 
 ```typescript
-import { SchemaStream } from "schema-stream";
-import { z } from "zod";
+import { SchemaStream } from 'schema-stream'
+import { z } from 'zod'
 
 const schema = z.object({
   someString: z.string(),
   someNumber: z.number(),
-});
+})
 
-const response = await getSomeStreamOfJson();
+async function getSomeStreamOfJson(
+  jsonString: string
+): Promise<{ body: ReadableStream }> {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder()
+      const jsonBytes = encoder.encode(jsonString)
+
+      for (let i = 0; i < jsonBytes.length; ) {
+        const chunkSize = Math.floor(Math.random() * 5) + 2
+        const chunk = jsonBytes.slice(i, i + chunkSize)
+        controller.enqueue(chunk)
+        i += chunkSize
+      }
+      controller.close()
+    },
+  })
+
+  return { body: stream }
+}
+
+const response = await getSomeStreamOfJson(
+  `{"someString": "Hello schema-stream", "someNumber": 42000000}`
+)
 
 const parser = new SchemaStream(schema, {
-  someString: "default string",
-});
+  defaultData: {
+    someString: 'Default value',
+  },
+})
 
-const streamParser = parser.parse({});
-response.body?.pipeThrough(parser);
+const streamParser = parser.parse({})
+response.body?.pipeThrough(streamParser)
 
-const reader = streamParser.readable.getReader();
-const decoder = new TextDecoder();
-let result = {};
+const reader = streamParser.readable.getReader()
+const decoder = new TextDecoder()
+let result = {}
+let done = false
 
 while (!done) {
-  const { value, done: doneReading } = await reader.read();
-  done = doneReading;
+  const { value, done: doneReading } = await reader.read()
+  done = doneReading
 
   if (done) {
-    console.log(result);
-    break;
+    console.log('Final result:   ', result)
+    break
   }
 
-  const chunkValue = decoder.decode(value);
-  result = JSON.parse(chunkValue);
+  const chunkValue = decoder.decode(value)
+  console.log('Partial result: ', chunkValue)
+  result = JSON.parse(chunkValue)
 }
 ```
 
