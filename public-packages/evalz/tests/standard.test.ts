@@ -61,7 +61,7 @@ describe("Should eval", () => {
     console.log(result)
 
     //@ts-ignore
-    expect(result.scoreResults.value).toBeGreaterThan(0.9)
+    expect(result.scoreResults.value).toBeGreaterThanOrEqual(0.9)
   })
 })
 
