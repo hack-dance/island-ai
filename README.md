@@ -218,10 +218,6 @@ function DataViewer() {
 
 A universal LLM client that extends the OpenAI SDK to provide consistent interfaces across different providers that may not follow the OpenAI API specification.
 
-### 4. llm-polyglot
-
-A universal LLM client that extends the OpenAI SDK to provide consistent interfaces across providers with different APIs.
-
 **Native API Support Status:**
 
 | Provider API | Status | Chat | Basic Stream | Functions/Tool calling | Function streaming | Notes |
