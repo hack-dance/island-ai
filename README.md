@@ -466,7 +466,14 @@ async function consumeStream() {
 
 ### Using Instructor
 
-Instructor provides a high-level client that composes Island AI's core packages into a complete solution for structured extraction. It extends the OpenAI client with streaming and schema validation capabilities.
+  <a aria-label="NPM version" href="https://www.npmjs.com/package/@instructor-ai/instructor" target="_blank">
+    <img alt="schema-stream" src="https://img.shields.io/npm/v/@instructor-ai/instructor.svg?style=flat-square&logo=npm&labelColor=000000&label=@instructor-ai/instructor">
+  </a>
+  <a aria-label="Github Repo" href="https://github.com/instructor-ai/instructor-js" target="_blank">
+    <img alt="instructor-js" src="https://img.shields.io/github/stars/instructor-ai/instructor-js?style=flat-square&logo=github&labelColor=000000&label=instructor-ai/instructor-js">
+  </a>
+
+[Instructor](https://github.com/instructor-ai/instructor-js) provides a high-level client that composes Island AI's core packages into a complete solution for structured extraction. It extends the OpenAI client with streaming and schema validation capabilities.
 
 ```typescript
 import Instructor from "@instructor-ai/instructor";
