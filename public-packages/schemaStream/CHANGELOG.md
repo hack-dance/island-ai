@@ -1,5 +1,11 @@
 # schema-stream
 
+## 3.2.1
+
+### Patch Changes
+
+- [#81](https://github.com/hack-dance/island-ai/pull/81) [`e192f1a`](https://github.com/hack-dance/island-ai/commit/e192f1a440b60f88f9f6982013ce6785a1e3eb9d) Thanks [@roodboi](https://github.com/roodboi)! - updating documentation everywhere
+
 ## 3.2.0
 
 ### Minor Changes
