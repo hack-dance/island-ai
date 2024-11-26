@@ -26,7 +26,6 @@ export function createEvaluator<T extends ResultsType>({
     throw new Error("Evaluation description was not provided.")
   }
 
-  //@ts-ignore
   const instructorClient = createInstructor<OpenAI>({
     client,
     mode: "TOOLS"

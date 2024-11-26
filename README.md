@@ -35,25 +35,6 @@
 
 Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs). The packages range from basic JSON streaming parsers to complete LLM clients, giving you the flexibility to build custom solutions or use pre-built integrations.
 
-## Core Packages vs Instructor
-
-The core Island AI packages provide low-level utilities for building custom LLM clients and data handling pipelines. For a complete, ready-to-use solution, check out [Instructor](https://github.com/instructor-ai/instructor-js), which composes these tools into a full-featured client.
-
-**When to use core packages:**
-
-- You need direct access to the HTTP stream for custom transport (e.g., not using SSE/WebSockets)
-- You want to build a custom LLM client
-- You need fine-grained control over streaming and parsing
-- You're implementing server-side streaming with client-side parsing
-
-**When to use Instructor:**
-
-- You want a complete solution for structured extraction
-- You're using WebSocket-based streaming from server to client
-- You're requests are only on the server
-- You need the full async generator pattern for progressive object updates
-- You want OpenAI SDK compatibility out of the box
-
 ## Core Packages
 
 ### 1. schema-stream
@@ -469,6 +450,27 @@ const client = createLLMClient({
 3. **OpenAI**
    - Direct SDK proxy
    - All native OpenAI features supported
+
+## zod-stream/schema-stream vs Instructor
+
+The core Island AI packages provides more low-level utilities for building custom LLM clients and data handling pipelines (schema-stream, zod-stream, stream-hooks). For a complete, ready-to-use solution, check out [Instructor](https://github.com/instructor-ai/instructor-js), which composes some of these tools into a full-featured client.
+
+**When to use core packages:**
+
+- You need direct access to the HTTP stream for custom transport (e.g., not using SSE/WebSockets)
+- You want to build a custom LLM client
+- You need fine-grained control over streaming and parsing
+- You're implementing server-side streaming with client-side parsing
+- You need a structured evaluation tool
+- You want to use different LLM providers that don't support the OpenAI SDK format
+
+**When to use Instructor:**
+
+- You want a complete solution for structured extraction
+- You're using WebSocket-based streaming from server to client
+- You're requests are only on the server
+- You need the full async generator pattern for progressive object updates
+- You want OpenAI SDK compatibility out of the box
 
 ## Transport Patterns
 
