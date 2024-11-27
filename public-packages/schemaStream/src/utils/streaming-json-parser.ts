@@ -70,7 +70,6 @@ export class SchemaStream {
   private activePath: (string | number | undefined)[] = []
   private completedPaths: (string | number | undefined)[][] = []
   private onKeyComplete?: OnKeyCompleteCallback
-  private isStrictSchema: Boolean
 
   /**
    * Constructs a new instance of the `SchemaStream` class.
@@ -90,7 +89,6 @@ export class SchemaStream {
     this.schemaType = schema
     this.schemaInstance = this.createBlankObject(schema, defaultData, typeDefaults)
     this.onKeyComplete = onKeyComplete
-    this.isStrictSchema = this.schemaType._def.unknownKeys === "strict"
   }
 
   /**
