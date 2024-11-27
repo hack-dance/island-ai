@@ -23,8 +23,8 @@ async function runTest<T extends ZodRawShape>(schema: ZodObject<T>, jsonData: ob
   })
 
   const stream = parser.parse({
-    onSchemaInvalid: zodError => {
-      errors = zodError.errors
+    onComplete: ({ errors: validationErrors }) => {
+      errors = validationErrors
     }
   })
 
