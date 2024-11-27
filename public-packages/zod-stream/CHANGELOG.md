@@ -1,5 +1,14 @@
 # zod-stream
 
+## 2.0.2
+
+### Patch Changes
+
+- [#82](https://github.com/hack-dance/island-ai/pull/82) [`a5561ba`](https://github.com/hack-dance/island-ai/commit/a5561ba464c7fd8680c97a5a4fb04e82e976f138) Thanks [@roodboi](https://github.com/roodboi)! - updating docs
+
+- Updated dependencies [[`a5561ba`](https://github.com/hack-dance/island-ai/commit/a5561ba464c7fd8680c97a5a4fb04e82e976f138)]:
+  - schema-stream@3.2.2
+
 ## 2.0.1
 
 ### Patch Changes
