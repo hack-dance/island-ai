@@ -2,16 +2,30 @@
 title: Anthropic
 ---
 
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-The llm-polyglot library provides support for Anthropic's API, including standard chat completions, streaming chat completions, and function calling. Both input paramaters and responses match exactly those of the OpenAI SDK - for more detailed documentation please see the OpenAI docs: [https://platform.openai.com/docs/api-reference](https://platform.openai.com/docs/api-reference)
+We support Anthropic's API, including standard chat completions, streaming chat completions, and function calling. Both input paramaters and responses match exactly those of the OpenAI SDK - for more detailed documentation please see the OpenAI docs: [https://platform.openai.com/docs/api-reference](https://platform.openai.com/docs/api-reference)
 
-The anthropic sdk is required when using the anthropic provider - we only use the types provided by the sdk.
 
 ## Installation
 
-```bash
-  bun add llm-polyglot openai @anthropic-ai/sdk
-```
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add llm-polyglot openai @anthropic-ai/sdk
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install llm-polyglot openai @anthropic-ai/sdk
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add llm-polyglot openai @anthropic-ai/sdk
+    ```
+  </Tab>
+</Tabs>
 
 
 ```typescript

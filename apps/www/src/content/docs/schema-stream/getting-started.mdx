@@ -2,11 +2,27 @@
 title:   Getting Started
 ---
 
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
 ## Installation
 
-```bash
-  bun add schema-stream zod
-```
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add schema-stream zod
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install schema-stream zod
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add schema-stream zod
+    ```
+  </Tab>
+</Tabs>
 
 ## Basic Usage
 

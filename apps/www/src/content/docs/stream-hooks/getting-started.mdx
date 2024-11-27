@@ -3,11 +3,27 @@
 title: Getting Started
 ---
 
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
 ## Installation
 
-```bash
-bun add stream-hooks zod zod-stream
-```
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add stream-hooks zod zod-stream
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install stream-hooks zod zod-stream
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add stream-hooks zod zod-stream
+    ```
+  </Tab>
+</Tabs>
 
 ## Quick Start
 

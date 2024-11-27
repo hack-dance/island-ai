@@ -2,21 +2,33 @@
 title: Google
 ---
 
-We support  Google's Gemini API including:
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
+We support  Google's Gemini API including:
 - standard chat completions
 - streaming chat completions
 - function calling
 - context caching support for better token optimization (must be a paid API key)
 
-The Google generative-ai sdk is required when using the google provider - we only use the types provided by the sdk.
-
-
 ## Installation
 
-```bash
-  bun add llm-polyglot openai @google/generative-ai
-```
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add llm-polyglot openai @google/generative-ai
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install llm-polyglot openai @google/generative-ai
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add llm-polyglot openai @google/generative-ai
+    ```
+  </Tab>
+</Tabs>
 
 
 #### Context Caching

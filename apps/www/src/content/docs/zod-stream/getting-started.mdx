@@ -2,11 +2,28 @@
 title:   Getting Started
 ---
 
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
 ## Installation
 
-```bash
-bun add zod-stream zod openai
-```
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add zod-stream zod openai
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install zod-stream zod openai
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add zod-stream zod openai
+    ```
+  </Tab>
+</Tabs>
+
 
 
 ## Core Concepts

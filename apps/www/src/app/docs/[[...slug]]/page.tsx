@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation"
+import { createTypeTable } from "fumadocs-typescript/ui"
 import defaultMdxComponents from "fumadocs-ui/mdx"
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page"
 
 import { metadataImage } from "@/lib/metadata"
 import { source } from "@/lib/source"
+
+const { AutoTypeTable } = createTypeTable()
 
 export default async function Page(props: { params: Promise<{ slug?: string[] }> }) {
   const params = await props.params
@@ -20,7 +23,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <MDX components={{ ...defaultMdxComponents }} />
+        <MDX components={{ ...defaultMdxComponents, AutoTypeTable }} />
       </DocsBody>
     </DocsPage>
   )
