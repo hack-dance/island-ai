@@ -1,21 +1,36 @@
-# evalz
+<div align="center">
+  <h1>evalz</h1>
+</div>
+<br />
+
+<p align="center"><i>> Structured evaluation toolkit for LLM outputs</i></p>
+<br />
 
 <div align="center">
-  <img alt="GitHub issues" src="https://img.shields.io/github/issues/hack-dance/island-ai.svg?style=flat-square&labelColor=000000">
-  <img alt="NPM version" src="https://img.shields.io/npm/v/evalz.svg?style=flat-square&logo=npm&labelColor=000000&label=evalz">
-  <img alt="License" src="https://img.shields.io/npm/l/evalz.svg?style=flat-square&labelColor=000000">
+  <a aria-label="NPM version" href="https://www.npmjs.com/package/evalz">
+    <img alt="evalz" src="https://img.shields.io/npm/v/evalz.svg?style=flat-square&logo=npm&labelColor=000000&label=evalz">
+  </a>
+   <a aria-label="Island AI" href="https://github.com/hack-dance/island-ai">
+    <img alt="Island AI" src="https://img.shields.io/badge/Part of Island AI-000000.svg?style=flat-square&labelColor=000000&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTQuNjkgMjU5LjI0Ij4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjZmZmOwogICAgICAgIHN0cm9rZS13aWR0aDogMHB4OwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8ZyBpZD0iTGF5ZXJfMS0yIiBkYXRhLW5hbWU9IkxheWVyIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTEwMC42MSwxNzguNDVoMTMuOTd2LTE5LjYyaC0xMy45N3YxOS42MlptMC0xMDguOTZ2MjMuNzJoMTMuOTd2LTIzLjcyaC0xMy45N1ptLTIuNzksMTg5Ljc1aDE5LjU2bC0yLjc5LTI4LjkyaC0xMy45N2wtMi43OSwyOC45MlptMi43OS0xMzcuNjJoMTMuOTd2LTE5LjYyaC0xMy45N3YxOS42MlptMCwyOC40MWgxMy45N3YtMTkuNjJoLTEzLjk3djE5LjYyWiIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iOTQuNSIgY3k9IjY5LjExIiByPSIxNC4yNCIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iMTIwLjE5IiBjeT0iNjkuMTEiIHI9IjE0LjI0Ii8+CiAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMjE0LjI1LDYyLjU5Yy0uNzktLjc1LTE4Ljc1LTE3LjQ4LTQ5LjQ2LTE5LjA0bDE1Ljc1LTUuODhjLTEuNjctMi40Ni00LjAxLTQuMTgtNi4zNS02LS4yMy0uMTgtLjAzLS41OC4yMy0uNTcsMy40NS4xNyw2LjgyLDEuNzUsMTAuMTIsMi42OCwxLjA2LjMsMi4wOS43MiwzLjA4LDEuMjRsMTkuNDUtNy4yNmMuNTMtLjIuOS0uNzEuOTEtMS4yOHMtLjMyLTEuMDktLjg1LTEuMzJjLTEuMDQtLjQ0LTI1Ljk2LTEwLjc2LTU3LjM1Ljk2LTEuMTkuNDQtMi4zNy45MS0zLjU0LDEuNDFsMTMuNTEtMTMuMTNjLTIuMTgtLjY3LTQuNC0uOTUtNi42My0xLjQ0LS4zOC0uMDgtLjQxLS43NSwwLS44MSwzLjEyLS40NCw2LjU0LS45OCw5Ljg3LS45MWw5LjEzLTguODdjLjQxLS40LjUzLTEuMDEuMzItMS41My0uMjItLjUzLS44LS43OS0xLjMxLS44Ny0uOTYuMDEtMjMuNy40OS00My45NiwyMC4xOCwwLDAsMCwwLDAsMGwtMjAuMDcsMTkuNzYtMTkuNTgtMTkuNzZDNjcuMjUuNDksNDQuNTEuMDEsNDMuNTUsMGMtLjU2LjA1LTEuMDkuMzQtMS4zMS44Ny0uMjIuNTMtLjA5LDEuMTQuMzIsMS41M2w1LjY3LDUuNTFjNS4xLjIyLDEwLjE0LjcxLDE0LjQzLDQsLjQyLjMyLjIsMS4xMi0uMzkuOTMtMi41OC0uODYtNi4wMi0uODctOS4zOS0uNGwxNS41NiwxNS4xMmMtMS4xNy0uNS0yLjM2LS45Ny0zLjU0LTEuNDEtMzEuNC0xMS43Mi01Ni4zLTEuNDEtNTcuMzUtLjk2LS41Mi4yMi0uODYuNzUtLjg1LDEuMzJzLjM3LDEuMDguOTEsMS4yOGwxMS4wNiw0LjEzYzQuNDYtMS40OCw4LjctMi4zOSwxMC40Mi0yLjU1LjU3LS4wNS41Ni43My4xMi45MS0xLjg2Ljc0LTMuNjEsMi4yOS01LjI3LDMuNjFsMjUuOTQsOS42OEMxOS4xOCw0NS4xMSwxLjIyLDYxLjg0LjQzLDYyLjU5Yy0uNDEuMzktLjU1LDEtLjM0LDEuNTMuMjEuNTMuNzMuODgsMS4zLjg4aDEzLjljLjE1LS4wOS4zMS0uMTkuNDUtLjI4LDUuNzktMy41OCwxMS45NC02LjE5LDE4LjE4LTguODcuNjgtLjI5LDEuMjguNjQuNiwxLjAzLTMuNTQsMi4wMy02LjU0LDUuMS05LjQ5LDguMTNoMTQuNTljNC4yNy0zLjExLDguODItNS43LDEzLjE2LTguNy41OS0uNDEsMS4yMi40OS43NS45Ny0yLjM1LDIuMzgtNC40NCw1LjA2LTYuNTMsNy43NGgxMTYuODNjLS45OS0zLjE5LTIuMDItNi4zNS00LjEzLTkuMDQtLjMzLS40Mi4xOC0uOTYuNTktLjU5LDMuMzYsMy4wMSw3LjM3LDYuMTUsMTEuMDIsOS42M2gxNS4zNGMtMS4zOC0zLjUyLTMuMDUtNi44Mi01LjcxLTguNjctLjU0LS4zNy0uMDgtMS4xNS41MS0uODcsNC40LDIuMDgsOC4yNyw1Ljg2LDExLjY1LDkuNTRoMjAuMmMuNTcsMCwxLjA5LS4zNSwxLjMtLjg4LjIxLS41My4wOC0xLjE0LS4zNC0xLjUzWiIvPgogICAgICA8L2c+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTEwMS4wNiwyMjEuMzNoMTMuOTd2LTMzLjZoLTEzLjk3djMzLjZaIi8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=">
+  </a>
+  <a aria-label="Made by hack.dance" href="https://hack.dance">
+    <img alt="docs" src="https://img.shields.io/badge/MADE%20BY%20HACK.DANCE-000000.svg?style=flat-square&labelColor=000000">
+  </a>
+  <a aria-label="Twitter" href="https://twitter.com/dimitrikennedy">
+    <img alt="follow" src="https://img.shields.io/twitter/follow/dimitrikennedy?style=social&labelColor=000000">
+  </a>
 </div>
 
-**evalz** is a TypeScript project for creating model-graded, accuracy, and context-based evaluations with a focus on structured output. It provides a set of tools to assess the quality of responses based on custom criteria such as relevance, fluency, completeness, and contextual relevance. We use OpenAI and Instructor js (@instructor-ai/instructor) to perform structured model-graded evaluations, offering both simple and weighted evaluation mechanisms. Additionally, **evalz** supports accuracy evaluations using Levenshtein distance or semantic embeddings and context-based evaluations measuring precision, recall, and entities recall.
+## Overview
 
-## Features
--  **Structured Evaluation Models**: Define your evaluation logic using Zod schemas to ensure data integrity throughout your application.
--  **Flexible Evaluation Strategies**: Supports various evaluation strategies, including score-based and binary evaluations, with customizable evaluators.
--  **Easy Integration**: Designed to integrate seamlessly with existing TypeScript projects, enhancing AI and data processing workflows with minimal setup.
--  **Custom Evaluations**: Define evaluation criteria tailored to your specific requirements.
--  **Weighted Evaluations**: Combine multiple evaluations with custom weights to calculate a composite score.
--  **Accuracy Evaluations**: Evaluate text similarity using Levenshtein distance or semantic embeddings.
--  **Context Evaluations**: Evaluate context-based criteria such as relevance, precision, recall, and entities recall.
+`evalz` provides structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and integrated with OpenAI and Instructor, it enables both automated evaluation and human-in-the-loop assessment workflows.
+
+### Key Capabilities
+
+- 🎯 **Model-Graded Evaluation**: Leverage LLMs to assess response quality
+- 📊 **Accuracy Measurement**: Compare outputs using semantic and lexical similarity
+- 🔍 **Context Validation**: Evaluate responses against source materials
+- ⚖️ **Composite Assessment**: Combine multiple evaluation types with custom weights
 
 ## Installation
 
@@ -29,424 +44,558 @@ bun add evalz openai zod @instructor-ai/instructor
 pnpm add evalz openai zod @instructor-ai/instructor
 ```
 
-## Basic Usage
+## When to Use evalz
 
-### Creating an Evaluator
+### Model-Graded Evaluation
 
-First, create an evaluator for assessing a single aspect of a response, such as its relevance:
+Provides human-like judgment for subjective criteria that can't be measured through pure text comparison
+
+Use when you need qualitative assessment of responses:
+
+- Evaluating RAG system output quality
+- Assessing chatbot response appropriateness
+- Validating content generation
+- Measuring response coherence and fluency
 
 ```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const relevanceEval = createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Rate relevance and quality from 0-1"
 });
-
-function relevanceEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the relevance from 0 to 1."
-  });
-}
 ```
 
-### Conducting an Evaluation
+### Accuracy Evaluation
 
-Evaluate AI-generated content by passing the response data to your evaluator:
+Gives objective measurements for cases where exact or semantic matching is important
+
+Use for comparing outputs against known correct answers:
+
+- Question-answering system validation
+- Translation accuracy measurement
+- Fact-checking systems
+- Test case validation
 
 ```typescript
-const evaluator = relevanceEval();
-
-const result = await evaluator({ data: yourResponseData });
-console.log(result.scoreResults);
+const accuracyEval = createAccuracyEvaluator({
+  weights: { 
+    factual: 0.6,  // Levenshtein distance weight
+    semantic: 0.4   // Embedding similarity weight
+  }
+});
 ```
 
-### Accuracy Evaluations
+### Context Evaluation
 
-Create an accuracy evaluator to assess text similarity using Levenshtein distance or semantic embeddings:
+Measures how well outputs utilize and stay faithful to provided context
+
+Use for assessing responses against source materials:
+
+- RAG system faithfulness
+- Document summarization accuracy
+- Knowledge extraction validation
+- Information retrieval quality
 
 ```typescript
-import { createAccuracyEvaluator } from "evalz";
-
-function distanceEval() {
-  return createAccuracyEvaluator({
-    accuracyType: "levenshtein"
-  });
-}
-
-function semanticEval() {
-  return createAccuracyEvaluator({
-    accuracyType: "semantic"
-  });
-}
-
-
-const evaluator = distanceEval();
-
-const result = await evaluator({ data: [{ completion: "text1", expectedCompletion: "text2" }] });
-console.log(result.scoreResults);
+const contextEval = createContextEvaluator({ 
+  type: "precision"  // or "recall", "relevance", "entities-recall" 
+});
 ```
 
-### Weighted Evaluation
+### Composite Evaluation
 
-Combine multiple evaluators with specified weights for a comprehensive assessment:
+Provides balanced assessment across multiple dimensions of quality
+
+Use for comprehensive system assessment:
+
+- Production LLM monitoring
+- A/B testing prompts and models
+- Quality assurance pipelines
+- Multi-factor response validation
 
 ```typescript
-import { createWeightedEvaluator } from "evalz";
-
-const weightedEvaluator = createWeightedEvaluator({
+const compositeEval = createWeightedEvaluator({
   evaluators: {
     relevance: relevanceEval(),
-    fluency: fluencyEval(),
-    completeness: completenessEval()
+    accuracy: accuracyEval(),
+    context: contextEval()
   },
   weights: {
-    relevance: 0.25,
-    fluency: 0.25,
-    completeness: 0.5
+    relevance: 0.4,
+    accuracy: 0.4,
+    context: 0.2
   }
 });
-
-const result = await weightedEvaluator({ data: yourResponseData });
-console.log(result.scoreResults);
 ```
 
-### Context Evaluations
+## Evaluator Types and Data Requirements
 
-Create context evaluators to assess criteria such as relevance, precision, recall, and entities recall:
-
-**Entities Recall Evaluation**
+### Context Evaluator Types
 
 ```typescript
-import { createContextEvaluator } from "evalz";
+type ContextEvaluatorType = "entities-recall" | "precision" | "recall" | "relevance";
+```
 
-function contextEntitiesRecallEval() {
-  return createContextEvaluator({ type: "entities-recall" });
+- **entities-recall**: Measures how well the completion captures named entities from the context
+- **precision**: Evaluates how accurate the completion is compared to the context
+- **recall**: Measures how much relevant information from the context is included
+- **relevance**: Assesses how well the completion relates to the context
+
+### Data Requirements by Evaluator Type
+
+#### Model-Graded Evaluator
+
+```typescript
+type ModelGradedData = {
+  prompt: string;
+  completion: string;
+  expectedCompletion?: string;  // Ignored for this evaluator type
 }
 
-
-const data = [
-  {
-    prompt: "When was the first super bowl?",
-    contexts: ["The First AFL–NFL World Championship Game was an American football game...", "This first championship game is retroactively referred to as Super Bowl I."],
-    groundTruth: "The first superbowl was held on January 15, 1967",
-    completion: "The first superbowl was held on January 15, 1967, in Los Angeles."
-  }
-];
+const modelEval = createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Rate the response"
+});
 
 
-const evaluator = contextEntitiesRecallEval();
-
-const result = await evaluator({ data });
-console.log(result.scoreResults);
+await modelEval({
+  data: [{
+    prompt: "What is TypeScript?",
+    completion: "TypeScript is a typed superset of JavaScript"
+  }]
+});
 ```
 
-**Precision Evaluation**
+#### Accuracy Evaluator
 
 ```typescript
-import { createContextEvaluator } from "evalz";
-
-function contextPrecisionEval() {
-  return createContextEvaluator({ type: "precision" });
+type AccuracyData = {
+  completion: string;
+  expectedCompletion: string;  // Required for accuracy comparison
 }
 
+const accuracyEval = createAccuracyEvaluator({
+  weights: { factual: 0.5, semantic: 0.5 }
+});
 
-const data = [
-  {
-    prompt: "When was the first super bowl?",
-    contexts: ["The First AFL–NFL World Championship Game was an American football game...", "This first championship game is retroactively referred to as Super Bowl I."],
-    groundTruth: "The first superbowl was held on January 15, 1967",
-    completion: "The first superbowl was held on January 15, 1967, in Los Angeles."
-  }
-];
-
-
-const evaluator = contextPrecisionEval();
-
-const result = await evaluator({ data });
-console.log(result.scoreResults);
+await accuracyEval({
+  data: [{
+    completion: "TypeScript adds types to JavaScript",
+    expectedCompletion: "TypeScript is JavaScript with type support"
+  }]
+});
 ```
 
-**Recall Evaluation**
+#### Context Evaluator
 
 ```typescript
-import { createContextEvaluator } from "evalz";
-
-function contextRecallEval() {
-  return createContextEvaluator({ type: "recall" });
+type ContextData = {
+  prompt: string;
+  completion: string;
+  groundTruth: string;   // Required for context evaluation
+  contexts: string[];    // Required for context evaluation
 }
 
+// Entities Recall - Checks named entities
+const entitiesEval = createContextEvaluator({ 
+  type: "entities-recall" 
+});
 
-const data = [
-  {
-    prompt: "When was the first super bowl?",
-    contexts: ["The First AFL–NFL World Championship Game was an American football game...", "This first championship game is retroactively referred to as Super Bowl I."],
-    groundTruth: "The first superbowl was held on January 15, 1967",
-    completion: "The first superbowl was held on January 15, 1967, in Los Angeles."
-  }
-];
+// Precision - Checks accuracy against context
+const precisionEval = createContextEvaluator({ 
+  type: "precision" 
+});
 
+// Recall - Checks information coverage
+const recallEval = createContextEvaluator({ 
+  type: "recall" 
+});
 
-const evaluator = contextRecallEval();
+// Relevance - Checks contextual relevance
+const relevanceEval = createContextEvaluator({ 
+  type: "relevance" 
+});
 
-const result = await evaluator({ data });
-console.log(result.scoreResults);
+// Example usage
+const data = {
+  prompt: "What did the CEO say about Q3?",
+  completion: "CEO Jane Smith reported 15% growth in Q3 2023",
+  groundTruth: "The CEO announced strong Q3 performance",
+  contexts: [
+    "CEO Jane Smith presented Q3 results",
+    "Company saw 15% revenue growth in Q3 2023"
+  ]
+};
+
+await entitiesEval({ data: [data] });   // Focuses on "Jane Smith", "Q3", "2023"
+await precisionEval({ data: [data] });  // Checks factual accuracy
+await recallEval({ data: [data] });     // Checks information completeness
+await relevanceEval({ data: [data] });  // Checks contextual relevance
 ```
 
-**Relevance Evaluation**
+#### Composite Evaluation
 
 ```typescript
-import { createContextEvaluator } from "evalz";
-
-function contextRelevanceEval() {
-  return createContextEvaluator({ type: "relevance" });
-}
-
-
-const data = [
-  {
-    prompt: "When was the first super bowl?",
-    contexts: ["The First AFL–NFL World Championship Game was an American football game...", "This first championship game is retroactively referred to as Super Bowl I."],
-    groundTruth: "The first superbowl was held on January 15, 1967",
-    completion: "The first superbowl was held on January 15, 1967, in Los Angeles."
-  }
-];
-
-
-const evaluator = contextRelevanceEval();
-
-const result = await evaluator({ data });
-console.log(result.scoreResults);
-```
-
-## Test Data
-
-When constructing test data for evaluations, it is essential to distinguish between model-graded evaluations and accuracy evaluations.
-
-### Model-Graded Evaluations
-
-For model-graded evaluations, you typically need data pairs where each item consists of a `prompt`, `completion`, and optionally an `expectedCompletion`. The scores are based on evaluation criteria such as relevance, fluency, and completeness.
-
-**Example**
-
-```typescript
-const modelGradedData = [
-  { prompt: "Discuss the impact of AI on industries.", completion: "AI is transforming many industries.", expectedCompletion: "AI is transforming many industries." },
-  { prompt: "Explain the causes of climate change.", completion: "Climate change is caused by human activities.", expectedCompletion: "Climate change is caused by human activities." }
-];
-```
-
-### Accuracy Evaluations
-
-For accuracy evaluations, the test data should include pairs of strings where each pair consists of a `completion` and `expectedCompletion` string. The score is based on the similarity between these strings, assessed using either Levenshtein distance or semantic embeddings.
-
-**Example**
-
-```typescript
-const accuracyData = [
-  { completion: "Hello, world!", expectedCompletion: "Hello world" },
-  { completion: "The quick brown fox jumps over the lazy dog.", expectedCompletion: "A quick brown dog jumps over the lazy fox." }
-];
-```
-
-### Context Evaluations Data
-
-For context-based evaluations, the test data should include `prompt`, `completion`, `groundTruth`, and `contexts`. The scores are based on evaluation criteria such as relevance, precision, recall, and entities recall.
-
-**Example**
-
-```typescript
-const contextData = [
-  {
-    prompt: "When was the first super bowl?",
-    completion: "The first super bowl was held on January 15, 1967.",
-    groundTruth: "The first super bowl was held on January 15, 1967.",
-    contexts: [
-      "The First AFL–NFL World Championship Game was an American football game played on January 15, 1967, at the Los Angeles Memorial Coliseum in Los Angeles.",
-      "This first championship game is retroactively referred to as Super Bowl I."
-    ]
+// Can combine different evaluator types
+const compositeEval = createWeightedEvaluator({
+  evaluators: {
+    entities: createContextEvaluator({ type: "entities-recall" }),
+    accuracy: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.9,   // High weight on exact matches
+        semantic: 0.1    // Low weight on similar terms
+      }
+    }),
+    quality: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate quality"
+    })
   },
-  {
-    prompt: "Who won the most Super Bowls?",
-    completion: "The New England Patriots have won the most Super Bowls.",
-    groundTruth: "The New England Patriots have won the Super Bowl a record six times.",
-    contexts: [
-      "The New England Patriots have won the Super Bowl a record six times.",
-      "Other notable teams include the Pittsburgh Steelers with six and the San Francisco 49ers with five."
-    ]
+  weights: {
+    entities: 0.3,
+    accuracy: 0.4,
+    quality: 0.3
   }
-];
-```
-
-
-## Evaluation Templates
-
-Here are some templates for different types of model-graded evaluations using OpenAI models. Simply copy and adjust the evaluation description as needed.
-
-**Relevance Evaluation**
-
-```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
 });
 
-function relevanceEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the relevance of the response from 0 (not relevant) to 1 (highly relevant), considering how well the response addresses the main topic."
-  });
-}
+// Must provide all required fields for each evaluator type
+await compositeEval({
+  data: [{
+    prompt: "Summarize the earnings call",
+    completion: "CEO Jane Smith announced 15% growth",
+    expectedCompletion: "The CEO reported strong growth",
+    groundTruth: "CEO discussed Q3 performance",
+    contexts: [
+      "CEO Jane Smith presented Q3 results",
+      "Company saw 15% growth in Q3 2023"
+    ]
+  }]
+});
 ```
 
-**Completeness Evaluation**
+## Cookbook
+
+### RAG System Evaluation
+
+Evaluate RAG responses for relevance to source documents and factual accuracy.
 
 ```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const ragEvaluator = createWeightedEvaluator({
+  evaluators: {
+    // Check if named entities (people, places, dates) are preserved
+    entities: createContextEvaluator({ 
+      type: "entities-recall" 
+    }),
+    // Verify factual correctness using embedding similarity
+    precision: createContextEvaluator({ 
+      type: "precision" 
+    }),
+    // Check if all relevant information is included
+    recall: createContextEvaluator({ 
+      type: "recall" 
+    }),
+    // Assess overall contextual relevance
+    relevance: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate how well the response uses the context"
+    })
+  },
+  weights: {
+    entities: 0.2,   // Lower weight as it's more supplementary
+    precision: 0.3,  // Higher weight for factual correctness
+    recall: 0.3,     // Higher weight for information coverage
+    relevance: 0.2   // Balance of overall relevance
+  }
 });
 
-function completenessEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the completeness of the response from 0 (not complete) to 1 (fully complete), considering whether the response addresses all parts of the prompt."
-  });
+const result = await ragEvaluator({
+  data: [{
+    prompt: "What are the key financial metrics?",
+    completion: "Revenue grew 25% to $10M in Q3 2023",
+    groundTruth: "Q3 2023 saw 25% revenue growth to $10M",
+    contexts: [
+      "In Q3 2023, company revenue increased 25% to $10M",
+      "Operating margins improved to 15%"
+    ]
+  }]
+});
+
+/* Example output:
+{
+  results: [{
+    score: 0.85,
+    scores: [
+      { score: 1.0, evaluator: "entities" },    // Perfect entity preservation
+      { score: 0.92, evaluator: "precision" },  // High factual accuracy
+      { score: 0.75, evaluator: "recall" },     // Missing margin information
+      { score: 0.78, evaluator: "relevance" }   // Good contextual relevance
+    ],
+    item: {
+      prompt: "What were the key financial metrics?",
+      completion: "Revenue grew 25% to $10M in Q3 2023",
+      groundTruth: "Q3 2023 saw 25% revenue growth to $10M",
+      contexts: [...]
+    }
+  }],
+  scoreResults: {
+    value: 0.85,
+    individual: {
+      entities: 1.0,
+      precision: 0.92,
+      recall: 0.75,
+      relevance: 0.78
+    }
+  }
 }
+*/
 ```
 
-**Answer Correctness Evaluation**
+### Content Moderation Evaluation
+
+Binary evaluation for content policy compliance, useful for automated content filtering.
 
 ```typescript
-import { createAccuracyEvaluator } from "evalz";
-
-function correctnessEval() {
-  return createAccuracyEvaluator({
-    accuracyType: "semantic"
-  });
-}
-
-
-const evaluator = correctnessEval();
-
-const result = await evaluator({
-  data: [{ completion: "Einstein was born in Germany in 1879.", expectedCompletion: "Einstein was born in 1879 in Germany." }]
+const moderationEvaluator = createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  resultsType: "binary",  // Changes output to true/false counts
+  evaluationDescription: "Score 1 if content follows all policies (safe, respectful, appropriate), 0 if any violation exists"
 });
-console.log(result.scoreResults);
+
+const moderationResult = await moderationEvaluator({
+  data: [
+    {
+      prompt: "Describe our product benefits",
+      completion: "Our product helps improve productivity",
+      expectedCompletion: "Professional product description"
+    },
+    {
+      prompt: "Respond to negative review",
+      completion: "Your complaint is totally wrong...",
+      expectedCompletion: "Professional response to feedback"
+    }
+  ]
+});
+
+/* Example output:
+{
+  results: [
+    { score: 1, item: { ... } },  // Meets content guidelines
+    { score: 0, item: { ... } }   // Violates professional tone policy
+  ],
+  binaryResults: {
+    trueCount: 1,
+    falseCount: 1
+  }
+}
+*/
 ```
 
-**Fluency Evaluation**
+### Student Answer Evaluation
+
+Demonstrates weighted evaluation combining exact matching, semantic understanding, and qualitative assessment.
 
 ```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const gradingEvaluator = createWeightedEvaluator({
+  evaluators: {
+    // Check for presence of required terminology
+    keyTerms: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.9,   // High weight on exact matches
+        semantic: 0.1    // Low weight on similar terms
+      }
+    }),
+    // Assess conceptual understanding
+    understanding: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.2,   // Low weight on exact matches
+        semantic: 0.8    // High weight on meaning similarity
+      }
+    }),
+    // Evaluate answer quality like a human grader
+    quality: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate answer completeness and clarity 0-1"
+    })
+  },
+  weights: {
+    keyTerms: 0.3,      // Balance terminology requirements
+    understanding: 0.4,  // Emphasize conceptual grasp
+    quality: 0.3        // Consider overall presentation
+  }
 });
 
-function fluencyEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the fluency of the response from 0 (not fluent) to 1 (very fluent), considering the grammatical correctness and natural flow."
-  });
+const gradingResult = await gradingEvaluator({
+  data: [{
+    prompt: "Explain how photosynthesis works",
+    completion: "Plants convert sunlight into chemical energy through chlorophyll",
+    expectedCompletion: "Photosynthesis is the process where plants use chlorophyll to convert sunlight, water, and CO2 into glucose and oxygen"
+  }]
+});
+
+/* Example output:
+{
+  results: [{
+    score: 0.78,  // Overall grade (78%)
+    scores: [
+      { 
+        score: 0.65,           // Missing key terms (water, CO2, glucose)
+        evaluator: "keyTerms",
+        evaluatorType: "accuracy"
+      },
+      { 
+        score: 0.90,           // Shows good conceptual understanding
+        evaluator: "understanding",
+        evaluatorType: "accuracy"
+      },
+      { 
+        score: 0.75,           // Clear but not comprehensive
+        evaluator: "quality",
+        evaluatorType: "model-graded"
+      }
+    ],
+    item: { ... }
+  }],
+  scoreResults: {
+    value: 0.78,
+    individual: {
+      keyTerms: 0.65,
+      understanding: 0.90,
+      quality: 0.75
+    }
+  }
 }
+*/
 ```
 
-**Sentiment Analysis Evaluation**
+### Chatbot Quality Assessment
+
+Monitor chatbot response quality across multiple dimensions.
 
 ```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const chatbotEvaluator = createWeightedEvaluator({
+  evaluators: {
+    // Evaluate response appropriateness
+    relevance: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate how well the response addresses the user's query"
+    }),
+    // Check response tone
+    tone: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate the professionalism and friendliness of the response"
+    }),
+    // Verify against known good responses
+    accuracy: createAccuracyEvaluator({
+      weights: { semantic: 0.8, factual: 0.2 }
+    })
+  },
+  weights: {
+    relevance: 0.4,
+    tone: 0.3,
+    accuracy: 0.3
+  }
 });
 
-function sentimentEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the sentiment of the response from -1 (very negative) to 1 (very positive), considering the emotional tone conveyed by the response."
-  });
-}
+const result = await chatbotEvaluator({
+  data: [{
+    prompt: "How do I reset my password?",
+    completion: "You can reset your password by clicking the 'Forgot Password' link on the login page.",
+    expectedCompletion: "To reset your password, use the 'Forgot Password' option at login.",
+    contexts: ["Previous support interactions"]
+  }]
+});
 ```
 
-**Grammar and Spelling Evaluation**
+### Content Generation Pipeline
+
+Evaluate generated content for quality and accuracy.
 
 ```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const contentEvaluator = createWeightedEvaluator({
+  evaluators: {
+    // Check writing quality
+    quality: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate clarity, structure, and engagement"
+    }),
+    // Verify factual accuracy
+    factCheck: createAccuracyEvaluator({
+      weights: { factual: 1.0 }
+    }),
+    // Assess source usage
+    citations: createContextEvaluator({ 
+      type: "entities-recall" 
+    })
+  },
+  weights: {
+    quality: 0.4,
+    factCheck: 0.4,
+    citations: 0.2
+  }
 });
 
-function grammarEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the grammatical correctness of the response from 0 (many errors) to 1 (no errors), considering grammar, punctuation, and spelling."
-  });
-}
+const result = await contentEvaluator({
+  data: [{
+    prompt: "Write an article about renewable energy trends",
+    completion: "Solar and wind power installations increased by 30% in 2023...",
+    contexts: [
+      "Global renewable energy deployment grew by 30% year-over-year",
+      "Solar and wind remained the fastest-growing sectors"
+    ],
+    groundTruth: "Renewable energy saw significant growth, led by solar and wind"
+  }]
+});
 ```
 
+### Document Processing System
 
-### Coherence Evaluation
+Evaluate document extraction and summarization quality.
 
 ```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const documentEvaluator = createWeightedEvaluator({
+  evaluators: {
+    // Verify key information extraction
+    extraction: createContextEvaluator({
+      type: "recall"
+    }),
+    // Check summary quality
+    summary: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate conciseness and completeness"
+    }),
+    // Validate against reference summary
+    accuracy: createAccuracyEvaluator({
+      weights: { semantic: 0.6, factual: 0.4 }
+    })
+  },
+  weights: {
+    extraction: 0.4,
+    summary: 0.3,
+    accuracy: 0.3
+  }
 });
 
-function coherenceEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the coherence of the response from 0 (not coherent) to 1 (highly coherent), considering whether the response logically follows from the prompt and maintains consistency."
-  });
-}
-```
-
-### Coverage Evaluation
-
-```typescript
-import { createEvaluator } from "evalz";
-import OpenAI from "openai";
-
-const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  organization: process.env["OPENAI_ORG_ID"]
+const result = await documentEvaluator({
+  data: [{
+    prompt: "Summarize the quarterly report",
+    completion: "Q3 revenue grew 25% YoY, driven by new product launches...",
+    contexts: [
+      "Revenue increased 25% compared to Q3 2022",
+      "Growth primarily attributed to successful product launches"
+    ],
+    groundTruth: "Q3 saw 25% YoY revenue growth due to new products"
+  }]
 });
-
-function coverageEval() {
-  return createEvaluator({
-    client: oai,
-    model: "gpt-4-turbo",
-    evaluationDescription: "Rate the coverage of the response from 0 (incomplete coverage) to 1 (full coverage), considering whether the response addresses all parts of the prompt."
-  });
-}
 ```
-
 
 ## API Reference
 
@@ -457,7 +606,7 @@ Creates a basic evaluator for assessing AI-generated content based on custom cri
 **Parameters**
 
 • client: OpenAI instance.
-• model: OpenAI model to use (e.g., "gpt-4-turbo").
+• model: OpenAI model to use (e.g., "gpt-4o").
 • evaluationDescription: Description guiding the evaluation criteria.
 • `resultsType`: Type of results to return ("score" or "binary").
 • `messages`: Additional messages to include in the OpenAI API call.
@@ -545,6 +694,7 @@ console.log(result.scoreResults);
 ```
 
 ### Create Composite Weighted Evaluation
+
 A  weighted evaluator that incorporates various evaluation types:
 **Example**
 
@@ -679,30 +829,6 @@ const result4 = await relevanceEvaluator({ data });
 console.log(result4.scoreResults);
 ```
 
-
-## When and Why to Use Different Evaluators
-
-### Model-Graded Evaluators
--  **When to Use**: Assess the quality of responses based on criteria such as relevance, fluency, and completeness.
--  **Why to Use**: Provides detailed feedback on different aspects of the response, integrates seamlessly with AI systems, and automates the assessment process.
--  **Examples**: Evaluating chatbot responses, assessing AI-generated content, and measuring customer support responses.
-
-### Accuracy Evaluators
--  **When to Use**: Evaluate the similarity between two pieces of text, validate the accuracy of AI-generated content, and compare generated responses to training data.
--  **Why to Use**: Provides a precise measure of text similarity using advanced embeddings and flexible metrics like Levenshtein distance and cosine similarity.
--  **Examples**: Evaluating machine translations, comparing text summaries, and measuring grammar corrections.
-
-### Context Evaluators
--  **When to Use**: Assess the relevance of retrieved documents, measure how well AI-generated answers align with the given context, and evaluate the relevance of categorized content.
--  **Why to Use**: Provides detailed insights into the contextual relevance of content, evaluates various criteria like precision, recall, and entities recall, and enhances understanding of AI-generated content in context.
--  **Examples**: Evaluating rag results, measuring document retrieval relevance, and assessing content matching in personalized feeds.
-
-### Composite Weighted Evaluators
--  **When to Use**: Combine multiple types of evaluations for a comprehensive assessment, including model-graded, accuracy, and context-based evaluations.
--  **Why to Use**: Provides a holistic evaluation by combining various criteria and applying custom weights to each evaluator.
--  **Examples**: Evaluating the overall performance of AI-powered systems like chatbots and rag apps.
-
-
 ## Real-World Examples
 
 ### Chatbot Evaluation
@@ -784,7 +910,6 @@ const result = await compositeEvaluator({ data });
 console.log(result.scoreResults);
 ```
 
-
 ### Document Retrieval System
 
 #### Scenario
@@ -862,7 +987,24 @@ const result = await compositeEvaluator({ data });
 console.log(result.scoreResults);
 ```
 
+## Integration with Island AI
+
+Part of the Island AI toolkit:
+
+- [`schema-stream`](https://www.npmjs.com/package/schema-stream): Streaming JSON parser
+- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Structured streaming
+- [`stream-hooks`](https://www.npmjs.com/package/stream-hooks): React streaming hooks
+- [`llm-polyglot`](https://www.npmjs.com/package/llm-polyglot): Universal LLM client
+- [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
 
 ## Contributing
 
-Contributions are welcome! Please submit a pull request or open an issue to propose changes or additions.
+We welcome contributions! Check out:
+
+- [Island AI Documentation](https://island.hack.dance)
+- [GitHub Issues](https://github.com/hack-dance/island-ai/issues)
+- [Twitter](https://twitter.com/dimitrikennedy)
+
+## License
+
+MIT © [hack.dance](https://hack.dance)
