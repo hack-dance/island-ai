@@ -3,6 +3,7 @@ import { BaseLayoutProps } from "fumadocs-ui/layouts/shared"
 import { LogoMark } from "@/components/logo-mark"
 
 export const baseOptions: BaseLayoutProps = {
+  githubUrl: "https://github.com/hack-dance/island-ai",
   nav: {
     title: (
       <>
