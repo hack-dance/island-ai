@@ -2,10 +2,7 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 
-import { Shell } from "./shell"
-
 export const customComponents = {
-  Shell: Shell,
   h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1
       className={cn(
@@ -18,7 +15,7 @@ export const customComponents = {
   h2: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h2
       className={cn(
-        "peer mt-8 text-2xl font-okineBold tracking-tight first:mt-0 uppercase tracking-widest pb-4 mb-4 border-b border-accent",
+        "peer mt-8 text-2xl font-okineBold  first:mt-0 uppercase tracking-widest pb-4 mb-4 border-b border-accent",
         className
       )}
       {...props}
