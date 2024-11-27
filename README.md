@@ -33,7 +33,7 @@
 
 ## Overview
 
-Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs). The packages range from basic JSON streaming parsers to complete LLM clients, giving you the flexibility to build custom solutions or use pre-built integrations.
+Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from LLMs. The packages range from basic JSON streaming parsers to complete LLM clients, giving you the flexibility to build custom solutions or use pre-built integrations.
 
 ## Core Packages
 
