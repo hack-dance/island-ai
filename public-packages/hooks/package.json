@@ -1,6 +1,6 @@
 {
   "name": "stream-hooks",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.hack.dance",
   "repository": {
@@ -51,7 +51,7 @@
     "tsup": "^8.0.1"
   },
   "peerDependencies": {
-    "zod-stream": "^2.0.1",
+    "zod-stream": "^2.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zod": "^3.23.3"
