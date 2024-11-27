@@ -253,6 +253,15 @@ class SchemaStream<T extends ZodObject<any>> {
   parse(options?: {
     stringBufferSize?: number;
     handleUnescapedNewLines?: boolean;
+    onComplete: (data: { 
+      isValid: boolean,;
+      errors: ZodError[];
+      data: data:
+          | {
+              [x: string]: any
+            }
+          | undefined
+    }) => void
   }): TransformStream;
 }
 ```

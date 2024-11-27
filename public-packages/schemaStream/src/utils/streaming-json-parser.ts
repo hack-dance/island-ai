@@ -1,5 +1,6 @@
 import { lensPath, set, view } from "ramda"
 import { z, ZodObject, ZodOptional, ZodRawShape, ZodTypeAny } from "zod"
+import type { ZodIssue } from "zod"
 
 import JSONParser from "./json-parser"
 import { ParsedTokenInfo, StackElement, TokenParserMode, TokenParserState } from "./token-parser"
@@ -226,8 +227,20 @@ export class SchemaStream {
     opts: {
       stringBufferSize?: number
       handleUnescapedNewLines?: boolean
-      onSchemaInvalid?: (error: z.ZodError) => void
-    } = { stringBufferSize: 0, handleUnescapedNewLines: true, onSchemaInvalid: () => null }
+      onComplete?: ({
+        isValid,
+        errors,
+        data
+      }: {
+        isValid: boolean
+        errors: ZodIssue[]
+        data:
+          | {
+              [x: string]: any
+            }
+          | undefined
+      }) => void
+    } = { stringBufferSize: 0, handleUnescapedNewLines: true, onComplete: () => null }
   ) {
     const textEncoder = new TextEncoder()
 
@@ -239,12 +252,14 @@ export class SchemaStream {
     parser.onToken = this.handleToken.bind(this)
     parser.onValue = () => void 0
     parser.onEnd = () => {
-      if (this.isStrictSchema) {
-        const validationResult = this.schemaType.safeParse(this.schemaInstance)
-        if (!validationResult.success) {
-          opts.onSchemaInvalid?.(validationResult.error)
-        }
-      }
+      const parsedResult = this.schemaType.safeParse(this.schemaInstance)
+
+      opts.onComplete &&
+        opts.onComplete({
+          isValid: parsedResult.success,
+          errors: parsedResult.error?.errors ?? [],
+          data: parsedResult.data
+        })
     }
 
     const stream = new TransformStream({
