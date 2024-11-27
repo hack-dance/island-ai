@@ -22,13 +22,28 @@ export const metadata: Metadata = {
     siteName: "Island AI",
     locale: "en_US",
     type: "website",
-    images: []
+    images: [
+      {
+        url: "/api/docs-og/home-page",
+        width: 1200,
+        height: 630,
+        alt: "Island AI"
+      }
+    ]
   },
   twitter: {
     title: "Island AI",
     card: "summary_large_image",
-    creator: "@dimitrikennedy"
+    creator: "@dimitrikennedy",
+    description:
+      "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs).",
+    images: ["/og.png"]
   },
+  alternates: {
+    canonical: "https://island.hack.dance"
+  },
+  keywords: ["open source", "ai", "llm", "production"],
+  authors: [{ name: "Dimitri Kennedy" }],
   icons: {
     shortcut: "/favicon.ico"
   }
