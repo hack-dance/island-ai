@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import type { StartStream, StartStreamArgs, StopStream, UseJsonStreamProps } from "@/types"
 import z from "zod"
 import ZodStream from "zod-stream"
@@ -61,10 +61,10 @@ export function useJsonStream<T extends z.AnyZodObject>({
    * stopStream();
    * ```
    */
-  const stopStream = () => {
+  const stopStream = useCallback(() => {
     setLoading(false)
     stopStreamBase()
-  }
+  }, [stopStreamBase])
 
   /**
    * @function startStream
@@ -77,39 +77,42 @@ export function useJsonStream<T extends z.AnyZodObject>({
    * startStream();
    * ```
    */
-  const startStream = async (streamProps: StartStreamArgs) => {
-    setLoading(true)
+  const startStream = useCallback(
+    async (streamProps: StartStreamArgs) => {
+      setLoading(true)
 
-    try {
-      const extractionStream = await streamClient.current.create({
-        completionPromise: async () => await startStreamBase(streamProps),
-        response_model: { schema }
-      })
+      try {
+        const extractionStream = await streamClient.current.create({
+          completionPromise: async () => await startStreamBase(streamProps),
+          response_model: { schema }
+        })
 
-      let final: z.infer<T> = {}
-      for await (const data of extractionStream) {
-        final = data
-        onReceive && onReceive(data)
-        setJson(data)
+        let final: z.infer<T> = {}
+        for await (const data of extractionStream) {
+          final = data
+          onReceive && onReceive(data)
+          setJson(data)
+        }
+
+        setLoading(false)
+        onEnd && onEnd(final)
+      } catch (err: any) {
+        setLoading(false)
+
+        if (err?.name === "AbortError") {
+          console.warn("useJsonStream: aborted", err)
+
+          return null
+        }
+
+        stopStream()
+        throw err
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
-      onEnd && onEnd(final)
-    } catch (err: any) {
-      setLoading(false)
-
-      if (err?.name === "AbortError") {
-        console.warn("useJsonStream: aborted", err)
-
-        return null
-      }
-
-      stopStream()
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+    [onEnd, onReceive, schema, startStreamBase, stopStream]
+  )
 
   return {
     startStream,
