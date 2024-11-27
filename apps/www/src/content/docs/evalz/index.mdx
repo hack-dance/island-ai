@@ -1,3 +1,100 @@
 ---
 title:   Evalz
+description: Structured evaluation toolkit for LLM outputs
 ---
+
+`evalz` provides structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and integrated with OpenAI and Instructor, it enables both automated evaluation and human-in-the-loop assessment workflows.
+
+
+### Key Capabilities
+
+- 🎯 **Model-Graded Evaluation**: Leverage LLMs to assess response quality
+- 📊 **Accuracy Measurement**: Compare outputs using semantic and lexical similarity
+- 🔍 **Context Validation**: Evaluate responses against source materials
+- ⚖️ **Composite Assessment**: Combine multiple evaluation types with custom weights
+
+
+
+## When to Use evalz
+
+### Model-Graded Evaluation
+
+Provides human-like judgment for subjective criteria that can't be measured through pure text comparison
+
+Use when you need qualitative assessment of responses:
+
+- Evaluating RAG system output quality
+- Assessing chatbot response appropriateness
+- Validating content generation
+- Measuring response coherence and fluency
+
+```typescript
+const relevanceEval = createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Rate relevance and quality from 0-1"
+});
+```
+
+### Accuracy Evaluation
+
+Gives objective measurements for cases where exact or semantic matching is important
+
+Use for comparing outputs against known correct answers:
+
+- Question-answering system validation
+- Translation accuracy measurement
+- Fact-checking systems
+- Test case validation
+
+```typescript
+const accuracyEval = createAccuracyEvaluator({
+  weights: { 
+    factual: 0.6,  // Levenshtein distance weight
+    semantic: 0.4   // Embedding similarity weight
+  }
+});
+```
+
+### Context Evaluation
+
+Measures how well outputs utilize and stay faithful to provided context
+
+Use for assessing responses against source materials:
+
+- RAG system faithfulness
+- Document summarization accuracy
+- Knowledge extraction validation
+- Information retrieval quality
+
+```typescript
+const contextEval = createContextEvaluator({ 
+  type: "precision"  // or "recall", "relevance", "entities-recall" 
+});
+```
+
+### Composite Evaluation
+
+Provides balanced assessment across multiple dimensions of quality
+
+Use for comprehensive system assessment:
+
+- Production LLM monitoring
+- A/B testing prompts and models
+- Quality assurance pipelines
+- Multi-factor response validation
+
+```typescript
+const compositeEval = createWeightedEvaluator({
+  evaluators: {
+    relevance: relevanceEval(),
+    accuracy: accuracyEval(),
+    context: contextEval()
+  },
+  weights: {
+    relevance: 0.4,
+    accuracy: 0.4,
+    context: 0.2
+  }
+});
+```

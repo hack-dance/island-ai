@@ -1,0 +1,234 @@
+---
+title:   API Reference
+---
+
+
+### createEvaluator
+
+Creates a basic evaluator for assessing AI-generated content based on custom criteria.
+
+**Parameters**
+
+- `client`: OpenAI instance.
+- `model`: OpenAI model to use (e.g., "gpt-4o").
+- `evaluationDescription`: Description guiding the evaluation criteria.
+- `resultsType`: Type of results to return ("score" or "binary").
+- `messages`: Additional messages to include in the OpenAI API call.
+
+**Example**
+
+```typescript
+import { createEvaluator } from "evalz";
+import OpenAI from "openai";
+
+const oai = new OpenAI({
+  apiKey: process.env["OPENAI_API_KEY"],
+  organization: process.env["OPENAI_ORG_ID"]
+});
+
+const evaluator = createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Rate the relevance from 0 to 1."
+});
+
+const result = await evaluator({ data: [{ prompt: "Discuss the importance of AI.", completion: "AI is important for future technology.", expectedCompletion: "AI is important for future technology." }] });
+console.log(result.scoreResults);
+```
+
+### createAccuracyEvaluator
+
+Creates an evaluator that assesses string similarity using a hybrid approach of Levenshtein distance (factual similarity) and semantic embeddings (semantic similarity), with customizable weights.
+
+**Parameters**
+
+- `model` (optional): OpenAI.Embeddings.EmbeddingCreateParams["model"] - The OpenAI embedding model to use defaults to `"text-embedding-3-small"`.
+
+- `weights` (optional): An object specifying the weights for factual and semantic similarities. Defaults to `{` factual: 0.5, semantic: 0.5 }.
+
+**Example**
+
+```typescript
+import { createAccuracyEvaluator } from "evalz";
+
+const evaluator = createAccuracyEvaluator({
+  model: "text-embedding-3-small",
+  weights: { factual: 0.4, semantic: 0.6 }
+});
+
+
+const data = [
+  { completion: "Einstein was born in Germany in 1879.", expectedCompletion: "Einstein was born in 1879 in Germany." }
+];
+
+const result = await evaluator({ data });
+console.log(result.scoreResults);
+```
+
+### createWeightedEvaluator
+
+Combines multiple evaluators with specified weights for a comprehensive assessment.
+
+**Parameters**
+
+- `evaluators`: An object mapping evaluator names to evaluator functions.
+
+- `weights`: An object mapping evaluator names to their corresponding weights.
+
+**Example**
+
+```typescript
+import { createWeightedEvaluator } from "evalz";
+
+const weightedEvaluator = createWeightedEvaluator({
+  evaluators: {
+    relevance: relevanceEval(),
+    fluency: fluencyEval(),
+    completeness: completenessEval()
+  },
+  weights: {
+    relevance: 0.25,
+    fluency: 0.25,
+    completeness: 0.5
+  }
+});
+
+const result = await weightedEvaluator({ data: yourResponseData });
+console.log(result.scoreResults);
+```
+
+### Create Composite Weighted Evaluation
+
+A  weighted evaluator that incorporates various evaluation types:
+**Example**
+
+```typescript
+import { createEvaluator, createAccuracyEvaluator, createContextEvaluator, createWeightedEvaluator }  from "evalz"
+
+const oai = new OpenAI({
+  apiKey: process.env["OPENAI_API_KEY"],
+  organization: process.env["OPENAI_ORG_ID"]
+});
+
+
+const relevanceEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the relevance of the response from 0 (not at all relevant) to 1 (highly relevant), considering whether the AI stayed on topic and provided a reasonable answer."
+});
+
+const distanceEval = () => createAccuracyEvaluator({
+  weights: { factual: 0.5, semantic: 0.5 }
+});
+
+const semanticEval = () => createAccuracyEvaluator({
+  weights: { factual: 0.0, semantic: 1.0 }
+});
+
+const fluencyEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
+});
+
+const completenessEval = () => createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Please rate the completeness of the response from 0 (not at all complete) to 1 (completely answered), considering whether the AI addressed all parts of the prompt."
+});
+
+const contextEntitiesRecallEval = () => createContextEvaluator({ type: "entities-recall" });
+const contextPrecisionEval = () => createContextEvaluator({ type: "precision" });
+const contextRecallEval = () => createContextEvaluator({ type: "recall" });
+const contextRelevanceEval = () => createContextEvaluator({ type: "relevance" });
+
+
+const compositeWeightedEvaluator = createWeightedEvaluator({
+  evaluators: {
+    relevance: relevanceEval(),
+    fluency: fluencyEval(),
+    completeness: completenessEval(),
+    accuracy: createAccuracyEvaluator({ weights: { factual: 0.6, semantic: 0.4 } }),
+    contextPrecision: contextPrecisionEval()
+  },
+  weights: {
+    relevance: 0.2,
+    fluency: 0.2,
+    completeness: 0.2,
+    accuracy: 0.2,
+    contextPrecision: 0.2
+  }
+});
+
+
+const data = [
+  {
+    prompt: "When was the first super bowl?",
+    completion: "The first super bowl was held on January 15, 1967.",
+    expectedCompletion: "The first superbowl was held on January 15, 1967.",
+    contexts: ["The First AFL–NFL World Championship Game was an American football game played on January 15, 1967, at the Los Angeles Memorial Coliseum in Los Angeles."],
+    groundTruth: "The first superbowl was held on January 15, 1967."
+  }
+];
+
+
+const result = await compositeWeightedEvaluator({ data });
+console.log(result.scoreResults);
+```
+
+### createContextEvaluator
+
+Creates an evaluator that assesses context-based criteria such as relevance, precision, recall, and entities recall.
+
+**Parameters**
+
+- `type`: "entities-recall" | "precision" | "recall" | "relevance" - The type of context evaluation to perform.
+
+- `model` (optional): OpenAI.Embeddings.EmbeddingCreateParams["model"] - The OpenAI embedding model to use. Defaults to `"text-embedding-3-small"`.
+
+**Example**
+
+```typescript
+import { createContextEvaluator } from "evalz";
+
+
+const entitiesRecallEvaluator = createContextEvaluator({ type: "entities-recall" });
+
+
+const precisionEvaluator = createContextEvaluator({ type: "precision" });
+
+
+const recallEvaluator = createContextEvaluator({ type: "recall" });
+
+
+const relevanceEvaluator = createContextEvaluator({ type: "relevance" });
+
+
+const data = [
+  { 
+    prompt: "When was the first super bowl?", 
+    completion: "The first superbowl was held on January 15, 1967.", 
+    groundTruth: "The first superbowl was held on January 15, 1967.", 
+    contexts: [
+      "The First AFL–NFL World Championship Game was an American football game played on January 15, 1967 at the Los Angeles Memorial Coliseum in Los Angeles.",
+      "This first championship game is retroactively referred to as Super Bowl I."
+    ]
+  }
+];
+
+
+const result1 = await entitiesRecallEvaluator({ data });
+console.log(result1.scoreResults);
+
+
+const result2 = await precisionEvaluator({ data });
+console.log(result2.scoreResults);
+
+
+const result3 = await recallEvaluator({ data });
+console.log(result3.scoreResults);
+
+
+const result4 = await relevanceEvaluator({ data });
+console.log(result4.scoreResults);
+```
