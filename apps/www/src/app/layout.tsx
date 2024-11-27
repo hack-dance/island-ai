@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Island AI",
     description:
-      "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs).",
+      "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from LLMs.",
     url: "https://island.hack.dance",
     siteName: "Island AI",
     locale: "en_US",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     creator: "@dimitrikennedy",
     description:
-      "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs).",
+      "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from LLMs.",
     images: ["/api/docs-og/home-page"]
   },
   alternates: {
