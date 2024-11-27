@@ -1,3 +1,68 @@
 ---
 title:   LLM Polyglot
+description: Universal client for LLM providers with OpenAI-compatible interface
 ---
+
+
+`llm-polyglot` extends the OpenAI SDK to provide a consistent interface across different LLM providers. Use the same familiar OpenAI-style API with Anthropic, Google, and others.
+
+## Provider Support
+
+**Native API Support Status:**
+
+| Provider API | Status | Chat | Basic Stream | Functions/Tool calling | Function streaming | Notes |
+|-------------|---------|------|--------------|---------------------|-----------------|--------|
+| OpenAI | ✅ | ✅ | ✅ | ✅ | ✅ | Direct SDK proxy |
+| Anthropic | ✅ | ✅ | ✅ | ❌ | ❌ | Claude models |
+| Google | ✅ | ✅ | ✅ | ✅ | ❌ | Gemini models + context caching |
+| Azure | 🚧 | ✅ | ✅ | ❌ | ❌ | OpenAI model hosting |
+| Cohere | ❌ | - | - | - | - | Not supported |
+| AI21 | ❌ | - | - | - | - | Not supported |
+
+Stream Types:
+
+- **Basic Stream**: Simple text streaming
+- **Partial JSON Stream**: Progressive JSON object construction during streaming
+- **Function Stream**: Streaming function/tool calls and their results
+
+<br />
+
+**OpenAI-Compatible Hosting Providers:**
+
+These providers use the OpenAI SDK format, so they work directly with the OpenAI client configuration:
+
+| Provider | How to Use | Available Models |
+|----------|------------|------------------|
+| Together | Use OpenAI client with Together base URL | Mixtral, Llama, OpenChat, Yi, others |
+| Anyscale | Use OpenAI client with Anyscale base URL | Mistral, Llama, others |
+| Perplexity | Use OpenAI client with Perplexity base URL | pplx-* models |
+| Replicate | Use OpenAI client with Replicate base URL | Various open models |
+
+
+## OpenAI-Compatible Providers
+
+These providers work directly with OpenAI client configuration:
+
+| Provider | Configuration | Available Models |
+|----------|--------------|------------------|
+| Together | `baseURL: "https://api.together.xyz/v1"` | Mixtral, Llama, OpenChat, Yi |
+| Anyscale | `baseURL: "https://api.endpoints.anyscale.com/v1"` | Mistral, Llama |
+| Perplexity | `baseURL: "https://api.perplexity.ai"` | pplx-* models |
+
+```typescript
+// Together.ai example
+const client = createLLMClient({
+  provider: "openai",
+  baseURL: "https://api.together.xyz/v1"
+});
+
+// Use any Together-hosted model
+const completion = await client.chat.completions.create({
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  messages: [{ role: "user", content: "Hello!" }]
+});
+```
+
+## OpenAI
+
+The llm-polyglot library also provides support for the OpenAI API, which is the default provider and will just proxy directly to the OpenAI sdk.

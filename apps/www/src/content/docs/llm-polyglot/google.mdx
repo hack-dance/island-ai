@@ -1,0 +1,95 @@
+---
+title: Google
+---
+
+We support  Google's Gemini API including:
+
+- standard chat completions
+- streaming chat completions
+- function calling
+- context caching support for better token optimization (must be a paid API key)
+
+The Google generative-ai sdk is required when using the google provider - we only use the types provided by the sdk.
+
+
+## Installation
+
+```bash
+  bun add llm-polyglot openai @google/generative-ai
+```
+
+
+#### Context Caching
+
+[Context Caching](https://ai.google.dev/gemini-api/docs/caching) is a feature specific to Gemini that helps cut down on duplicate token usage by allowing you to create a cache with a TTL with which you can provide context to the model that you've already obtained from elsewhere.
+
+To use Context Caching you need to create a cache before you call generate via `googleClient.cacheManager.create({})` like so:
+
+```typescript
+const cacheResponse = await googleClient.cacheManager.create({
+      model: "gemini-1.5-flash-8b",
+      messages: [
+        {
+          role: "user",
+          content: "What is the capital of Montana?"
+        }
+      ],
+      ttlSeconds: 3600, // Cache for 1 hour,
+      max_tokens: 1000
+    })
+
+    // Now use the cached content in a new completion
+    const completion = await googleClient.chat.completions.create({
+      model: "gemini-1.5-flash-8b",
+      messages: [
+        {
+          role: "user",
+          content: "What state is it in?"
+        }
+      ],
+      additionalProperties: {
+        cacheName: cacheResponse.name
+      },
+      max_tokens: 1000
+    })
+```
+
+Gemini does support [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#node.js) for it's Node client but given that it's in beta and it has some limitations around structured output and images we're not using it directly in this library.
+
+```typescript
+const googleClient = createLLMClient({
+  provider: "openai",
+  apiKey: "gemini_api_key",
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
+})
+
+
+const completion = await openai.chat.completions.create({
+  model: "gemini-1.5-flash",
+  max_tokens: 1000,
+  messages: [
+    { role: "user", content: "My name is Dimitri Kennedy." }
+  ]
+});
+```
+
+#### Standard Chat Completions
+
+```typescript
+const client = createLLMClient({ provider: "google" });
+
+// With context caching
+const cache = await client.cacheManager.create({
+  model: "gemini-1.5-flash-8b",
+  messages: [{ role: "user", content: "Context to cache" }],
+  ttlSeconds: 3600
+});
+
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-8b",
+  messages: [{ role: "user", content: "Follow-up question" }],
+  additionalProperties: {
+    cacheName: cache.name
+  }
+});
+```

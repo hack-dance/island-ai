@@ -1,0 +1,30 @@
+---
+
+title: API Reference
+---
+
+## Hook Options
+
+```typescript
+interface UseJsonStreamOptions<T extends z.ZodType> {
+  schema: T;                    // Zod schema for validation
+  onReceive?: (data: any) => void;  // Progressive update handler
+  onComplete?: (data: any) => void; // Stream completion handler
+  onError?: (error: Error) => void; // Error handler
+  debug?: boolean;              // Enable debug logging
+}
+```
+
+
+## Return Values
+
+```typescript
+interface UseJsonStreamReturn<T> {
+  data: T | null;              // Current stream data
+  loading: boolean;            // Stream status
+  error: Error | null;         // Error state
+  startStream: (options: FetchOptions) => Promise<void>; // Start streaming
+  stopStream: () => void;      // Stop streaming
+  reset: () => void;           // Reset hook state
+}
+```

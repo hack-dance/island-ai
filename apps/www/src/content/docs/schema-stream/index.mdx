@@ -1,3 +1,48 @@
 ---
 title:   Schema Stream
+description: Streaming partial JSON parser with type safety
 ---
+
+
+`schema-stream` is a foundational streaming JSON parser that enables immediate data access through structured stubs. Built on Zod schema validation, it provides type-safe parsing and progressive data access for JSON streams.
+
+## Key Features
+
+- 🔄 Stream JSON data with immediate access to partial results
+- 🔑 Path completion tracking for complex objects
+- 📝 Default value support via schema or explicit defaults
+- 🌳 Deep nested object and array support
+- ⚡ Zero dependencies except Zod
+- 🔍 TypeScript types inferred from schema
+
+## Integration with Island AI
+
+`schema-stream` is designed as a foundational package that other tools build upon:
+
+- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds validation and OpenAI integration
+
+  ```typescript
+  // Example of zod-stream using schema-stream
+  const zodStream = new ZodStream();
+  const extraction = await zodStream.create({
+    completionPromise: stream,
+    response_model: { 
+      schema: yourSchema,
+      name: "Extract" 
+    }
+  });
+  ```
+
+- [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
+
+  ```typescript
+  const client = Instructor({
+    client: oai,
+    mode: "TOOLS"
+  });
+  
+  const result = await client.chat.completions.create({
+    response_model: { schema: yourSchema }
+    // ...
+  });
+  ```

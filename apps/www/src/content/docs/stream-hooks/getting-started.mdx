@@ -1,3 +1,122 @@
 ---
-title:   Getting Started
+
+title: Getting Started
 ---
+
+## Installation
+
+```bash
+bun add stream-hooks zod zod-stream
+```
+
+## Quick Start
+
+```typescript
+import { useJsonStream } from "stream-hooks"
+import { z } from "zod"
+
+export function ChatComponent() {
+  const { loading, startStream, stopStream, data } = useJsonStream({
+    schema: z.object({
+      content: z.string()
+    }),
+    onReceive: data => {
+      console.log("incremental update to final response model", data)
+    }
+  })
+
+  const submit = async () => {
+    try {
+      await startStream({
+        url: "/api/ai/chat",
+        method: "POST",
+        body: {
+          messages: [
+            {
+              content: "yo",
+              role: "user"
+            }
+          ]
+        }
+      })
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  return (
+    <div>
+      {data?.content}
+
+      <button onClick={submit} disabled={loading}>
+        Start
+      </button>
+
+      <button onClick={stopStream}>
+        Stop
+      </button>
+    </div>
+  )
+}
+```
+
+## Progressive Updates
+
+The hook provides real-time updates as data streams in:
+
+```typescript
+const AnalysisComponent = () => {
+  const { data } = useJsonStream({
+    schema: z.object({
+      user: z.object({
+        preferences: z.object({
+          theme: z.string(),
+          language: z.string()
+        })
+      }),
+      content: z.object({
+        title: z.string(),
+        body: z.string()
+      })
+    }),
+    onReceive: (chunk) => {
+      // Start personalizing as soon as preferences are available
+      if (isPathComplete(['user', 'preferences'], chunk)) {
+        applyTheme(chunk.user.preferences.theme);
+      }
+
+      // Begin content rendering when title is ready
+      if (isPathComplete(['content', 'title'], chunk)) {
+        updateTitle(chunk.content.title);
+      }
+    }
+  });
+
+  return <div>{/* Your UI */}</div>;
+};
+```
+
+## Error Handling
+
+```typescript
+function StreamComponent() {
+  const { error, reset } = useJsonStream({
+    schema,
+    onError: (err) => {
+      console.error("Stream error:", err);
+    }
+  });
+
+  if (error) {
+    return (
+      <div>
+        <p>Error: {error.message}</p>
+        <button onClick={reset}>Retry</button>
+      </div>
+    );
+  }
+
+  return <div>{/* Your UI */}</div>;
+}
+```
+
