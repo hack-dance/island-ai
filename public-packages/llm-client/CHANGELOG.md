@@ -1,5 +1,15 @@
 # llm-polyglot
 
+## 2.3.0
+
+### Minor Changes
+
+- [#76](https://github.com/hack-dance/island-ai/pull/76) [`556e00c`](https://github.com/hack-dance/island-ai/commit/556e00c503315c486f62bf2d6ff2a6afdf08a2f1) Thanks [@RollForReflex](https://github.com/RollForReflex)! - Added Gemini LLM support as a new provider (thank you to @jcamera)
+
+### Patch Changes
+
+- [#81](https://github.com/hack-dance/island-ai/pull/81) [`e192f1a`](https://github.com/hack-dance/island-ai/commit/e192f1a440b60f88f9f6982013ce6785a1e3eb9d) Thanks [@roodboi](https://github.com/roodboi)! - updating documentation everywhere
+
 ## 2.2.0
 
 ### Minor Changes
