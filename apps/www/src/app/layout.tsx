@@ -17,7 +17,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   openGraph: {
     title: "Island AI",
-    description: "",
+    description:
+      "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs).",
     url: "https://island.hack.dance",
     siteName: "Island AI",
     locale: "en_US",
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
     creator: "@dimitrikennedy",
     description:
       "Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs).",
-    images: ["/og.png"]
+    images: ["/api/docs-og/home-page"]
   },
   alternates: {
     canonical: "https://island.hack.dance"
