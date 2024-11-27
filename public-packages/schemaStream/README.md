@@ -335,6 +335,7 @@ const parser = new SchemaStream(schema, {
 
 - `stringBufferSize`: Size of the buffer for string values (default: 0)
 - `handleUnescapedNewLines`: Handle unescaped newlines in JSON (default: true)
+-  onSchemaInvalid: Callback that will return any zod errors found during validation if provided schema is strict. (default: () =>)
 
 ### Schema Stub Utility
 
