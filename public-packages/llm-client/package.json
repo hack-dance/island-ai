@@ -52,20 +52,20 @@
   "peerDependencies": {
     "@anthropic-ai/sdk": "^0.22.0",
     "@google/generative-ai": "^0.21.0",
-    "openai": ">=4.28.0"
+    "openai": "4.47.1"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.22.0",
     "@google/generative-ai": "^0.21.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^1.10.12",
-    "@types/eslint": "^8.44.7",
-    "@types/node": "^20.5.2",
+    "@turbo/gen": "^1.11.3",
+    "@types/eslint": "^8.56.1",
+    "@types/node": "^20.10.6",
     "eslint": "^8.53.0",
     "ramda": "^0.29.0",
     "tsup": "^8.0.1",
-    "typescript": "^5.2.2",
-    "zod": "^3.22.4"
+    "typescript": "^5.3.3",
+    "zod": "^3.23.3"
   }
 }

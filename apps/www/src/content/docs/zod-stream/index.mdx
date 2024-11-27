@@ -1,0 +1,66 @@
+---
+title:   Zod Stream
+description:   Type-safe structured extraction from LLM streams with progressive validation
+---
+
+
+`zod-stream` adds structured output validation and streaming capabilities to LLM responses. Built on top of [`schema-stream`](/docs/schema-stream), it enables type-safe extraction with progressive validation.
+
+
+
+## Key Features
+
+- 🔄 Stream structured LLM outputs with validation
+- 🎯 Multiple response modes (TOOLS, FUNCTIONS, JSON, etc.)
+- 📝 OpenAI client integration
+- 🌳 Progressive validation with partial results
+- ⚡ Built on schema-stream
+- 🔍 Full TypeScript support
+
+## Why zod-stream?
+
+`zod-stream` solves key challenges in handling streaming LLM responses:
+
+- **Dependency Management**: Process data as soon as dependencies are met, rather than waiting for complete responses
+
+  ```typescript
+  if (isPathComplete(['user', 'preferences'], chunk)) {
+    // Start personalizing immediately, don't wait for content
+    initializeUserExperience(chunk.user.preferences);
+  }
+  ```
+
+- **Type-Safe LLM Integration**: Full TypeScript support for structured outputs from OpenAI and other providers
+
+  ```typescript
+  const params = withResponseModel({
+    response_model: { schema, name: "Extract" },
+    mode: "TOOLS"  // or "FUNCTIONS", "JSON", etc.
+  });
+  ```
+
+- **Progressive Processing**: Built on `schema-stream` for immediate access to partial results
+
+  ```typescript
+  for await (const chunk of stream) {
+    // Safely access partial data with full type inference
+    chunk._meta._completedPaths.forEach(path => {
+      processDependency(path, chunk);
+    });
+  }
+  ```
+
+- **Provider Flexibility**: Consistent interface across different LLM response formats
+
+  ```typescript
+  // Works with various response modes
+  const stream = OAIStream({ res: completion });  // OpenAI tools/functions
+  const stream = JSONStream({ res: completion }); // Direct JSON
+  ```
+
+Think of it as a type-safe pipeline for handling streaming LLM data where you need to:
+
+- Start processing before the full response arrives
+- Ensure type safety throughout the stream
+- Handle complex data dependencies
+- Work with multiple LLM response formats

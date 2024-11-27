@@ -1,10 +1,12 @@
 import fs from "fs"
-import createMDX from "@next/mdx"
+import { createMDX } from "fumadocs-mdx/next"
 import rehypePrettyCode from "rehype-pretty-code"
 import remarkGfm from "remark-gfm"
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {
+  transpilePackages: ["@repo/ui"]
+}
 
 const options = {
   keepBackground: false,

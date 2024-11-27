@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useState } from "react"
+import { RootProvider } from "fumadocs-ui/provider"
 import { ThemeProvider, useTheme } from "next-themes"
 import { Toaster } from "sonner"
 
@@ -30,7 +31,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         }}
       >
         <ToasterProvider />
-        <div>{children}</div>
+        <RootProvider>{children}</RootProvider>
       </AppContext.Provider>
     </ThemeProvider>
   )

@@ -1,0 +1,68 @@
+---
+title: Anthropic
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+We support Anthropic's API, including standard chat completions, streaming chat completions, and function calling. Both input paramaters and responses match exactly those of the OpenAI SDK - for more detailed documentation please see the OpenAI docs: [https://platform.openai.com/docs/api-reference](https://platform.openai.com/docs/api-reference)
+
+
+## Installation
+
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add llm-polyglot openai @anthropic-ai/sdk
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install llm-polyglot openai @anthropic-ai/sdk
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add llm-polyglot openai @anthropic-ai/sdk
+    ```
+  </Tab>
+</Tabs>
+
+
+```typescript
+const client = createLLMClient({ provider: "anthropic" });
+
+// Standard completion
+const response = await client.chat.completions.create({
+  model: "claude-3-opus-20240229",
+  messages: [{ role: "user", content: "Hello!" }]
+});
+
+// Streaming
+const stream = await client.chat.completions.create({
+  model: "claude-3-opus-20240229",
+  messages: [{ role: "user", content: "Hello!" }],
+  stream: true
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content ?? "");
+}
+
+// Tool/Function calling
+const result = await client.chat.completions.create({
+  model: "claude-3-opus-20240229",
+  messages: [{ role: "user", content: "Analyze this data" }],
+  tools: [{
+    type: "function",
+    function: {
+      name: "analyze",
+      parameters: {
+        type: "object",
+        properties: {
+          sentiment: { type: "string" }
+        }
+      }
+    }
+  }]
+});
+```

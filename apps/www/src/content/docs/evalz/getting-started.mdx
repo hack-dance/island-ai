@@ -1,0 +1,173 @@
+---
+title:   Getting Started
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+## Installation
+
+Install `evalz` using your preferred package manager:
+
+<Tabs items={['bun', 'npm', 'pnpm']} persist>
+  <Tab value="bun">
+    ```bash
+    bun add evalz openai zod @instructor-ai/instructor
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install evalz openai zod @instructor-ai/instructor
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add evalz openai zod @instructor-ai/instructor
+    ```
+  </Tab>
+</Tabs>
+
+## Evaluator Types and Data Requirements
+
+### Context Evaluator Types
+
+```typescript
+type ContextEvaluatorType = "entities-recall" | "precision" | "recall" | "relevance";
+```
+
+- **entities-recall**: Measures how well the completion captures named entities from the context
+- **precision**: Evaluates how accurate the completion is compared to the context
+- **recall**: Measures how much relevant information from the context is included
+- **relevance**: Assesses how well the completion relates to the context
+
+### Data Requirements by Evaluator Type
+
+#### Model-Graded Evaluator
+
+```typescript
+type ModelGradedData = {
+  prompt: string;
+  completion: string;
+  expectedCompletion?: string;  // Ignored for this evaluator type
+}
+
+const modelEval = createEvaluator({
+  client: oai,
+  model: "gpt-4-turbo",
+  evaluationDescription: "Rate the response"
+});
+
+
+await modelEval({
+  data: [{
+    prompt: "What is TypeScript?",
+    completion: "TypeScript is a typed superset of JavaScript"
+  }]
+});
+```
+
+#### Accuracy Evaluator
+
+```typescript
+type AccuracyData = {
+  completion: string;
+  expectedCompletion: string;  // Required for accuracy comparison
+}
+
+const accuracyEval = createAccuracyEvaluator({
+  weights: { factual: 0.5, semantic: 0.5 }
+});
+
+await accuracyEval({
+  data: [{
+    completion: "TypeScript adds types to JavaScript",
+    expectedCompletion: "TypeScript is JavaScript with type support"
+  }]
+});
+```
+
+#### Context Evaluator
+
+```typescript
+type ContextData = {
+  prompt: string;
+  completion: string;
+  groundTruth: string;   // Required for context evaluation
+  contexts: string[];    // Required for context evaluation
+}
+
+// Entities Recall - Checks named entities
+const entitiesEval = createContextEvaluator({ 
+  type: "entities-recall" 
+});
+
+// Precision - Checks accuracy against context
+const precisionEval = createContextEvaluator({ 
+  type: "precision" 
+});
+
+// Recall - Checks information coverage
+const recallEval = createContextEvaluator({ 
+  type: "recall" 
+});
+
+// Relevance - Checks contextual relevance
+const relevanceEval = createContextEvaluator({ 
+  type: "relevance" 
+});
+
+// Example usage
+const data = {
+  prompt: "What did the CEO say about Q3?",
+  completion: "CEO Jane Smith reported 15% growth in Q3 2023",
+  groundTruth: "The CEO announced strong Q3 performance",
+  contexts: [
+    "CEO Jane Smith presented Q3 results",
+    "Company saw 15% revenue growth in Q3 2023"
+  ]
+};
+
+await entitiesEval({ data: [data] });   // Focuses on "Jane Smith", "Q3", "2023"
+await precisionEval({ data: [data] });  // Checks factual accuracy
+await recallEval({ data: [data] });     // Checks information completeness
+await relevanceEval({ data: [data] });  // Checks contextual relevance
+```
+
+#### Composite Evaluation
+
+```typescript
+// Can combine different evaluator types
+const compositeEval = createWeightedEvaluator({
+  evaluators: {
+    entities: createContextEvaluator({ type: "entities-recall" }),
+    accuracy: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.9,   // High weight on exact matches
+        semantic: 0.1    // Low weight on similar terms
+      }
+    }),
+    quality: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate quality"
+    })
+  },
+  weights: {
+    entities: 0.3,
+    accuracy: 0.4,
+    quality: 0.3
+  }
+});
+
+// Must provide all required fields for each evaluator type
+await compositeEval({
+  data: [{
+    prompt: "Summarize the earnings call",
+    completion: "CEO Jane Smith announced 15% growth",
+    expectedCompletion: "The CEO reported strong growth",
+    groundTruth: "CEO discussed Q3 performance",
+    contexts: [
+      "CEO Jane Smith presented Q3 results",
+      "Company saw 15% growth in Q3 2023"
+    ]
+  }]
+});
+```

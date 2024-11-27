@@ -15,44 +15,36 @@
   </a>
 </div>
 
-<p align="center">
-Hooks for consuming streams in react - specifically json streams coming from LLMS - given a Zod Schema that represents the final output, you can start the stream and start to read the structured result immediately.
-</p>
+`stream-hooks` provides React hooks for consuming streams - specifically JSON streams coming from LLMs. Given a Zod Schema that represents the final output, you can start processing structured results immediately as they stream in.
 
 ## Installation
 
-with pnpm
-
 ```bash
+# pnpm
 pnpm add stream-hooks zod zod-stream
-```
 
-with npm
-
-```bash
+# npm
 npm install stream-hooks zod zod-stream
-```
 
-with bun
-
-```bash
+# bun
 bun add stream-hooks zod zod-stream
 ```
 
-## useJsonStream
+## Quick Start
 
 ```typescript
-  import { useJsonStream } from "stream-hooks"
+import { useJsonStream } from "stream-hooks"
+import { z } from "zod"
 
-  export function Test() {
-    const { loading, startStream, stopStream, data } = useJsonStream({
-      schema: z.object({
-        content: z.string()
-      }),
-      onReceive: data => {
-        console.log("incremental update to final response model", data)
-      }
-    })
+export function ChatComponent() {
+  const { loading, startStream, stopStream, data } = useJsonStream({
+    schema: z.object({
+      content: z.string()
+    }),
+    onReceive: data => {
+      console.log("incremental update to final response model", data)
+    }
+  })
 
   const submit = async () => {
     try {
@@ -73,18 +65,164 @@ bun add stream-hooks zod zod-stream
     }
   }
 
+  return (
+    <div>
+      {data?.content}
+
+      <button onClick={submit} disabled={loading}>
+        Start
+      </button>
+
+      <button onClick={stopStream}>
+        Stop
+      </button>
+    </div>
+  )
+}
+```
+
+## Key Features
+
+- 🔄 React hooks for streaming LLM responses
+- 🎯 Progressive validation and partial results
+- 📝 Built-in TypeScript support
+- ⚡ Seamless integration with zod-stream
+- 🌳 Path completion tracking
+- 🔍 Error handling and loading states
+
+## Hook Options
+
+```typescript
+interface UseJsonStreamOptions<T extends z.ZodType> {
+  schema: T;                    // Zod schema for validation
+  onReceive?: (data: any) => void;  // Progressive update handler
+  onComplete?: (data: any) => void; // Stream completion handler
+  onError?: (error: Error) => void; // Error handler
+  debug?: boolean;              // Enable debug logging
+}
+```
+
+## Progressive Updates
+
+The hook provides real-time updates as data streams in:
+
+```typescript
+const AnalysisComponent = () => {
+  const { data } = useJsonStream({
+    schema: z.object({
+      user: z.object({
+        preferences: z.object({
+          theme: z.string(),
+          language: z.string()
+        })
+      }),
+      content: z.object({
+        title: z.string(),
+        body: z.string()
+      })
+    }),
+    onReceive: (chunk) => {
+      // Start personalizing as soon as preferences are available
+      if (isPathComplete(['user', 'preferences'], chunk)) {
+        applyTheme(chunk.user.preferences.theme);
+      }
+
+      // Begin content rendering when title is ready
+      if (isPathComplete(['content', 'title'], chunk)) {
+        updateTitle(chunk.content.title);
+      }
+    }
+  });
+
+  return <div>{/* Your UI */}</div>;
+};
+```
+
+## Error Handling
+
+```typescript
+function StreamComponent() {
+  const { error, reset } = useJsonStream({
+    schema,
+    onError: (err) => {
+      console.error("Stream error:", err);
+    }
+  });
+
+  if (error) {
     return (
       <div>
-        {data.content}
-
-        <button onClick={submit}>
-          start
-        </button>
-
-        <button onClick={stopStream}>
-          stop
-        </button>
+        <p>Error: {error.message}</p>
+        <button onClick={reset}>Retry</button>
       </div>
-    )
+    );
   }
+
+  return <div>{/* Your UI */}</div>;
+}
 ```
+
+## Integration with zod-stream
+
+`stream-hooks` works seamlessly with `zod-stream` response modes:
+
+```typescript
+import { withResponseModel } from "zod-stream";
+
+// API Route
+export async function POST(req: Request) {
+  const params = withResponseModel({
+    response_model: {
+      schema,
+      name: "Analysis"
+    },
+    mode: "TOOLS",
+    params: {
+      messages: [{ role: "user", content: "..." }],
+      model: "gpt-4"
+    }
+  });
+
+  const completion = await openai.chat.completions.create({
+    ...params,
+    stream: true
+  });
+
+  return new Response(completion.body);
+}
+```
+
+## TypeScript Support
+
+The hook provides full type inference:
+
+```typescript
+const schema = z.object({
+  result: z.string(),
+  confidence: z.number()
+});
+
+// data is fully typed based on schema
+const { data } = useJsonStream({
+  schema,
+  onReceive: (data) => {
+    // TypeScript knows the shape of data
+    console.log(data.result, data.confidence);
+  }
+});
+```
+
+## Return Values
+
+```typescript
+interface UseJsonStreamReturn<T> {
+  data: T | null;              // Current stream data
+  loading: boolean;            // Stream status
+  error: Error | null;         // Error state
+  startStream: (options: FetchOptions) => Promise<void>; // Start streaming
+  stopStream: () => void;      // Stop streaming
+  reset: () => void;           // Reset hook state
+}
+```
+
+For more details on the underlying streaming capabilities, check out the [zod-stream documentation](/docs/zod-stream).

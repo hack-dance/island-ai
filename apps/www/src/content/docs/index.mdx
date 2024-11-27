@@ -1,0 +1,286 @@
+---
+title:   Island AI
+description: Island AI is a collection of low-level utilities and high-level tools for handling structured data streams from Large Language Models (LLMs). The packages range from basic JSON streaming parsers to complete LLM clients, giving you the flexibility to build custom solutions or use pre-built integrations.
+---
+
+
+## Core Packages
+
+### 1. schema-stream [⇨](/docs/schema-stream)
+
+A foundational streaming JSON parser that enables immediate data access through structured stubs.
+
+**Key Features:**
+
+- Streaming JSON parser with typed outputs
+- Default value support
+- Path completion tracking
+- Nested object and array support
+
+```typescript
+import { SchemaStream } from "schema-stream";
+import { z } from "zod";
+
+// Define complex nested schemas
+const schema = z.object({
+  layer1: z.object({
+    layer2: z.object({
+      value: z.string(),
+      layer3: z.object({
+        layer4: z.object({
+          layer5: z.string()
+        })
+      })
+    })
+  }),
+  someArray: z.array(z.object({
+    someString: z.string(),
+    someNumber: z.number()
+  }))
+});
+
+// Get a readable stream of json (from an api or otherwise)
+async function getSomeStreamOfJson(
+  jsonString: string
+): Promise<{ body: ReadableStream }> {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder()
+      const jsonBytes = encoder.encode(jsonString)
+
+      for (let i = 0; i < jsonBytes.length; ) {
+        const chunkSize = Math.floor(Math.random() * 5) + 2
+        const chunk = jsonBytes.slice(i, i + chunkSize)
+        controller.enqueue(chunk)
+        i += chunkSize
+      }
+      controller.close()
+    },
+  })
+
+  return { body: stream }
+}
+
+
+// Create parser with completion tracking
+const parser = new SchemaStream(schema, {
+  onKeyComplete({ completedPaths }) {
+    console.log('Completed paths:', completedPaths);
+  }
+});
+
+// Get the readabale stream to parse
+const readableStream = await getSomeStreamOfJson(
+  `{"someString": "Hello schema-stream", "someNumber": 42000000}`
+)
+
+// Parse streaming data
+const stream = parser.parse();
+readableStream.pipeThrough(stream);
+
+// Get typed results
+const reader = stream.readable.getReader();
+const decoder = new TextDecoder()
+let result = {}
+let complete = false
+
+while (true) {
+  const { value, done } = await reader.read();
+  complete = done
+  
+  if (complete) break;
+  
+  result = JSON.parse(decoder.decode(value));
+  // result is fully typed based on schema
+}
+```
+
+### 2. zod-stream [⇨](/docs/zod-stream)
+
+Extends schema-stream with OpenAI integration and Zod-specific features.
+
+**Key Features:**
+
+- OpenAI completion streaming
+- Multiple response modes (TOOLS, FUNCTIONS, JSON, etc.)
+- Schema validation during streaming
+
+```typescript
+import { OAIStream } from "zod-stream";
+import { withResponseModel } from "zod-stream";
+import { z } from "zod";
+
+// Define extraction schema
+const ExtractionSchema = z.object({
+  users: z.array(z.object({
+    name: z.string(),
+    handle: z.string(),
+    twitter: z.string()
+  })).min(3),
+  location: z.string(),
+  budget: z.number()
+});
+
+// Configure OpenAI params with schema
+const params = withResponseModel({
+  response_model: { 
+    schema: ExtractionSchema, 
+    name: "Extract" 
+  },
+  params: {
+    messages: [{ role: "user", content: textBlock }],
+    model: "gpt-4"
+  },
+  mode: "TOOLS"
+});
+
+// Stream completions
+const stream = OAIStream({ 
+  res: await oai.chat.completions.create({
+    ...params,
+    stream: true
+  })
+});
+
+// Process results
+const client = new ZodStream();
+const extractionStream = await client.create({
+  completionPromise: () => stream,
+  response_model: { 
+    schema: ExtractionSchema, 
+    name: "Extract" 
+  }
+});
+
+for await (const data of extractionStream) {
+  console.log('Progressive update:', data);
+}
+```
+
+### 3. stream-hooks [⇨](/docs/stream-hooks)
+
+React hooks for consuming streaming JSON data with Zod schema validation.
+
+**Key Features:**
+
+- Ready-to-use React hooks
+- Automatic schema validation
+- Progress tracking
+- Error handling
+
+```typescript
+import { useJsonStream } from "stream-hooks";
+
+function DataViewer() {
+  const { loading, startStream, data, error } = useJsonStream({
+    schema: ExtractionSchema,
+    onReceive: (update) => {
+      console.log('Progressive update:', update);
+    },
+  });
+
+  return (
+    <div>
+      {loading && <div>Loading...</div>}
+      {error && <div>Error: {error.message}</div>}
+      {data && (
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      )}
+      <button onClick={() => startStream({
+        url: "/api/extract",
+        method: "POST",
+        body: { text: "..." }
+      })}>
+        Start Extraction
+      </button>
+    </div>
+  );
+}
+```
+
+### 4. evalz [⇨](/docs/evalz)
+
+Structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and integrated with OpenAI and Instructor, it enables both automated evaluation and human-in-the-loop assessment workflows.
+
+**Key Features:**
+
+- 🎯 **Model-Graded Evaluation**: Leverage LLMs to assess response quality
+- 📊 **Accuracy Measurement**: Compare outputs using semantic and lexical similarity
+- 🔍 **Context Validation**: Evaluate responses against source materials
+- ⚖️ **Composite Assessment**: Combine multiple evaluation types with custom weights
+
+```typescript
+// Combine different evaluator types
+const compositeEval = createWeightedEvaluator({
+  evaluators: {
+    entities: createContextEvaluator({ type: "entities-recall" }),
+    accuracy: createAccuracyEvaluator({
+      weights: { 
+        factual: 0.9,   // High weight on exact matches
+        semantic: 0.1    // Low weight on similar terms
+      }
+    }),
+    quality: createEvaluator({
+      client: oai,
+      model: "gpt-4-turbo",
+      evaluationDescription: "Rate quality"
+    })
+  },
+  weights: {
+    entities: 0.3,
+    accuracy: 0.4,
+    quality: 0.3
+  }
+});
+
+// Must provide all required fields for each evaluator type
+await compositeEval({
+  data: [{
+    prompt: "Summarize the earnings call",
+    completion: "CEO Jane Smith announced 15% growth",
+    expectedCompletion: "The CEO reported strong growth",
+    groundTruth: "CEO discussed Q3 performance",
+    contexts: [
+      "CEO Jane Smith presented Q3 results",
+      "Company saw 15% growth in Q3 2023"
+    ]
+  }]
+});
+```
+
+### 5. llm-polyglot [⇨](/docs/llm-polyglot)
+
+A universal LLM client that extends the OpenAI SDK to provide consistent interfaces across different providers that may not follow the OpenAI API specification.
+
+**Key Features:**
+
+- OpenAI-compatible interface for non-OpenAI providers
+- Support for major providers:
+  - OpenAI (direct SDK proxy)
+  - Anthropic (Claude models)
+  - Google (Gemini models)
+  - Together
+  - Microsoft/Azure
+  - Anyscale
+- Streaming support across providers
+- Function/tool calling compatibility
+- Context caching for Gemini
+- Structured output support
+
+#### Basic OpenAI-Style Usage
+
+```typescript
+import { createLLMClient } from "llm-polyglot";
+
+// Create provider-specific client
+const anthropicClient = createLLMClient({
+  provider: "anthropic"
+});
+
+// Use consistent OpenAI-style API
+const completion = await anthropicClient.chat.completions.create({
+  model: "claude-3-opus-20240229",
+  max_tokens: 1000,
+  messages: [{ role: "user", content: "Extract data..." }]
+});
+```

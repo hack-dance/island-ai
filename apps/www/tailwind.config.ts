@@ -1,13 +1,15 @@
 import sharedConfig from "@repo/tailwind-config/tailwind.config"
+import { createPreset } from "fumadocs-ui/tailwind-plugin"
 import type { Config } from "tailwindcss"
 
 const config: Pick<Config, "content" | "presets"> = {
   content: [
-    "../../packages/ui/dist/**/*.{mjs,js,ts,jsx,tsx}",
-    "./**/*.{js,ts,jsx,tsx}",
-    "./pages/**/*.{js,ts,jsx,tsx}"
+    "../../packages/ui/src/**/*.{mjs,js,ts,jsx,tsx}",
+    "../../node_modules/fumadocs-ui/dist/**/*.js",
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/app/**/*.{js,ts,jsx,tsx}"
   ],
-  presets: [sharedConfig]
+  presets: [sharedConfig, createPreset()]
 }
 
 export default config

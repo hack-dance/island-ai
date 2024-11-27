@@ -1,0 +1,71 @@
+---
+
+title: Stream Hooks
+description: React hooks for processing streaming JSON data from LLMs with progressive validation
+---
+
+
+Hooks for consuming streams in react - specifically json streams coming from LLMS - given a Zod Schema that represents the final output, you can start the stream and start to read the structured result immediately.
+
+
+`stream-hooks` provides React hooks for consuming streams - specifically JSON streams coming from LLMs. Given a Zod Schema that represents the final output, you can start processing structured results immediately as they stream in.
+
+
+## Key Features
+
+- 🔄 React hooks for streaming LLM responses
+- 🎯 Progressive validation and partial results
+- 📝 Built-in TypeScript support
+- ⚡ Seamless integration with zod-stream
+- 🌳 Path completion tracking
+- 🔍 Error handling and loading states
+
+## Integration with zod-stream
+
+`stream-hooks` was designed to work with `zod-stream` response modes:
+
+```typescript
+import { withResponseModel } from "zod-stream";
+
+// API Route
+export async function POST(req: Request) {
+  const params = withResponseModel({
+    response_model: {
+      schema,
+      name: "Analysis"
+    },
+    mode: "TOOLS",
+    params: {
+      messages: [{ role: "user", content: "..." }],
+      model: "gpt-4"
+    }
+  });
+
+  const completion = await openai.chat.completions.create({
+    ...params,
+    stream: true
+  });
+
+  return new Response(completion.body);
+}
+```
+
+## TypeScript Support
+
+The hook provides full type inference:
+
+```typescript
+const schema = z.object({
+  result: z.string(),
+  confidence: z.number()
+});
+
+// data is fully typed based on schema
+const { data } = useJsonStream({
+  schema,
+  onReceive: (data) => {
+    // TypeScript knows the shape of data
+    console.log(data.result, data.confidence);
+  }
+});
+```

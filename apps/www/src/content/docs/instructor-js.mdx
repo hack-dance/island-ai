@@ -1,0 +1,188 @@
+---
+title:   Instructor.js
+description: Instructor.js composes the core Island AI packages into a complete, ready-to-use solution for structured extraction.
+---
+
+## zod-stream/schema-stream vs Instructor
+
+The core Island AI packages provides more low-level utilities for building custom LLM clients and data handling pipelines (schema-stream, zod-stream, stream-hooks). For a complete, ready-to-use solution, check out [Instructor](https://github.com/instructor-ai/instructor-js), which composes some of these tools into a full-featured client.
+
+**When to use core packages:**
+
+- You need direct access to the HTTP stream for custom transport (e.g., not using SSE/WebSockets)
+- You want to build a custom LLM client
+- You need fine-grained control over streaming and parsing
+- You're implementing server-side streaming with client-side parsing
+- You need a structured evaluation tool
+- You want to use different LLM providers that don't support the OpenAI SDK format
+
+**When to use Instructor:**
+
+- You want a complete solution for structured extraction
+- You're using WebSocket-based streaming from server to client
+- Your requests are only on the server
+- You need the full async generator pattern for progressive object updates
+- You want OpenAI SDK compatibility out of the box
+
+## Transport Patterns
+
+### Direct HTTP Streaming
+For cases where you need direct control over the HTTP stream, you can use the core packages to build your own streaming endpoints:
+
+```typescript
+import { OAIStream } from "zod-stream";
+import { withResponseModel } from "zod-stream";
+import OpenAI from "openai";
+import { z } from "zod";
+
+const oai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_ORG_ID
+});
+
+// Define your schema
+const schema = z.object({
+  content: z.string(),
+  users: z.array(z.object({
+    name: z.string(),
+  })),
+});
+
+// API Route Example (Next.js)
+export async function POST(request: Request) {
+  const { messages } = await request.json();
+
+  // Configure OpenAI parameters with schema
+  const params = withResponseModel({
+    response_model: { 
+      schema: schema, 
+      name: "Users extraction and message" 
+    },
+    params: {
+      messages,
+      model: "gpt-4",
+    },
+    mode: "TOOLS",
+  });
+
+  // Create streaming completion
+  const extractionStream = await oai.chat.completions.create({
+    ...params,
+    stream: true,
+  });
+
+  // Return streaming response
+  return new Response(
+    OAIStream({ res: extractionStream })
+  );
+}
+
+// Client-side consumption
+async function consumeStream() {
+  const response = await fetch('/api/extract', {
+    method: 'POST',
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: 'Your prompt here' }]
+    })
+  });
+
+  const parser = new SchemaStream(schema);
+  const stream = parser.parse();
+
+  response.body
+    ?.pipeThrough(stream)
+    .pipeTo(new WritableStream({
+      write(chunk) {
+        const data = JSON.parse(new TextDecoder().decode(chunk));
+        // Use partial data as it arrives
+        console.log('Partial data:', data);
+      }
+    }));
+}
+```
+
+### Using Instructor
+
+  <a aria-label="NPM version" href="https://www.npmjs.com/package/@instructor-ai/instructor" target="_blank">
+    <img alt="schema-stream" src="https://img.shields.io/npm/v/@instructor-ai/instructor.svg?style=flat-square&logo=npm&labelColor=000000&label=@instructor-ai/instructor" />
+  </a>
+  <a aria-label="Github Repo" href="https://github.com/instructor-ai/instructor-js" target="_blank">
+    <img alt="instructor-js" src="https://img.shields.io/github/stars/instructor-ai/instructor-js?style=flat-square&logo=github&labelColor=000000&label=instructor-ai/instructor-js" />
+  </a>
+
+[Instructor](https://github.com/instructor-ai/instructor-js) provides a high-level client that composes Island AI's core packages into a complete solution for structured extraction. It extends the OpenAI client with streaming and schema validation capabilities.
+
+```typescript
+import Instructor from "@instructor-ai/instructor";
+import OpenAI from "openai";
+import { z } from "zod";
+
+// Define your extraction schema
+const ExtractionSchema = z.object({
+  users: z.array(
+    z.object({
+      name: z.string(),
+      handle: z.string(),
+      twitter: z.string()
+    })
+  ).min(3),
+  location: z.string(),
+  budget: z.number()
+});
+
+type Extraction = Partial<z.infer<typeof ExtractionSchema>>;
+
+// Initialize OpenAI client with Instructor
+const oai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_ORG_ID
+});
+
+const client = Instructor({
+  client: oai,
+  mode: "TOOLS"
+});
+
+// Stream completions with structured output
+const extractionStream = await client.chat.completions.create({
+  messages: [{ 
+    role: "user", 
+    content: "Your text content here..." 
+  }],
+  model: "gpt-4",
+  response_model: { 
+    schema: ExtractionSchema, 
+    name: "Extract" 
+  },
+  max_retries: 3,
+  stream: true,
+  stream_options: {
+    include_usage: true
+  }
+});
+
+// Process streaming results
+let extraction: Extraction = {};
+for await (const result of extractionStream) {
+  extraction = result;
+  console.log('Progressive update:', result);
+}
+
+console.log('Final extraction:', extraction);
+```
+
+## Key Differences
+
+1. **Instructor**
+   - Provides a complete solution built on top of the OpenAI SDK
+   - Handles retries, validation, and streaming automatically
+   - Returns an async generator for progressive updates
+   - Ideal for WebSocket-based streaming from server to client
+   - Simpler integration when you don't need low-level control
+
+2. **Direct HTTP Streaming**
+   - Gives you direct access to the HTTP stream
+   - Allows custom transport mechanisms
+   - Enables server-side streaming with client-side parsing
+   - More flexible for custom implementations
+   - Better for scenarios where you need to minimize server processing

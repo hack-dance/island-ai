@@ -1,0 +1,136 @@
+---
+title:   API Reference
+---
+
+
+### `SchemaStream`
+
+```typescript
+class SchemaStream<T extends ZodObject<any>> {
+  constructor(
+    schema: T,
+    options?: {
+      defaultData?: NestedObject;
+      typeDefaults?: {
+        string?: string | null | undefined;
+        number?: number | null | undefined;
+        boolean?: boolean | null | undefined;
+      };
+      onKeyComplete?: (info: {
+        activePath: (string | number | undefined)[];
+        completedPaths: (string | number | undefined)[][];
+      }) => void;
+    }
+  )
+
+  // Create a stub instance of the schema with defaults
+  getSchemaStub<T extends ZodRawShape>(
+    schema: SchemaType<T>, 
+    defaultData?: NestedObject
+  ): z.infer<typeof schema>;
+
+  // Parse streaming JSON data
+  parse(options?: {
+    stringBufferSize?: number;
+    handleUnescapedNewLines?: boolean;
+  }): TransformStream;
+}
+```
+
+### Constructor Options
+
+- `schema`: Zod schema defining the structure of your data
+- `options`:
+  - `defaultData`: Initial values for schema properties
+  - `typeDefaults`: Default values for primitive types
+  - `onKeyComplete`: Callback for tracking parsing progress
+
+## Working with Defaults
+
+There are two ways to provide default values in schema-stream:
+
+### 1. Via Zod Schema
+
+```typescript
+const schema = z.object({
+  // Default via schema
+  count: z.number().default(0),
+  status: z.string().default('pending'),
+  settings: z.object({
+    enabled: z.boolean().default(true)
+  }),
+  tags: z.array(z.string()).default(['default'])
+});
+
+const parser = new SchemaStream(schema);
+```
+
+### 2. Via Constructor Options
+
+```typescript
+// Global type defaults
+const parser = new SchemaStream(schema, {
+  typeDefaults: {
+    string: "",      // Default for all strings
+    number: 0,       // Default for all numbers
+    boolean: false   // Default for all booleans
+  }
+});
+
+// Specific property defaults
+const parser = new SchemaStream(schema, {
+  defaultData: {
+    count: 100,
+    status: 'ready',
+    settings: {
+      enabled: true
+    }
+  }
+});
+```
+
+Priority order:
+
+1. Explicit `defaultData` values
+2. Zod schema defaults
+3. Global `typeDefaults`
+4. `null` (if no other default is found)
+
+### Completion Tracking
+
+Track the progress of parsing with path information:
+
+```typescript
+const parser = new SchemaStream(schema, {
+  onKeyComplete({ activePath, completedPaths }) {
+    // activePath: Current path being processed
+    // completedPaths: Array of all completed paths
+    console.log('Currently parsing:', activePath);
+    console.log('Completed paths:', completedPaths);
+  }
+});
+```
+
+### Parse Options
+
+- `stringBufferSize`: Size of the buffer for string values (default: 0)
+- `handleUnescapedNewLines`: Handle unescaped newlines in JSON (default: true)
+
+### Schema Stub Utility
+
+Create a typed stub of your schema with defaults:
+
+```typescript
+const schema = z.object({
+  users: z.array(z.object({
+    name: z.string(),
+    age: z.number()
+  }))
+});
+
+const parser = new SchemaStream(schema);
+const stub = parser.getSchemaStub(schema, {
+  users: [{ name: "default", age: 0 }]
+});
+// stub is fully typed as z.infer<typeof schema>
+```

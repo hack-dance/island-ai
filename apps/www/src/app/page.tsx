@@ -13,16 +13,13 @@ export default async function Page() {
           <BadgeLogo size={186} />
 
           <p className="sm:text-center mt-12 mb-6 font-mono">
-            A TypeScript toolkit for building dynamic ai-generated UI with structured, streaming,
-            immediately safe-to-parse JSON from OpenAI or AnyScale.
+            A TypeScript toolkit for building dynamic LLM generated UI with structured, streaming,
+            immediately safe-to-parse JSON.
           </p>
 
           <div className="flex items-center gap-2">
-            <Link href="/docs/overview/introduction">
+            <Link href="/docs">
               <Button>Read the docs</Button>
-            </Link>
-            <Link href="https://dashboard-demo.novy.work/">
-              <Button variant="secondary">Live demo</Button>
             </Link>
           </div>
         </div>
