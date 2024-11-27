@@ -1,6 +1,6 @@
-import React from "react"
+import { cn } from "@ui/lib/utils"
 
-import { cn } from "@/lib/utils"
+import React from "react"
 
 export const AnimatedBorderWrapper = ({
   children,
@@ -18,7 +18,7 @@ export const AnimatedBorderWrapper = ({
   return (
     <div
       className={cn(
-        `min-w-full group shadow-xl relative overflow-hidden rounded-lg bg-white p-[2px] transition-all duration-300 ease-in-out bg-gradient-to-r from-fl-purple via-purple-500 to-fl-green`,
+        `from-cheese to-grass group relative w-full min-w-full overflow-hidden rounded-full bg-white bg-gradient-to-r p-[2px] shadow-xl transition-all duration-300 ease-in-out`,
         {
           "className": !!className,
           "p-[4px]": strokeWidth === 4,
@@ -28,8 +28,8 @@ export const AnimatedBorderWrapper = ({
         }
       )}
     >
-      <div className="animate-spin-slow absolute -top-[1200%] -bottom-[1200%] left-[30%] right-[30%] bg-gradient-to-r from-transparent via-gray-100/80 to-transparent visible"></div>
-      <div className="bg-white rounded-md relative z-50 h-full w-full">{children}</div>
+      <div className="animate-spin-slow visible absolute inset-x-[30%] inset-y-[-1200%] bg-gradient-to-r from-transparent via-gray-100/80 to-transparent"></div>
+      <div className="relative z-50 size-full rounded-full bg-white">{children}</div>
     </div>
   )
 }

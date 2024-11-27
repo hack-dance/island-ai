@@ -25,7 +25,13 @@ export async function generateStaticParams() {
   }))
 }
 
-export default async function Page({ params: { slug } }: { params: { slug: string[] } }) {
+export default async function Page(props: { params: Promise<{ slug: string[] }> }) {
+  const params = await props.params;
+
+  const {
+    slug
+  } = params;
+
   const doc = allPages.find(doc => doc.slug === slug.join("/"))
 
   if (!doc) {
@@ -44,11 +50,11 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
   })
 
   return (
-    <div className="p-4 min-h-full">
+    (<div className="p-4 min-h-full">
       <header className="border-b-[1px] border-b-accent pb-4 mb-8 pl-12 lg:pl-0">
         {[...slug].slice(0, -1).map((part, index) => {
           return (
-            <span key={`${part}-${index}`}>
+            (<span key={`${part}-${index}`}>
               {!!index && <span className="text-sm text-muted-foreground">{` / `}</span>}
               <span
                 key={part}
@@ -60,16 +66,15 @@ export default async function Page({ params: { slug } }: { params: { slug: strin
                   {part.replace(/-/g, " ")}
                 </Link>
               </span>
-            </span>
-          )
+            </span>)
+          );
         })}
         <span className="text-sm text-muted-foreground">{` / `}</span>
         <span className="text-sm font-semibold">{doc.title}</span>
       </header>
-
       <div className="px-2 min-h-full">
         <Content />
       </div>
-    </div>
-  )
+    </div>)
+  );
 }

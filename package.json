@@ -4,6 +4,7 @@
   "scripts": {
     "build": "turbo run build --no-daemon --concurrency=11",
     "dev": "turbo dev --no-daemon --concurrency=11",
+    "docs": "turbo dev --filter=docs",
     "lint": "turbo lint --concurrency=11",
     "type-check": "turbo type-check --concurrency=11",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -11,7 +12,9 @@
     "start": "turbo next start",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "publish-packages": "turbo run build --filter='./public-packages/*' && changeset publish"
+    "publish-packages": "turbo run build --filter='./public-packages/*' && changeset publish",
+    "sync-ls": "syncpack list-mismatches",
+    "sync-up": "syncpack fix-mismatches"
   },
   "devDependencies": {
     "@changesets/changelog-github": "latest",
@@ -22,6 +25,7 @@
     "@types/bun": "^1.0.1",
     "husky": "^8.0.3",
     "prettier": "^3.1.1",
+    "syncpack": "^12.4.0",
     "turbo": "latest"
   },
   "engines": {
@@ -32,6 +36,5 @@
     "apps/*",
     "packages/*",
     "public-packages/*"
-  ],
-  "dependencies": {}
+  ]
 }

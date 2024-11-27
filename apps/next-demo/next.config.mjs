@@ -4,7 +4,9 @@ import rehypePrettyCode from "rehype-pretty-code"
 import remarkGfm from "remark-gfm"
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {
+  transpilePackages: ["@repo/ui"]
+}
 
 const options = {
   keepBackground: false,

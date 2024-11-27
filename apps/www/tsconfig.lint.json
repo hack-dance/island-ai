@@ -20,10 +20,11 @@
   "include": [
     "next-env.d.ts",
     "next.config.js",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
-    "postcss.config.js"
+    "postcss.config.js",
+    "tailwind.config.ts"
   ],
   "exclude": ["node_modules"]
 }
