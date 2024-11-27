@@ -253,6 +253,15 @@ class SchemaStream<T extends ZodObject<any>> {
   parse(options?: {
     stringBufferSize?: number;
     handleUnescapedNewLines?: boolean;
+    onComplete: (data: { 
+      isValid: boolean,;
+      errors: ZodError[];
+      data: data:
+          | {
+              [x: string]: any
+            }
+          | undefined
+    }) => void
   }): TransformStream;
 }
 ```
@@ -335,6 +344,7 @@ const parser = new SchemaStream(schema, {
 
 - `stringBufferSize`: Size of the buffer for string values (default: 0)
 - `handleUnescapedNewLines`: Handle unescaped newlines in JSON (default: true)
+-  onSchemaInvalid: Callback that will return any zod errors found during validation if provided schema is strict. (default: (err: ZodError) => {})
 
 ### Schema Stub Utility
 
