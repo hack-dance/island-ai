@@ -64,6 +64,7 @@ npm install llm-polyglot openai
 # Provider-specific SDKs (as needed)
 npm install @anthropic-ai/sdk    # For Anthropic
 npm install @google/generative-ai # For Google/Gemini
+npm install @azure/openai # For Azure OpenAI
 ```
 
 ## Basic Usage
@@ -73,7 +74,7 @@ import { createLLMClient } from "llm-polyglot";
 
 // Initialize provider-specific client
 const client = createLLMClient({
-  provider: "anthropic" // or "google", "openai", etc.
+  provider: "anthropic" // or "google", "openai", "azure-openai", etc.
 });
 
 // Use consistent OpenAI-style interface
@@ -85,6 +86,28 @@ const completion = await client.chat.completions.create({
 ```
 
 ## Provider-Specific Features
+
+### Azure OpenAI
+
+The llm-polyglot library provides support for Azure OpenAI's API, including standard chat completions, streaming chat completions, and function calling. Both input parameters and responses match exactly those of the OpenAI SDK - for more detailed documentation please see the OpenAI docs: [https://platform.openai.com/docs/api-reference](https://platform.openai.com/docs/api-reference)
+
+```bash
+  bun add @azure/openai
+```
+
+To use the Azure OpenAI provider, you need to set the `provider` option to `"azure-openai"` and provide the `apiKey` and `endpoint` options or leverage the `AZURE_OPENAI_API_KEY` and `AZURE_OPENAI_ENDPOINT` environment variables as shown below:
+
+```typescript
+const client = createLLMClient({
+  provider: "azure-openai",
+  apiKey: "your-api-key", // or AZURE_OPENAI_API_KEY env var
+  endpoint: "your-endpoint", // or AZURE_OPENAI_ENDPOINT env var,
+  apiVersion: "2024-08-01-preview" // (optional) we use the latest available version by default,
+  deployment: "gpt-4o-mini" // (optional) the deployment name to use for the model
+});
+```
+
+**Note**: There are other ways to authenticate with Azure OpenAI, but this is the most straightforward way to get started. If you need to authenticate via Azure identity please log an issue and we'll add support.
 
 ### Anthropic
 

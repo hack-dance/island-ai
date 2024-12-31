@@ -4,11 +4,17 @@ import {
   EnhancedGenerateContentResponse,
   GoogleGenerativeAI
 } from "@google/generative-ai"
-import OpenAI from "openai"
+import OpenAI, { AzureClientOptions, ClientOptions } from "openai"
 
-export type Providers = "openai" | "anthropic" | "google"
+export type Providers = "openai" | "anthropic" | "google" | "azure-openai"
 export type LogLevel = "debug" | "info" | "warn" | "error"
 export type Role = "system" | "user" | "assistant" | "tool"
+
+export type SupportedClientOptions = ClientOptions | AzureClientOptions
+export type LLMClientOptions<P extends Providers> = SupportedClientOptions & {
+  provider: P
+  logLevel?: LogLevel
+}
 
 export type SupportedChatCompletionMessageParam = Omit<
   OpenAI.ChatCompletionCreateParams["messages"][number],
@@ -110,7 +116,7 @@ export type GeminiGenerativeModels =
   | (string & {})
 
 /** General type for providers */
-export type OpenAILikeClient<P> = P extends "openai" | "azure"
+export type OpenAILikeClient<P> = P extends "openai" | "azure-openai"
   ? OpenAI
   : P extends "google"
     ? GoogleGenerativeAI & {
