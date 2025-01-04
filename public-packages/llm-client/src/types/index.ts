@@ -4,7 +4,7 @@ import {
   EnhancedGenerateContentResponse,
   GoogleGenerativeAI
 } from "@google/generative-ai"
-import OpenAI, { AzureClientOptions, ClientOptions } from "openai"
+import OpenAI, { AzureClientOptions, AzureOpenAI, ClientOptions } from "openai"
 
 export type Providers = "openai" | "anthropic" | "google" | "azure-openai"
 export type LogLevel = "debug" | "info" | "warn" | "error"
@@ -116,7 +116,7 @@ export type GeminiGenerativeModels =
   | (string & {})
 
 /** General type for providers */
-export type OpenAILikeClient<P> = P extends "openai" | "azure-openai"
+export type OpenAILikeClient<P> = P extends "openai"
   ? OpenAI
   : P extends "google"
     ? GoogleGenerativeAI & {
@@ -150,7 +150,9 @@ export type OpenAILikeClient<P> = P extends "openai" | "azure-openai"
             }
           }
         }
-      : never
+      : P extends "azure-openai"
+        ? AzureOpenAI
+        : never
 
 /** Logging client */
 export type LogTransport = (
