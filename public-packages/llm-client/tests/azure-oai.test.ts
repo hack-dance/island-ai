@@ -2,7 +2,9 @@ import { createLLMClient } from "@/index"
 import { describe, expect, test } from "bun:test"
 
 const azureOpenAIClient = createLLMClient({
-  provider: "azure-openai"
+  provider: "azure-openai",
+  apiKey: process.env["AZURE_OPENAI_API_KEY"] ?? undefined,
+  endpoint: process.env["AZURE_OPENAI_ENDPOINT"] ?? undefined
 })
 
 describe(`LLMClient Azure OpenAI Provider`, () => {
