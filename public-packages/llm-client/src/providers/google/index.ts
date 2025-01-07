@@ -65,7 +65,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    */
   private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
     let function_declarations: FunctionDeclarationsTool[] = []
-    const allowedFunctionNames: string[] = ["googleSearchRetrieval"]
+    const allowedFunctionNames: string[] = []
     const mappedTools: Tool[] = []
 
     const { systemMessages, nonSystemMessages } = params.messages.reduce<{
