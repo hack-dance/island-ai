@@ -27,8 +27,6 @@ import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generat
 import { ClientOptions } from "openai"
 import { isEmpty } from "ramda"
 
-const DEFAULT_GROUNDING_THRESHOLD = 0.7
-
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
