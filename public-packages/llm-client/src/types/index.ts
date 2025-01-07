@@ -67,6 +67,7 @@ export type GoogleChatCompletionParamsStream = Omit<
   additionalProperties?: {
     cacheName?: string
   }
+  groundingThreshold?: number
   model: GeminiGenerativeModels | string
 }
 
@@ -80,6 +81,7 @@ export type GoogleChatCompletionParamsNonStream = Omit<
   additionalProperties?: {
     cacheName?: string
   }
+  groundingThreshold?: number
   model: GeminiGenerativeModels
 }
 

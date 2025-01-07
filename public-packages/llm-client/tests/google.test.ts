@@ -194,3 +194,21 @@ describe(`LLMClient Gemini Provider`, () => {
     expect(completion?.choices?.[0].message.content).toMatch(/Montana/i)
   })
 })
+
+test.only("Chat with search", async () => {
+  const completion = await googleClient.chat.completions.create({
+    model: "gemini-1.5-flash-latest",
+    messages: [
+      {
+        role: "user",
+        content: "Give me some of the best ice cream places in Boston"
+      }
+    ],
+    max_tokens: 1000,
+    groundingThreshold: 0.7
+  })
+
+  console.log(completion?.choices?.[0].message.content)
+
+  expect(completion?.choices?.[0].message.content).toMatch(/J.P. Licks/i)
+})

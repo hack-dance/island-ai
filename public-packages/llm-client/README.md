@@ -187,6 +187,21 @@ const cacheResponse = await googleClient.cacheManager.create({
     })
 ```
 
+#### Grounding
+Grounding is a feature specific to Gemini that allows you to use Google Search to retrieve context for your model. This can be useful for answering questions that require real-time data.
+
+To use Grounding you need to set the `groundingThreshold` option when calling client.chat.completions.create. This is a number between 0 and 1 that determines the threshold for when the model will use the cached context.
+
+```typescript
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [
+    { role: "user", content: "Give me the best ice cream places in Boston" }
+  ],
+  groundingThreshold: 0.7
+});
+```
+
 #### Gemini OpenAI Compatibility
 
 Gemini does support [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#node.js) for it's Node client but given that it's in beta and it has some limitations around structured output and images we're not using it directly in this library.
