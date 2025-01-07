@@ -208,7 +208,5 @@ test("Chat with search", async () => {
     groundingThreshold: 0.7
   })
 
-  console.log(completion?.choices?.[0].message.content)
-
   expect(completion?.choices?.[0].message.content).toMatch(/J.P. Licks/i)
 })
