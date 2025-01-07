@@ -252,14 +252,13 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       const googleParams = this.transformParams(params)
 
       const isGroundingEnabled = params?.groundingThreshold !== undefined
-      const groundingThreshold = params?.groundingThreshold ?? DEFAULT_GROUNDING_THRESHOLD
 
       if (isGroundingEnabled) {
         googleParams.tools?.push({
           googleSearchRetrieval: {
             dynamicRetrievalConfig: {
               mode: DynamicRetrievalMode.MODE_DYNAMIC,
-              dynamicThreshold: groundingThreshold
+              dynamicThreshold: params.groundingThreshold
             }
           }
         })
