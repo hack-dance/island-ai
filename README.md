@@ -446,6 +446,7 @@ const client = createLLMClient({
    - Streaming support
    - Function calling
    - Optional OpenAI compatibility mode
+   - Grounding (i.e. Google Search) support
 
 3. **OpenAI**
    - Direct SDK proxy

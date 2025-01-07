@@ -13,6 +13,7 @@ import {
 } from "@/types"
 import {
   Content,
+  DynamicRetrievalMode,
   EnhancedGenerateContentResponse,
   FunctionCallingMode,
   FunctionDeclarationsTool,
@@ -35,6 +36,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   constructor(
     opts?: ClientOptions & {
       logLevel?: LogLevel
+      groundingThreshold?: number
     }
   ) {
     const apiKey = opts?.apiKey ?? process.env?.["GEMINI_API_KEY"] ?? null
@@ -62,6 +64,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
     let function_declarations: FunctionDeclarationsTool[] = []
     const allowedFunctionNames: string[] = []
+    const mappedTools: Tool[] = []
 
     const { systemMessages, nonSystemMessages } = params.messages.reduce<{
       systemMessages: typeof params.messages
@@ -110,6 +113,8 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
           parameters: tool.function.parameters
         } as FunctionDeclarationsTool
       })
+
+      mappedTools.push({ function_declarations } as Tool)
     }
 
     const systemInstruction =
@@ -124,7 +129,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       contents,
       ...(function_declarations?.length
         ? {
-            tools: [{ function_declarations } as Tool],
+            tools: mappedTools,
             toolConfig: {
               functionCallingConfig: {
                 mode: FunctionCallingMode.ANY,
@@ -244,6 +249,19 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
       const googleParams = this.transformParams(params)
 
+      const isGroundingEnabled = params?.groundingThreshold !== undefined
+
+      if (isGroundingEnabled) {
+        googleParams.tools?.push({
+          googleSearchRetrieval: {
+            dynamicRetrievalConfig: {
+              mode: DynamicRetrievalMode.MODE_DYNAMIC,
+              dynamicThreshold: params.groundingThreshold
+            }
+          }
+        })
+      }
+
       let generativeModel
       if (params.additionalProperties?.["cacheName"]) {
         // if there's a cacheName, get model using cached content
@@ -255,7 +273,9 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         generativeModel = this.getGenerativeModelFromCachedContent(cache)
       } else {
         // regular, non-cached model
-        generativeModel = this.getGenerativeModel({ model: params?.model })
+        generativeModel = this.getGenerativeModel({
+          model: params?.model
+        })
       }
 
       if (params?.stream) {
