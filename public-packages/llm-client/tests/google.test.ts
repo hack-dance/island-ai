@@ -195,7 +195,7 @@ describe(`LLMClient Gemini Provider`, () => {
   })
 })
 
-test.only("Chat with search", async () => {
+test("Chat with search", async () => {
   const completion = await googleClient.chat.completions.create({
     model: "gemini-1.5-flash-latest",
     messages: [
