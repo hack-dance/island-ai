@@ -51,11 +51,13 @@
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": "^0.22.0",
+    "@azure/openai": "^2.0.0",
     "@google/generative-ai": "^0.21.0",
     "openai": "4.47.1"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.22.0",
+    "@azure/openai": "^2.0.0",
     "@google/generative-ai": "^0.21.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",

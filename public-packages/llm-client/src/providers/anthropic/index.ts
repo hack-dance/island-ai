@@ -43,7 +43,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
 
     this.logLevel = opts?.logLevel ?? this.logLevel
     this.apiKey = apiKey
-    this.logger = new ProviderLogger("GEMINI-CLIENT")
+    this.logger = new ProviderLogger("ANTHROPIC-CLIENT")
     this.logger.addTransport(consoleTransport)
   }
   [key: string]: unknown

@@ -1,23 +1,23 @@
 import { AnthropicProvider } from "@/providers/anthropic"
 import { GoogleProvider } from "@/providers/google"
 import { OpenAIProvider } from "@/providers/openai"
-import { OpenAILikeClient, Providers } from "@/types"
-import { ClientOptions } from "openai"
+import { LLMClientOptions, OpenAILikeClient, Providers } from "@/types"
+
+import { AzureOpenAIProvider } from "./providers/azure"
 
 export class LLMClient<P extends Providers> {
   private providerInstance: OpenAILikeClient<P>
 
-  constructor(
-    opts: ClientOptions & {
-      provider: P
-    }
-  ) {
+  constructor(opts: LLMClientOptions<P>) {
     switch (opts?.provider) {
       case "anthropic":
         this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
         break
       case "google":
         this.providerInstance = new GoogleProvider(opts) as unknown as OpenAILikeClient<P>
+        break
+      case "azure-openai":
+        this.providerInstance = new AzureOpenAIProvider(opts) as unknown as OpenAILikeClient<P>
         break
       case "openai":
       default:
@@ -41,10 +41,7 @@ export class LLMClient<P extends Providers> {
 }
 
 export function createLLMClient<P extends Providers>(
-  opts: ClientOptions & {
-    provider: P
-    logLevel?: string
-  } = { provider: "openai" as P }
+  opts: LLMClientOptions<P> = { provider: "openai" as P }
 ): OpenAILikeClient<P> {
   const client = new LLMClient<P>(opts)
   return client.getProviderInstance()
