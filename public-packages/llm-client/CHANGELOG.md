@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 2.4.0
+
+### Minor Changes
+
+- [#88](https://github.com/hack-dance/island-ai/pull/88) [`721ff2d`](https://github.com/hack-dance/island-ai/commit/721ff2d98c51b0052c24000ee693736a41fb2f28) Thanks [@RollForReflex](https://github.com/RollForReflex)! - Added convenience flag for grounding support within Gemini
+
 ## 2.3.1
 
 ### Patch Changes
