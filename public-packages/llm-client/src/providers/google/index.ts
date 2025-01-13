@@ -56,6 +56,28 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     this.logger.addTransport(consoleTransport)
   }
 
+  private cleanSchema(schema: Record<string, unknown>): Record<string, unknown> {
+    const { additionalProperties, ...rest } = schema
+
+    // Handle nested properties
+    if (rest["properties"] && typeof rest["properties"] === "object") {
+      rest["properties"] = Object.entries(rest["properties"]).reduce(
+        (acc, [key, value]) => {
+          acc[key] = typeof value === "object" && value !== null ? this.cleanSchema(value) : value
+          return acc
+        },
+        {} as Record<string, unknown>
+      )
+    }
+
+    // Handle array items
+    if (rest["items"] && typeof rest["items"] === "object" && rest["items"] !== null) {
+      rest["items"] = this.cleanSchema(rest["items"] as Record<string, unknown>)
+    }
+
+    return rest
+  }
+
   /**
    * Transforms the OpenAI chat completion parameters into Google chat completion parameters.
    * @param params - The OpenAI chat completion parameters.
@@ -107,10 +129,14 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       function_declarations = tools.map(tool => {
         allowedFunctionNames.push(tool.function.name)
 
+        const parameters = tool.function.parameters
+          ? this.cleanSchema(tool.function.parameters)
+          : undefined
+
         return {
           name: tool.function.name ?? "",
           description: tool.function.description ?? "",
-          parameters: tool.function.parameters
+          parameters
         } as FunctionDeclarationsTool
       })
 
