@@ -57,9 +57,8 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   }
 
   private cleanSchema(schema: Record<string, unknown>): Record<string, unknown> {
-    const { additionalProperties, ...rest } = schema
+    const { _additionalProperties, ...rest } = schema
 
-    // Handle nested properties
     if (rest["properties"] && typeof rest["properties"] === "object") {
       rest["properties"] = Object.entries(rest["properties"]).reduce(
         (acc, [key, value]) => {
@@ -70,7 +69,6 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       )
     }
 
-    // Handle array items
     if (rest["items"] && typeof rest["items"] === "object" && rest["items"] !== null) {
       rest["items"] = this.cleanSchema(rest["items"] as Record<string, unknown>)
     }
