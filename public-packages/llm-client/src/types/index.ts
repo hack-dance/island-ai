@@ -2,7 +2,9 @@ import Anthropic from "@anthropic-ai/sdk"
 import {
   CachedContent,
   EnhancedGenerateContentResponse,
-  GoogleGenerativeAI
+  GenerationConfig,
+  GoogleGenerativeAI,
+  SafetySetting
 } from "@google/generative-ai"
 import OpenAI from "openai"
 
@@ -66,9 +68,13 @@ export type GoogleChatCompletionParamsStream = Omit<
   max_tokens: number
   additionalProperties?: {
     cacheName?: string
+    sessionId?: string
+    safetySettings?: SafetySetting[]
+    modelGenerationConfig?: GenerationConfig
   }
   groundingThreshold?: number
   model: GeminiGenerativeModels | string
+  systemInstruction?: string
 }
 
 export type GoogleChatCompletionParamsNonStream = Omit<
@@ -80,9 +86,13 @@ export type GoogleChatCompletionParamsNonStream = Omit<
   max_tokens: number
   additionalProperties?: {
     cacheName?: string
+    sessionId?: string
+    safetySettings?: SafetySetting[]
+    modelGenerationConfig?: GenerationConfig
   }
   groundingThreshold?: number
   model: GeminiGenerativeModels
+  systemInstruction?: string
 }
 
 export type GoogleChatCompletionParams =
