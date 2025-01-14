@@ -202,8 +202,6 @@ describe(`LLMClient Gemini Provider`, () => {
       stream: false
     })
 
-    console.log(completion?.choices?.[0]?.message.content)
-
     expect(completion?.choices?.[0]?.message.content).toMatch(
       /Last Chance Gulch|Montana State Capitol|Cathedral/i
     )
