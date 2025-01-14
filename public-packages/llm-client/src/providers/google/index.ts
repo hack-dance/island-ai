@@ -278,7 +278,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    */
   private transformResponse(
     responseDataChunk: EnhancedGenerateContentResponse,
-    stream: boolean = false
+    params: GoogleChatCompletionParams
   ): ExtendedCompletionGoogle | ExtendedCompletionChunkGoogle {
     const responseText = responseDataChunk.text()
     const toolCalls =
@@ -337,9 +337,9 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     const responseDataBase = {
       id: `chatcmpl-${Math.random().toString(36).slice(2)}`,
-      object: stream ? "chat.completion.chunk" : "chat.completion",
+      object: params.stream ? "chat.completion.chunk" : "chat.completion",
       created: Date.now(),
-      model: "gemini-pro",
+      model: params.model,
       system_fingerprint: undefined,
       originResponse: responseDataChunk,
       choices: [
@@ -370,7 +370,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       ]
     }
 
-    if (stream) {
+    if (params.stream) {
       return {
         ...responseDataBase,
         choices: [
@@ -389,10 +389,11 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    * Streams the chat completion response from the Google API.
    */
   private async *streamChatCompletion(
-    stream: AsyncIterable<EnhancedGenerateContentResponse>
+    stream: AsyncIterable<EnhancedGenerateContentResponse>,
+    params: GoogleChatCompletionParams
   ): AsyncIterable<ExtendedCompletionChunkGoogle> {
     for await (const chunk of stream) {
-      yield this.transformResponse(chunk, true) as ExtendedCompletionChunkGoogle
+      yield this.transformResponse(chunk, params) as ExtendedCompletionChunkGoogle
     }
   }
 
@@ -421,13 +422,14 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       if (params?.stream) {
         this.logger.log(this.logLevel, "Starting streaming completion response")
         const result = await chatSession.sendMessageStream(lastMessage.content.toString())
-        return this.streamChatCompletion(result.stream)
+        return this.streamChatCompletion(result.stream, params)
       } else {
         const result = await chatSession.sendMessage(lastMessage.content.toString())
         if (!result?.response) {
           throw new Error("Chat response failed")
         }
-        const transformedResult = this.transformResponse(result.response, false)
+
+        const transformedResult = this.transformResponse(result.response, params)
         transformedResult.model = params.model
         return transformedResult as ExtendedCompletionGoogle
       }
