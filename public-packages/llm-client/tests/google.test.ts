@@ -182,13 +182,14 @@ describe(`LLMClient Gemini Provider`, () => {
   test("Chat with multiple role-based instructions", async () => {
     const completion = await googleClient.chat.completions.create({
       model: "gemini-1.5-flash-latest",
+      systemInstruction: "You are a historian.",
       messages: [
         {
           role: "user",
-          content: "You are a historian. What happened in Helena, Montana in 1864?"
+          content: "What happened in Helena, Montana in 1864?"
         },
         {
-          role: "assistant",
+          role: "system",
           content:
             "Helena was founded in 1864 during the Montana gold rush when gold was discovered in Last Chance Gulch."
         },
@@ -200,6 +201,8 @@ describe(`LLMClient Gemini Provider`, () => {
       max_tokens: 1000,
       stream: false
     })
+
+    console.log(completion?.choices?.[0]?.message.content)
 
     expect(completion?.choices?.[0]?.message.content).toMatch(
       /Last Chance Gulch|Montana State Capitol|Cathedral/i

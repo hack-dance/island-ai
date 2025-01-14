@@ -17,12 +17,14 @@ import {
   EnhancedGenerateContentResponse,
   FunctionCallingMode,
   FunctionDeclaration,
-  FunctionDeclarationsTool,
   GenerationConfig,
   GoogleGenerativeAI,
   GoogleGenerativeAIError,
+  GroundingMetadata,
   SafetySetting,
-  StartChatParams
+  StartChatParams,
+  Tool,
+  ToolConfig
 } from "@google/generative-ai"
 import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generative-ai/server"
 import { ClientOptions } from "openai"
@@ -38,17 +40,10 @@ interface ModelConfig {
   model: string
   safetySettings?: SafetySetting[]
   generationConfig?: GenerationConfig
-  tools?: Array<{
-    googleSearchRetrieval: {
-      dynamicRetrievalConfig: {
-        mode: DynamicRetrievalMode
-        dynamicThreshold: number
-      }
-    }
-  }>
+  tools?: Tool[]
+  systemInstruction?: string | Content | undefined
 }
-
-interface GroundingMetadataExtended {
+interface GroundingMetadataExtended extends GroundingMetadata {
   webSearchQueries: string[]
   groundingChunks?: Array<{
     web?: {
@@ -176,20 +171,10 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
    * Transforms messages into Google's chat history format
    */
   private transformHistory(messages: GoogleChatCompletionParams["messages"]): Content[] {
-    return messages
-      .filter(message => message.role !== "system")
-      .map(message => ({
-        role: message.role === "assistant" ? "model" : "user",
-        parts: [{ text: message.content.toString() }]
-      }))
-  }
-
-  /**
-   * Gets system instructions from messages
-   */
-  private getSystemInstructions(messages: GoogleChatCompletionParams["messages"]): string {
-    const systemMessages = messages.filter(message => message.role === "system")
-    return systemMessages.map(message => message.content.toString()).join("\n")
+    return messages.map(message => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: [{ text: message.content.toString() }]
+    }))
   }
 
   private getModelConfig(params: GoogleChatCompletionParams) {
@@ -214,6 +199,10 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       ]
     }
 
+    if (params.systemInstruction) {
+      modelConfig.systemInstruction = params.systemInstruction
+    }
+
     return modelConfig
   }
 
@@ -230,10 +219,9 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     const generationConfig = this.createGenerationConfig(params)
     const history = this.transformHistory(params.messages)
-    const systemInstruction =
-      params.systemInstruction ?? this.getSystemInstructions(params.messages)
 
     let generativeModel
+
     if (additionalProps?.cacheName) {
       const cache = await this.googleCacheManager.get(additionalProps.cacheName)
       generativeModel = this.getGenerativeModelFromCachedContent(cache)
@@ -243,8 +231,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
     const chatParams: StartChatParams = {
       generationConfig,
-      history,
-      ...(systemInstruction ? { systemInstruction } : {})
+      history
     }
 
     if (params.tools?.length) {
@@ -264,8 +251,8 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       chatParams.tools = [
         {
           functionDeclarations
-        } as FunctionDeclarationsTool
-      ]
+        }
+      ] as Tool[]
 
       if (toolChoice?.type === "function") {
         chatParams.toolConfig = {
@@ -273,7 +260,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
             mode: FunctionCallingMode.ANY,
             allowedFunctionNames: [toolChoice.function.name]
           }
-        }
+        } satisfies ToolConfig
       }
     }
 

@@ -139,104 +139,78 @@ const result = await client.chat.completions.create({
 
 The llm-polyglot library provides support for Google's Gemini API including:
 
-- standard chat completions
-- streaming chat completions
-- function calling
-- context caching support for better token optimization (must be a paid API key)
+- Standard chat completions with OpenAI-compatible interface
+- Streaming chat completions with delta updates
+- Function/tool calling with automatic schema conversion
+- Context caching for token optimization (requires paid API key)
+- Grounding support with Google Search integration
+- Safety settings and model generation config
+- Session management for stateful conversations
+- Automatic response transformation with source attribution
 
-The Google generative-ai sdk is required when using the google provider - we only use the types provided by the sdk.
+The Google generative-ai sdk is required when using the google provider:
 
 ```bash
-  bun add @google/generative-ai-sdk
+  bun add @google/generative-ai
 ```
 
-To use any of the above functionality, the schema is effectively the same since we translate the OpenAI params spec into Gemini's model spec.
+To use any of the above functionality, the schema matches OpenAI's format since we translate the OpenAI params spec into Gemini's model spec.
 
-#### Context Caching
-
-[Context Caching](https://ai.google.dev/gemini-api/docs/caching) is a feature specific to Gemini that helps cut down on duplicate token usage by allowing you to create a cache with a TTL with which you can provide context to the model that you've already obtained from elsewhere.
-
-To use Context Caching you need to create a cache before you call generate via `googleClient.cacheManager.create({})` like so:
-
-```typescript
-const cacheResponse = await googleClient.cacheManager.create({
-      model: "gemini-1.5-flash-8b",
-      messages: [
-        {
-          role: "user",
-          content: "What is the capital of Montana?"
-        }
-      ],
-      ttlSeconds: 3600, // Cache for 1 hour,
-      max_tokens: 1000
-    })
-
-    // Now use the cached content in a new completion
-    const completion = await googleClient.chat.completions.create({
-      model: "gemini-1.5-flash-8b",
-      messages: [
-        {
-          role: "user",
-          content: "What state is it in?"
-        }
-      ],
-      additionalProperties: {
-        cacheName: cacheResponse.name
-      },
-      max_tokens: 1000
-    })
-```
-
-#### Grounding
-Grounding is a feature specific to Gemini that allows you to use Google Search to retrieve context for your model. This can be useful for answering questions that require real-time data.
-
-To use Grounding you need to set the `groundingThreshold` option when calling client.chat.completions.create. This is a number between 0 and 1 that determines the threshold for when the model will use the cached context.
-
-```typescript
-const completion = await client.chat.completions.create({
-  model: "gemini-1.5-flash-latest",
-  messages: [
-    { role: "user", content: "Give me the best ice cream places in Boston" }
-  ],
-  groundingThreshold: 0.7
-});
-```
-
-#### Gemini OpenAI Compatibility
-
-Gemini does support [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#node.js) for it's Node client but given that it's in beta and it has some limitations around structured output and images we're not using it directly in this library.
-
-That said, you can use it quite easily with llm-polyglot if you like.
-
-Here's a sample:
-
-```typescript
-const googleClient = createLLMClient({
-  provider: "openai",
-  apiKey: "gemini_api_key",
-  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
-})
-
-
-const completion = await openai.chat.completions.create({
-  model: "gemini-1.5-flash",
-  max_tokens: 1000,
-  messages: [
-    { role: "user", content: "My name is Dimitri Kennedy." }
-  ]
-});
-```
+#### Basic Usage
 
 ```typescript
 const client = createLLMClient({ provider: "google" });
 
-// With context caching
+// Standard completion
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Hello!" }],
+  max_tokens: 1000
+});
+
+// With grounding (Google Search)
+const groundedCompletion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "What are the latest AI developments?" }],
+  groundingThreshold: 0.7,
+  max_tokens: 1000
+});
+
+// With safety settings
+const safeCompletion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Tell me a story" }],
+  additionalProperties: {
+    safetySettings: [{
+      category: "HARM_CATEGORY_HARASSMENT",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    }]
+  }
+});
+
+// With session management
+const sessionCompletion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Remember this: I'm Alice" }],
+  additionalProperties: {
+    sessionId: "user-123"
+  }
+});
+```
+
+#### Context Caching
+
+[Context Caching](https://ai.google.dev/gemini-api/docs/caching) is a feature specific to Gemini that helps cut down on duplicate token usage by allowing you to create a cache with a TTL:
+
+```typescript
+// Create a cache
 const cache = await client.cacheManager.create({
   model: "gemini-1.5-flash-8b",
   messages: [{ role: "user", content: "Context to cache" }],
-  ttlSeconds: 3600
+  ttlSeconds: 3600 // Cache for 1 hour
 });
 
+// Use the cached context
 const completion = await client.chat.completions.create({
   model: "gemini-1.5-flash-8b",
   messages: [{ role: "user", content: "Follow-up question" }],
@@ -246,71 +220,31 @@ const completion = await client.chat.completions.create({
 });
 ```
 
+#### Function/Tool Calling
+
+```typescript
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Analyze this data" }],
+  tools: [{
+    type: "function",
+    function: {
+      name: "analyze",
+      parameters: {
+        type: "object",
+        properties: {
+          sentiment: { type: "string" }
+        }
+      }
+    }
+  }],
+  tool_choice: {
+    type: "function",
+    function: { name: "analyze" }
+  }
+});
+```
+
 ## Error Handling
 
-```typescript
-try {
-  const completion = await client.chat.completions.create({
-    model: "invalid-model",
-    messages: [{ role: "user", content: "Hello!" }]
-  });
-} catch (error) {
-  if (error.code === 'model_not_found') {
-    console.error('Invalid model specified');
-  }
-  // Provider-specific error handling
-  if (error.provider === 'anthropic') {
-    // Handle Anthropic-specific errors
-  }
-}
 ```
-
-## OpenAI-Compatible Providers
-
-These providers work directly with OpenAI client configuration:
-
-| Provider | Configuration | Available Models |
-|----------|--------------|------------------|
-| Together | `baseURL: "https://api.together.xyz/v1"` | Mixtral, Llama, OpenChat, Yi |
-| Anyscale | `baseURL: "https://api.endpoints.anyscale.com/v1"` | Mistral, Llama |
-| Perplexity | `baseURL: "https://api.perplexity.ai"` | pplx-* models |
-
-```typescript
-// Together.ai example
-const client = createLLMClient({
-  provider: "openai",
-  baseURL: "https://api.together.xyz/v1"
-});
-
-// Use any Together-hosted model
-const completion = await client.chat.completions.create({
-  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-  messages: [{ role: "user", content: "Hello!" }]
-});
-```
-
-## OpenAI
-
-The llm-polyglot library also provides support for the OpenAI API, which is the default provider and will just proxy directly to the OpenAI sdk.
-
-## Integration with Island AI
-
-Part of the Island AI toolkit:
-
-- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Structured streaming
-- [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
-- [`stream-hooks`](https://www.npmjs.com/package/stream-hooks): React streaming hooks
-- [`evalz`](https://www.npmjs.com/package/evalz): LLM evaluation
-- [`schema-stream`](https://www.npmjs.com/package/schema-stream): Streaming JSON parser
-
-## Contributing
-
-We welcome contributions! Check out:
-
-- [Island AI Documentation](https://island.hack.dance)
-- [GitHub Issues](https://github.com/hack-dance/island-ai/issues)
-- [Twitter](https://twitter.com/dimitrikennedy)
-
-## License
-
-MIT © [hack.dance](https://hack.dance)

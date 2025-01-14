@@ -1,10 +1,25 @@
 import Anthropic from "@anthropic-ai/sdk"
 import {
   CachedContent,
+  ChatSession,
+  Content,
   EnhancedGenerateContentResponse,
+  FunctionCall,
+  FunctionDeclaration,
+  FunctionDeclarationsTool,
+  FunctionResponse,
+  GenerateContentResponse,
+  GenerateContentResult,
   GenerationConfig,
   GoogleGenerativeAI,
-  SafetySetting
+  GoogleSearchRetrievalTool,
+  GroundingMetadata,
+  ModelParams,
+  Part,
+  SafetySetting,
+  StartChatParams,
+  Tool,
+  ToolConfig
 } from "@google/generative-ai"
 import OpenAI from "openai"
 
@@ -59,12 +74,11 @@ export type AnthropicChatCompletionParams =
   | AnthropicChatCompletionParamsNonStream
 
 /** Google types */
-export type GoogleChatCompletionParamsStream = Omit<
+export type GoogleChatCompletionParamsBase = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
   "messages" | "model"
 > & {
   messages: SupportedChatCompletionMessageParam[]
-  stream: true
   max_tokens: number
   additionalProperties?: {
     cacheName?: string
@@ -73,41 +87,88 @@ export type GoogleChatCompletionParamsStream = Omit<
     modelGenerationConfig?: GenerationConfig
   }
   groundingThreshold?: number
-  model: GeminiGenerativeModels | string
-  systemInstruction?: string
+  systemInstruction?: Content | string | undefined
+  tools?: Array<{
+    type: "function"
+    function: Omit<FunctionDeclaration, "parameters"> & {
+      parameters?: Record<string, unknown>
+    }
+  }>
+  tool_choice?: {
+    type: "function"
+    function: {
+      name: string
+    }
+  }
 }
 
-export type GoogleChatCompletionParamsNonStream = Omit<
-  Partial<OpenAI.ChatCompletionCreateParams>,
-  "messages" | "model"
-> & {
-  messages: SupportedChatCompletionMessageParam[]
+export type GoogleChatCompletionParamsStream = GoogleChatCompletionParamsBase & {
+  stream: true
+  model: GeminiGenerativeModels | string
+}
+
+export type GoogleChatCompletionParamsNonStream = GoogleChatCompletionParamsBase & {
   stream?: false | undefined
-  max_tokens: number
-  additionalProperties?: {
-    cacheName?: string
-    sessionId?: string
-    safetySettings?: SafetySetting[]
-    modelGenerationConfig?: GenerationConfig
-  }
-  groundingThreshold?: number
   model: GeminiGenerativeModels
-  systemInstruction?: string
 }
 
 export type GoogleChatCompletionParams =
   | GoogleChatCompletionParamsStream
   | GoogleChatCompletionParamsNonStream
 
+export interface GoogleGroundingMetadata extends GroundingMetadata {
+  search_queries: string[]
+  sources: Array<{
+    url: string
+    title: string
+  }>
+  search_suggestion_html?: string
+  supports?: Array<{
+    text: string
+    sources: Array<{
+      url: string
+      title: string
+    }>
+    confidence: number[]
+  }>
+}
+
+export interface GoogleToolCall {
+  index: number
+  id: string
+  function: FunctionCall
+  type: string
+}
+
+export interface GoogleMessage {
+  role: string
+  content: string
+  tool_calls?: GoogleToolCall[]
+}
+
+export interface GoogleChoice {
+  index: number
+  message: GoogleMessage
+  finish_reason: string | null
+  logprobs?: null
+  grounding_metadata?: GoogleGroundingMetadata
+}
+
+export interface GoogleDeltaChoice extends Omit<GoogleChoice, "message"> {
+  delta: GoogleMessage
+}
+
 export type ExtendedCompletionGoogle = Partial<OpenAI.ChatCompletion> & {
   originResponse: EnhancedGenerateContentResponse
+  choices: GoogleChoice[]
 }
 
 export type ExtendedCompletionChunkGoogle = Partial<OpenAI.ChatCompletionChunk> & {
   originResponse: EnhancedGenerateContentResponse
+  choices: GoogleDeltaChoice[]
 }
 
-export type GoogleCacheCreateParams = GoogleChatCompletionParams & {
+export type GoogleCacheCreateParams = Omit<GoogleChatCompletionParams, "stream"> & {
   ttlSeconds: number
 }
 
