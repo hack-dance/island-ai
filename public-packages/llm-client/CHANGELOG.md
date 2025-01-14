@@ -1,5 +1,17 @@
 # llm-polyglot
 
+## 2.5.0
+
+### Minor Changes
+
+- [#91](https://github.com/hack-dance/island-ai/pull/91) [`4378126`](https://github.com/hack-dance/island-ai/commit/43781260f4c2664cc9d07e7559589f5b247a9c25) Thanks [@roodboi](https://github.com/roodboi)! - supporting grounding/system messages/safety and more in google
+
+### Patch Changes
+
+- [#85](https://github.com/hack-dance/island-ai/pull/85) [`7832aeb`](https://github.com/hack-dance/island-ai/commit/7832aeb888e0b45b0f103414deb06e0718f78cc0) Thanks [@jasonm](https://github.com/jasonm)! - Adjust OAI Peer dep
+
+- [#91](https://github.com/hack-dance/island-ai/pull/91) [`199439a`](https://github.com/hack-dance/island-ai/commit/199439aed037b3f7ee52e72ad6703a55678fd55c) Thanks [@roodboi](https://github.com/roodboi)! - Removing "additional properties" property from function parameters in gemini requests
+
 ## 2.4.0
 
 ### Minor Changes
