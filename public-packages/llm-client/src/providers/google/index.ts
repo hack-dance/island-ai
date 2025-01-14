@@ -8,30 +8,96 @@ import {
   GoogleChatCompletionParamsNonStream,
   GoogleChatCompletionParamsStream,
   LogLevel,
-  OpenAILikeClient,
-  Role
+  OpenAILikeClient
 } from "@/types"
 import {
+  ChatSession,
   Content,
   DynamicRetrievalMode,
   EnhancedGenerateContentResponse,
   FunctionCallingMode,
-  FunctionDeclarationsTool,
-  GenerateContentRequest,
+  FunctionDeclaration,
+  GenerationConfig,
   GoogleGenerativeAI,
   GoogleGenerativeAIError,
-  TextPart,
-  Tool
+  GroundingMetadata,
+  SafetySetting,
+  StartChatParams,
+  Tool,
+  ToolConfig
 } from "@google/generative-ai"
 import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generative-ai/server"
 import { ClientOptions } from "openai"
-import { isEmpty } from "ramda"
+
+interface ExtendedAdditionalProperties {
+  cacheName?: string
+  sessionId?: string
+  safetySettings?: SafetySetting[]
+  modelGenerationConfig?: GenerationConfig
+}
+
+interface ModelConfig {
+  model: string
+  safetySettings?: SafetySetting[]
+  generationConfig?: GenerationConfig
+  tools?: Tool[]
+  systemInstruction?: string | Content | undefined
+}
+interface GroundingMetadataExtended extends GroundingMetadata {
+  webSearchQueries: string[]
+  groundingChunks?: Array<{
+    web?: {
+      uri: string
+      title: string
+    }
+  }>
+  searchEntryPoint?: {
+    renderedContent: string
+  }
+  groundingSupports?: Array<{
+    segment: {
+      startIndex?: number
+      endIndex?: number
+      text: string
+    }
+    groundingChunkIndices: number[]
+    confidenceScores: number[]
+  }>
+}
+
+interface ExtendedChoice {
+  index: number
+  message: {
+    role: string
+    content: string
+    tool_calls?: Array<{
+      index: number
+      id: string
+      function: {
+        name: string
+        arguments: string
+      }
+      type: string
+    }>
+  }
+  finish_reason: string | null
+  logprobs?: null
+  grounding_metadata?: {
+    search_queries: string[]
+    sources: Array<{
+      url: string
+      title: string
+    }>
+    search_suggestion_html: string | undefined
+  }
+}
 
 export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClient<"google"> {
   public apiKey: string
   public logLevel: LogLevel = (process.env?.["LOG_LEVEL"] as LogLevel) ?? "info"
   private googleCacheManager
   private logger: ProviderLogger
+  private activeChatSessions: Map<string, ChatSession> = new Map()
 
   constructor(
     opts?: ClientOptions & {
@@ -56,180 +122,283 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     this.logger.addTransport(consoleTransport)
   }
 
-  /**
-   * Transforms the OpenAI chat completion parameters into Google chat completion parameters.
-   * @param params - The OpenAI chat completion parameters.
-   * @returns The transformed Google chat completion parameters.
-   */
-  private transformParams(params: GoogleChatCompletionParams): GenerateContentRequest {
-    let function_declarations: FunctionDeclarationsTool[] = []
-    const allowedFunctionNames: string[] = []
-    const mappedTools: Tool[] = []
+  private cleanSchema(schema: Record<string, unknown>): Record<string, unknown> {
+    const { additionalProperties, _additionalProperties, ...rest } = schema
 
-    const { systemMessages, nonSystemMessages } = params.messages.reduce<{
-      systemMessages: typeof params.messages
-      nonSystemMessages: typeof params.messages
-    }>(
-      (acc, message) => {
-        if (message.role === "system") {
-          acc.systemMessages.push(message)
-        } else {
-          acc.nonSystemMessages.push(message)
-        }
-        return acc
-      },
-      { systemMessages: [], nonSystemMessages: [] }
+    this.logger.log(
+      this.logLevel,
+      `Removing unsupported 'additionalProperties' from schema - ${JSON.stringify(
+        additionalProperties ?? {}
+      )}`
     )
 
-    // conform messages to Google's Content[] type
-    // they use "model" and "user" instead of "assistant" and "user", and also have no "system" role
-    const contents: Content[] = nonSystemMessages.map(message => {
-      const textPart: TextPart = {
-        text: message.content.toString()
-      }
-      return {
-        role: message.role === "assistant" ? "model" : "user",
-        parts: [textPart]
-      }
-    })
-
-    // cache data doesn't support tools or system messages (yet)
-    if (params.additionalProperties?.["cacheName"]) {
-      return {
-        contents
-      }
+    if (rest["properties"] && typeof rest["properties"] === "object") {
+      rest["properties"] = Object.entries(rest["properties"]).reduce(
+        (acc, [key, value]) => {
+          acc[key] = typeof value === "object" && value !== null ? this.cleanSchema(value) : value
+          return acc
+        },
+        {} as Record<string, unknown>
+      )
     }
 
-    const hasTools = !isEmpty(params?.tools)
-    if (hasTools) {
-      const tools = params.tools ?? []
-
-      function_declarations = tools.map(tool => {
-        allowedFunctionNames.push(tool.function.name)
-
-        return {
-          name: tool.function.name ?? "",
-          description: tool.function.description ?? "",
-          parameters: tool.function.parameters
-        } as FunctionDeclarationsTool
-      })
-
-      mappedTools.push({ function_declarations } as Tool)
+    if (rest["items"] && typeof rest["items"] === "object" && rest["items"] !== null) {
+      rest["items"] = this.cleanSchema(rest["items"] as Record<string, unknown>)
     }
 
-    const systemInstruction =
-      systemMessages.length > 0
-        ? {
-            parts: systemMessages.map(message => ({ text: message.content.toString() })),
-            role: "system"
-          }
-        : undefined
+    return rest
+  }
 
+  /**
+   * Creates a generation config from the provided parameters
+   */
+  private createGenerationConfig(params: GoogleChatCompletionParams): GenerationConfig {
     return {
-      contents,
-      ...(function_declarations?.length
-        ? {
-            tools: mappedTools,
-            toolConfig: {
-              functionCallingConfig: {
-                mode: FunctionCallingMode.ANY,
-                allowedFunctionNames
-              }
+      temperature: params.temperature ?? undefined,
+      topP: params.top_p ?? undefined,
+      topK: params.n ?? undefined,
+      maxOutputTokens: params.max_tokens ?? undefined,
+      stopSequences: params.stop
+        ? Array.isArray(params.stop)
+          ? params.stop
+          : [params.stop]
+        : undefined,
+      candidateCount: params.n ?? undefined
+    }
+  }
+
+  /**
+   * Transforms messages into Google's chat history format
+   */
+  private transformHistory(messages: GoogleChatCompletionParams["messages"]): Content[] {
+    return messages.map(message => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: [{ text: message.content.toString() }]
+    }))
+  }
+
+  private getModelConfig(params: GoogleChatCompletionParams) {
+    const additionalProps = params.additionalProperties as ExtendedAdditionalProperties | undefined
+
+    const modelConfig: ModelConfig = {
+      model: params?.model,
+      safetySettings: additionalProps?.safetySettings,
+      generationConfig: additionalProps?.modelGenerationConfig
+    }
+
+    if (params.groundingThreshold !== undefined) {
+      modelConfig.tools = [
+        {
+          googleSearchRetrieval: {
+            dynamicRetrievalConfig: {
+              mode: DynamicRetrievalMode.MODE_DYNAMIC,
+              dynamicThreshold: params.groundingThreshold
             }
           }
-        : {}),
-      systemInstruction
+        }
+      ]
     }
+
+    if (params.systemInstruction) {
+      modelConfig.systemInstruction = params.systemInstruction
+    }
+
+    return modelConfig
+  }
+
+  /**
+   * Gets or creates a chat session
+   */
+  private async getChatSession(params: GoogleChatCompletionParams): Promise<ChatSession> {
+    const additionalProps = params.additionalProperties as ExtendedAdditionalProperties | undefined
+    const sessionId = additionalProps?.sessionId
+
+    if (sessionId && this.activeChatSessions.has(sessionId)) {
+      return this.activeChatSessions.get(sessionId)!
+    }
+
+    const generationConfig = this.createGenerationConfig(params)
+    const history = this.transformHistory(params.messages)
+
+    let generativeModel
+
+    if (additionalProps?.cacheName) {
+      const cache = await this.googleCacheManager.get(additionalProps.cacheName)
+      generativeModel = this.getGenerativeModelFromCachedContent(cache)
+    } else {
+      generativeModel = this.getGenerativeModel(this.getModelConfig(params))
+    }
+
+    const chatParams: StartChatParams = {
+      generationConfig,
+      history
+    }
+
+    if (params.tools?.length) {
+      const functionDeclarations = params.tools.map(tool => ({
+        name: tool.function.name ?? "",
+        description: tool.function.description ?? "",
+        parameters: {
+          type: "object",
+          ...(tool.function.parameters ? this.cleanSchema(tool.function.parameters) : {})
+        }
+      })) as FunctionDeclaration[]
+
+      const toolChoice = params.tool_choice as
+        | { type: "function"; function: { name: string } }
+        | undefined
+
+      chatParams.tools = [
+        {
+          functionDeclarations
+        }
+      ] as Tool[]
+
+      if (toolChoice?.type === "function") {
+        chatParams.toolConfig = {
+          functionCallingConfig: {
+            mode: FunctionCallingMode.ANY,
+            allowedFunctionNames: [toolChoice.function.name]
+          }
+        } satisfies ToolConfig
+      }
+    }
+
+    const chatSession = generativeModel.startChat(chatParams)
+
+    if (sessionId) {
+      this.activeChatSessions.set(sessionId, chatSession)
+    }
+
+    return chatSession
   }
 
   /**
    * Transforms the Google API response into an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
-   * @param response - The Google API response.
-   * @param stream - An optional parameter indicating whether the response is a stream.
-   * @returns A Promise that resolves to an ExtendedCompletionGoogle or ExtendedCompletionChunkGoogle object.
    */
-  private async transformResponse(
-    response: EnhancedGenerateContentResponse,
-    { stream }: { stream?: boolean } = {}
-  ): Promise<ExtendedCompletionGoogle | ExtendedCompletionChunkGoogle> {
-    const responseText = response.text()
-    const functionCalls = response.functionCalls()
+  private transformResponse(
+    responseDataChunk: EnhancedGenerateContentResponse,
+    params: GoogleChatCompletionParams
+  ): ExtendedCompletionGoogle | ExtendedCompletionChunkGoogle {
+    const responseText = responseDataChunk.text()
+    const toolCalls =
+      responseDataChunk.candidates?.[0]?.content?.parts?.flatMap(part =>
+        part.functionCall
+          ? [
+              {
+                index: 0,
+                id: `call_${Math.random().toString(36).slice(2)}`,
+                function: {
+                  name: part.functionCall.name,
+                  arguments: JSON.stringify(part.functionCall.args)
+                },
+                type: "function"
+              }
+            ]
+          : []
+      ) ?? []
 
-    const tool_calls = functionCalls?.map((block, index) => ({
-      index,
-      id: "",
-      type: "function",
-      function: {
-        name: block.name,
-        arguments: JSON.stringify(block.args)
+    const groundingMetadata = responseDataChunk.candidates?.[0]?.groundingMetadata as
+      | GroundingMetadataExtended
+      | undefined
+
+    let contentWithGrounding = responseText
+    let sources: Array<{ url: string; title: string }> = []
+
+    if (groundingMetadata) {
+      sources =
+        groundingMetadata.groundingChunks?.map(chunk => ({
+          url: chunk.web?.uri ?? "",
+          title: chunk.web?.title ?? ""
+        })) ?? []
+
+      if (groundingMetadata.groundingSupports?.length) {
+        contentWithGrounding += "\n\n**Grounded Segments**\n"
+        groundingMetadata.groundingSupports.forEach(support => {
+          const sourceIndices = support.groundingChunkIndices
+          const sourceTitles = sourceIndices
+            .map(index => sources[index]?.title)
+            .filter(Boolean)
+            .join(", ")
+          const avgConfidence =
+            support.confidenceScores.reduce((a, b) => a + b, 0) / support.confidenceScores.length
+          contentWithGrounding += `> "${support.segment.text}"\n`
+          contentWithGrounding += `> Sources: ${sourceTitles} (Confidence: ${(avgConfidence * 100).toFixed(1)}%)\n\n`
+        })
       }
-    }))
 
-    const transformedResponse = {
-      id: "",
-      originResponse: response,
-      usage: {
-        prompt_tokens: response.usageMetadata?.promptTokenCount ?? 0,
-        completion_tokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-        total_tokens:
-          (response.usageMetadata?.promptTokenCount ?? 0) +
-          (response.usageMetadata?.candidatesTokenCount ?? 0)
+      if (sources.length > 0) {
+        contentWithGrounding += "\n**Grounding Sources**\n"
+        sources.forEach(source => {
+          contentWithGrounding += `- [${source.title}](${source.url})\n`
+        })
       }
     }
 
-    const responseDataChunk = {
-      role: "assistant" as Role,
-      content: responseText,
-      ...(tool_calls?.length ? { tool_calls } : {})
+    const responseDataBase = {
+      id: `chatcmpl-${Math.random().toString(36).slice(2)}`,
+      object: params.stream ? "chat.completion.chunk" : "chat.completion",
+      created: Date.now(),
+      model: params.model,
+      system_fingerprint: undefined,
+      originResponse: responseDataChunk,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: toolCalls.length ? "" : contentWithGrounding,
+            ...(toolCalls.length ? { tool_calls: toolCalls } : {})
+          },
+          ...(groundingMetadata
+            ? {
+                grounding_metadata: {
+                  search_queries: groundingMetadata.webSearchQueries,
+                  sources: sources,
+                  search_suggestion_html: groundingMetadata.searchEntryPoint?.renderedContent,
+                  supports: groundingMetadata.groundingSupports?.map(support => ({
+                    text: support.segment.text,
+                    sources: support.groundingChunkIndices.map(index => sources[index]),
+                    confidence: support.confidenceScores
+                  }))
+                }
+              }
+            : {}),
+          finish_reason: responseDataChunk.candidates?.[0]?.finishReason?.toLowerCase() ?? null,
+          logprobs: null
+        } as ExtendedChoice
+      ]
     }
 
-    const finish_reason = tool_calls?.length ? "tool_calls" : "stop"
-
-    if (stream) {
+    if (params.stream) {
       return {
-        ...transformedResponse,
-        object: "chat.completion.chunk",
+        ...responseDataBase,
         choices: [
           {
-            delta: responseDataChunk,
-            finish_reason,
-            index: 0
+            ...responseDataBase.choices[0],
+            delta: responseDataBase.choices[0].message
           }
         ]
       } as ExtendedCompletionChunkGoogle
-    } else {
-      return {
-        ...transformedResponse,
-        object: "chat.completion",
-        choices: [
-          {
-            message: responseDataChunk,
-            finish_reason,
-            index: 0,
-            logprobs: null
-          }
-        ]
-      } as ExtendedCompletionGoogle
     }
+
+    return responseDataBase as ExtendedCompletionGoogle
   }
 
   /**
    * Streams the chat completion response from the Google API.
-   * @param response - The Response object from the Google API.
-   * @returns An asynchronous iterable of ExtendedCompletionChunkGoogle objects.
    */
   private async *streamChatCompletion(
-    stream: AsyncIterable<EnhancedGenerateContentResponse>
+    stream: AsyncIterable<EnhancedGenerateContentResponse>,
+    params: GoogleChatCompletionParams
   ): AsyncIterable<ExtendedCompletionChunkGoogle> {
     for await (const chunk of stream) {
-      yield (await this.transformResponse(chunk, { stream: true })) as ExtendedCompletionChunkGoogle
+      yield this.transformResponse(chunk, params) as ExtendedCompletionChunkGoogle
     }
   }
 
   /**
    * Creates a chat completion using the Google AI API.
-   * @param params - The chat completion parameters.
-   * @returns A Promise that resolves to an ExtendedCompletionGoogle object or an asynchronous iterable of ExtendedCompletionChunkGoogle objects if streaming is enabled.
    */
   public async create(
     params: GoogleChatCompletionParamsStream
@@ -247,59 +416,21 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
         throw new Error("model and messages are required")
       }
 
-      const googleParams = this.transformParams(params)
-
-      const isGroundingEnabled = params?.groundingThreshold !== undefined
-
-      if (isGroundingEnabled) {
-        googleParams.tools?.push({
-          googleSearchRetrieval: {
-            dynamicRetrievalConfig: {
-              mode: DynamicRetrievalMode.MODE_DYNAMIC,
-              dynamicThreshold: params.groundingThreshold
-            }
-          }
-        })
-      }
-
-      let generativeModel
-      if (params.additionalProperties?.["cacheName"]) {
-        // if there's a cacheName, get model using cached content
-        // note: need pay-as-you-go account - caching not available on free tier
-        const cache = await this.googleCacheManager.get(
-          params.additionalProperties?.["cacheName"]?.toString()
-        )
-
-        generativeModel = this.getGenerativeModelFromCachedContent(cache)
-      } else {
-        // regular, non-cached model
-        generativeModel = this.getGenerativeModel({
-          model: params?.model
-        })
-      }
+      const chatSession = await this.getChatSession(params)
+      const lastMessage = params.messages[params.messages.length - 1]
 
       if (params?.stream) {
         this.logger.log(this.logLevel, "Starting streaming completion response")
-
-        const result = await generativeModel.generateContentStream(googleParams)
-
-        if (!result?.stream) {
-          throw new Error("generateContentStream failed")
-        }
-
-        return this.streamChatCompletion(result.stream)
+        const result = await chatSession.sendMessageStream(lastMessage.content.toString())
+        return this.streamChatCompletion(result.stream, params)
       } else {
-        const result = await generativeModel.generateContent(googleParams)
-
+        const result = await chatSession.sendMessage(lastMessage.content.toString())
         if (!result?.response) {
-          throw new Error("generateContent failed")
+          throw new Error("Chat response failed")
         }
 
-        const transformedResult = await this.transformResponse(result.response, {
-          stream: false
-        })
+        const transformedResult = this.transformResponse(result.response, params)
         transformedResult.model = params.model
-
         return transformedResult as ExtendedCompletionGoogle
       }
     } catch (error) {
@@ -310,17 +441,15 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
 
   /**
    * Add content to the Google AI cache manager
-   * @param params - the same params as used in chat.completion.create plus ttlSeconds
-   * @returns the cache manager create response (which includes the cache name to use later)
    */
   public async createCacheManager(params: GoogleCacheCreateParams) {
-    const googleParams = this.transformParams(params)
+    const contents = this.transformHistory(params.messages)
 
     try {
       return await this.googleCacheManager.create({
         ttlSeconds: params.ttlSeconds,
         model: params.model,
-        ...googleParams
+        contents
       })
     } catch (err: unknown) {
       let error = err as Error
@@ -354,11 +483,12 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
       return await this.googleCacheManager.list()
     },
     update: async (cacheName: string, params: GoogleCacheCreateParams) => {
-      const googleParams = this.transformParams(params)
-      return await this.googleCacheManager.update(
-        cacheName,
-        googleParams as CachedContentUpdateParams
-      )
+      const contents = this.transformHistory(params.messages)
+      return await this.googleCacheManager.update(cacheName, {
+        cachedContent: {
+          contents
+        }
+      } as CachedContentUpdateParams)
     },
     delete: async (cacheName: string) => {
       return await this.googleCacheManager.delete(cacheName)

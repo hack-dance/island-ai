@@ -1,14 +1,20 @@
 ---
-title: Google
+title: Google (Gemini)
+description: OpenAI-compatible interface for Google's Gemini models
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-We support  Google's Gemini API including:
-- standard chat completions
-- streaming chat completions
-- function calling
-- context caching support for better token optimization (must be a paid API key)
+The llm-polyglot library provides comprehensive support for Google's Gemini API including:
+
+- Standard chat completions with OpenAI-compatible interface
+- Streaming chat completions with delta updates
+- Function/tool calling with automatic schema conversion
+- Context caching for token optimization (requires paid API key)
+- Grounding support with Google Search integration
+- Safety settings and model generation config
+- Session management for stateful conversations
+- Automatic response transformation with source attribution
 
 ## Installation
 
@@ -30,73 +36,63 @@ We support  Google's Gemini API including:
   </Tab>
 </Tabs>
 
-
-#### Context Caching
-
-[Context Caching](https://ai.google.dev/gemini-api/docs/caching) is a feature specific to Gemini that helps cut down on duplicate token usage by allowing you to create a cache with a TTL with which you can provide context to the model that you've already obtained from elsewhere.
-
-To use Context Caching you need to create a cache before you call generate via `googleClient.cacheManager.create({})` like so:
-
-```typescript
-const cacheResponse = await googleClient.cacheManager.create({
-      model: "gemini-1.5-flash-8b",
-      messages: [
-        {
-          role: "user",
-          content: "What is the capital of Montana?"
-        }
-      ],
-      ttlSeconds: 3600, // Cache for 1 hour,
-      max_tokens: 1000
-    })
-
-    // Now use the cached content in a new completion
-    const completion = await googleClient.chat.completions.create({
-      model: "gemini-1.5-flash-8b",
-      messages: [
-        {
-          role: "user",
-          content: "What state is it in?"
-        }
-      ],
-      additionalProperties: {
-        cacheName: cacheResponse.name
-      },
-      max_tokens: 1000
-    })
-```
-
-Gemini does support [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#node.js) for it's Node client but given that it's in beta and it has some limitations around structured output and images we're not using it directly in this library.
-
-```typescript
-const googleClient = createLLMClient({
-  provider: "openai",
-  apiKey: "gemini_api_key",
-  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
-})
-
-
-const completion = await openai.chat.completions.create({
-  model: "gemini-1.5-flash",
-  max_tokens: 1000,
-  messages: [
-    { role: "user", content: "My name is Dimitri Kennedy." }
-  ]
-});
-```
-
-#### Standard Chat Completions
+## Basic Usage
 
 ```typescript
 const client = createLLMClient({ provider: "google" });
 
-// With context caching
+// Standard completion
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Hello!" }],
+  max_tokens: 1000
+});
+
+// With grounding (Google Search)
+const groundedCompletion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "What are the latest AI developments?" }],
+  groundingThreshold: 0.7,
+  max_tokens: 1000
+});
+
+// With safety settings
+const safeCompletion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Tell me a story" }],
+  additionalProperties: {
+    safetySettings: [{
+      category: "HARM_CATEGORY_HARASSMENT",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    }]
+  }
+});
+
+// With session management
+const sessionCompletion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Remember this: I'm Alice" }],
+  additionalProperties: {
+    sessionId: "user-123"
+  }
+});
+```
+
+## Advanced Features
+
+### Context Caching
+
+[Context Caching](https://ai.google.dev/gemini-api/docs/caching) helps reduce token usage by caching context with a TTL:
+
+```typescript
+// Create a cache
 const cache = await client.cacheManager.create({
   model: "gemini-1.5-flash-8b",
   messages: [{ role: "user", content: "Context to cache" }],
-  ttlSeconds: 3600
+  ttlSeconds: 3600 // Cache for 1 hour
 });
 
+// Use the cached context
 const completion = await client.chat.completions.create({
   model: "gemini-1.5-flash-8b",
   messages: [{ role: "user", content: "Follow-up question" }],
@@ -104,4 +100,119 @@ const completion = await client.chat.completions.create({
     cacheName: cache.name
   }
 });
+
+// Cache management
+await client.cacheManager.list(); // List all caches
+await client.cacheManager.get(cacheName); // Get specific cache
+await client.cacheManager.update(cacheName, params); // Update cache
+await client.cacheManager.delete(cacheName); // Delete cache
 ```
+
+### Function/Tool Calling
+
+```typescript
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Analyze this data" }],
+  tools: [{
+    type: "function",
+    function: {
+      name: "analyze",
+      parameters: {
+        type: "object",
+        properties: {
+          sentiment: { type: "string" }
+        }
+      }
+    }
+  }],
+  tool_choice: {
+    type: "function",
+    function: { name: "analyze" }
+  }
+});
+```
+
+### Grounding with Google Search
+
+```typescript
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "What are the best restaurants in Boston?" }],
+  groundingThreshold: 0.7, // 0.0 to 1.0, higher means more reliance on search
+  max_tokens: 1000
+});
+
+// Response includes grounding metadata
+console.log(completion.choices[0].grounding_metadata);
+// {
+//   search_queries: string[],
+//   sources: Array<{ url: string, title: string }>,
+//   search_suggestion_html: string,
+//   supports: Array<{
+//     text: string,
+//     sources: Array<{ url: string, title: string }>,
+//     confidence: number[]
+//   }>
+// }
+```
+
+### Safety Settings & Generation Config
+
+```typescript
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "Tell me a story" }],
+  additionalProperties: {
+    // Safety settings
+    safetySettings: [{
+      category: "HARM_CATEGORY_HARASSMENT",
+      threshold: "BLOCK_MEDIUM_AND_ABOVE"
+    }],
+    // Generation config
+    modelGenerationConfig: {
+      temperature: 0.9,
+      topK: 40,
+      topP: 0.8,
+      maxOutputTokens: 200
+    }
+  }
+});
+```
+
+### Session Management
+
+```typescript
+// First message in session
+const msg1 = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "My name is Alice" }],
+  additionalProperties: { sessionId: "user-123" }
+});
+
+// Second message in same session (maintains context)
+const msg2 = await client.chat.completions.create({
+  model: "gemini-1.5-flash-latest",
+  messages: [{ role: "user", content: "What's my name?" }],
+  additionalProperties: { sessionId: "user-123" }
+});
+```
+
+## OpenAI Compatibility Mode
+
+While Gemini does offer [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#node.js), we recommend using our native integration for better type safety and feature support. However, if you prefer the OpenAI-compatible endpoint:
+
+```typescript
+const client = createLLMClient({
+  provider: "openai",
+  apiKey: "gemini_api_key",
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
+});
+
+const completion = await client.chat.completions.create({
+  model: "gemini-1.5-flash",
+  messages: [{ role: "user", content: "Hello!" }]
+});
+```
+
+Note that the OpenAI compatibility mode has some limitations around structured output and images.
