@@ -1,25 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk"
 import {
   CachedContent,
-  ChatSession,
   Content,
   EnhancedGenerateContentResponse,
   FunctionCall,
   FunctionDeclaration,
-  FunctionDeclarationsTool,
-  FunctionResponse,
-  GenerateContentResponse,
-  GenerateContentResult,
   GenerationConfig,
   GoogleGenerativeAI,
-  GoogleSearchRetrievalTool,
   GroundingMetadata,
-  ModelParams,
-  Part,
-  SafetySetting,
-  StartChatParams,
-  Tool,
-  ToolConfig
+  SafetySetting
 } from "@google/generative-ai"
 import OpenAI from "openai"
 
