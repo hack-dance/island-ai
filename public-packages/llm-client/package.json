@@ -55,7 +55,7 @@
     "openai": "^4.47.1"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.22.0",
+    "@anthropic-ai/sdk": "^0.33.0",
     "@google/generative-ai": "^0.21.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
