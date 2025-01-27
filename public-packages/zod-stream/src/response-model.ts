@@ -3,6 +3,7 @@ import {
   OAIBuildJsonModeParams,
   OAIBuildJsonSchemaParams,
   OAIBuildMessageBasedParams,
+  OAIBuildThinkingMessageBasedParams,
   OAIBuildToolFunctionParams
 } from "@/oai/params"
 import OpenAI from "openai"
@@ -62,6 +63,10 @@ export function withResponseModel<
 
   if (mode === MODE.MD_JSON) {
     return OAIBuildMessageBasedParams<P>(definition, params) as ModeParamsReturnType<P, M>
+  }
+
+  if (mode === MODE.THINKING_MD_JSON) {
+    return OAIBuildThinkingMessageBasedParams<P>(definition, params) as ModeParamsReturnType<P, M>
   }
 
   return OAIBuildMessageBasedParams<P>(definition, params) as ModeParamsReturnType<P, M>

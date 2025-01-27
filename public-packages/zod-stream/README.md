@@ -319,7 +319,8 @@ const modes = {
   TOOLS: "TOOLS",          // OpenAI tools API
   JSON: "JSON",            // Direct JSON response
   MD_JSON: "MD_JSON",      // JSON in markdown blocks
-  JSON_SCHEMA: "JSON_SCHEMA" // JSON with schema validation
+  JSON_SCHEMA: "JSON_SCHEMA", // JSON with schema validation
+  THINKING_MD_JSON: "THINKING_MD_JSON" // JSON with thinking in markdown blocks (deepseek r1)
 } as const;
 ```
 
@@ -384,7 +385,8 @@ import {
   OAIResponseParser,
   OAIResponseToolArgsParser,
   OAIResponseFnArgsParser,
-  OAIResponseJSONParser
+  OAIResponseJSONParser,
+  thinkingJsonParser
 } from "zod-stream";
 
 // Automatic format detection
@@ -394,6 +396,7 @@ const result = OAIResponseParser(response);
 const toolArgs = OAIResponseToolArgsParser(response);
 const fnArgs = OAIResponseFnArgsParser(response);
 const jsonContent = OAIResponseJSONParser(response);
+const thinkingJson = thinkingJsonParser(response);
 ```
 
 ### Streaming Utilities

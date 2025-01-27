@@ -3,7 +3,7 @@ import { omit } from "@/lib"
 import Anthropic from "@anthropic-ai/sdk"
 import { describe, expect, test } from "bun:test"
 
-for await (const model of ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"] as const) {
+for await (const model of ["claude-3-5-sonnet-latest", "claude-3-opus-latest"] as const) {
   await createTestCase(model)
 }
 
