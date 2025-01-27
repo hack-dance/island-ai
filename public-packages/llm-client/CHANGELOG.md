@@ -1,5 +1,11 @@
 # llm-polyglot
 
+## 2.6.0
+
+### Minor Changes
+
+- [#95](https://github.com/hack-dance/island-ai/pull/95) [`2f577bf`](https://github.com/hack-dance/island-ai/commit/2f577bf6827511e34002bd0a10025d1c18dd1331) Thanks [@roodboi](https://github.com/roodboi)! - basic r1 support with thinking parser to better control MD responses with thinking blocks + adjusted system prompt for r1 specific
+
 ## 2.5.0
 
 ### Minor Changes
