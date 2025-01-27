@@ -12,7 +12,6 @@ export function thinkingJsonParser(data: string | OpenAI.Chat.Completions.ChatCo
   json: string
   thinking: string
 } {
-  console.log("thinkingJsonParser", data)
   const text =
     typeof data === "string"
       ? data
