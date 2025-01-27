@@ -385,7 +385,8 @@ import {
   OAIResponseParser,
   OAIResponseToolArgsParser,
   OAIResponseFnArgsParser,
-  OAIResponseJSONParser
+  OAIResponseJSONParser,
+  thinkingJsonParser
 } from "zod-stream";
 
 // Automatic format detection
@@ -395,6 +396,7 @@ const result = OAIResponseParser(response);
 const toolArgs = OAIResponseToolArgsParser(response);
 const fnArgs = OAIResponseFnArgsParser(response);
 const jsonContent = OAIResponseJSONParser(response);
+const thinkingJson = thinkingJsonParser(response);
 ```
 
 ### Streaming Utilities
