@@ -1,6 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["ANTHROPIC_API_KEY", "NODE_ENV", "OPENAI_API_KEY", "OPENAI_ORG_ID"],
+  "globalEnv": [
+    "ANTHROPIC_API_KEY", "NODE_ENV", "OPENAI_API_KEY", "OPENAI_ORG_ID", "GROQ_API_KEY"
+    ],
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
