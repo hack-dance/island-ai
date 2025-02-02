@@ -1,5 +1,6 @@
 import { lensPath, set, view } from "ramda"
 import { z, ZodObject, ZodOptional, ZodRawShape, ZodTypeAny } from "zod"
+import type { ZodIssue } from "zod"
 
 import JSONParser from "./json-parser"
 import { ParsedTokenInfo, StackElement, TokenParserMode, TokenParserState } from "./token-parser"
@@ -65,6 +66,7 @@ type OnKeyCompleteCallback = (data: OnKeyCompleteCallbackParams) => void | undef
 
 export class SchemaStream {
   private schemaInstance: NestedObject
+  private schemaType: SchemaType
   private activePath: (string | number | undefined)[] = []
   private completedPaths: (string | number | undefined)[][] = []
   private onKeyComplete?: OnKeyCompleteCallback
@@ -84,6 +86,7 @@ export class SchemaStream {
   ) {
     const { defaultData, onKeyComplete, typeDefaults } = opts
 
+    this.schemaType = schema
     this.schemaInstance = this.createBlankObject(schema, defaultData, typeDefaults)
     this.onKeyComplete = onKeyComplete
   }
@@ -222,7 +225,20 @@ export class SchemaStream {
     opts: {
       stringBufferSize?: number
       handleUnescapedNewLines?: boolean
-    } = { stringBufferSize: 0, handleUnescapedNewLines: true }
+      onComplete?: ({
+        isValid,
+        errors,
+        data
+      }: {
+        isValid: boolean
+        errors: ZodIssue[]
+        data:
+          | {
+              [x: string]: any
+            }
+          | undefined
+      }) => void
+    } = { stringBufferSize: 0, handleUnescapedNewLines: true, onComplete: () => null }
   ) {
     const textEncoder = new TextEncoder()
 
@@ -233,6 +249,16 @@ export class SchemaStream {
 
     parser.onToken = this.handleToken.bind(this)
     parser.onValue = () => void 0
+    parser.onEnd = () => {
+      const parsedResult = this.schemaType.safeParse(this.schemaInstance)
+
+      opts.onComplete &&
+        opts.onComplete({
+          isValid: parsedResult.success,
+          errors: parsedResult.error?.errors ?? [],
+          data: parsedResult.data
+        })
+    }
 
     const stream = new TransformStream({
       transform: async (chunk, controller): Promise<void> => {
