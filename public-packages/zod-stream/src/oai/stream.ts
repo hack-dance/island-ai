@@ -65,6 +65,11 @@ export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
 /**
  * `readableStreamToAsyncGenerator` converts a ReadableStream to an AsyncGenerator.
  *
+ * ReadableStream.read() does not guarantee that chunk boundaries align with
+ * TransformStream output boundaries. For large values, a single JSON-encoded
+ * partial object can span multiple read() calls. We accumulate bytes across
+ * reads and only yield once a complete JSON object is available.
+ *
  * @param {ReadableStream<Uint8Array>} stream - The ReadableStream to convert.
  * @returns {AsyncGenerator<unknown>} - The converted AsyncGenerator.
  */
@@ -72,19 +77,38 @@ export async function* readableStreamToAsyncGenerator(
   stream: ReadableStream<Uint8Array>
 ): AsyncGenerator<unknown> {
   const reader = stream.getReader()
-  const decoder = new TextDecoder()
+  const decoder = new TextDecoder(undefined, { fatal: false })
+  let accumulated = ""
 
-  while (true) {
-    const { done, value } = await reader.read()
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
 
-    if (done) {
-      break
+      if (done) {
+        break
+      }
+
+      // stream: true prevents flushing incomplete multi-byte UTF-8 sequences
+      accumulated += stripControlCharacters(decoder.decode(value, { stream: true }))
+
+      try {
+        yield JSON.parse(accumulated)
+        accumulated = "" // reset — each TransformStream output is one complete JSON object
+      } catch {
+        // Incomplete chunk — accumulate more before parsing
+      }
     }
 
-    // stripping a second time to be safe.
-    const decodedString = stripControlCharacters(decoder.decode(value))
-    yield JSON.parse(decodedString)
+    // Flush any remaining bytes from the decoder and attempt a final parse
+    accumulated += stripControlCharacters(decoder.decode())
+    if (accumulated) {
+      try {
+        yield JSON.parse(accumulated)
+      } catch {
+        // nothing to yield
+      }
+    }
+  } finally {
+    reader.releaseLock()
   }
-
-  return
 }
