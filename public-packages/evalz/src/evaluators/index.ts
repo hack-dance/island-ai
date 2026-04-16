@@ -65,7 +65,7 @@ export function createEvaluator<T extends ResultsType>({
         })
 
         return {
-          score: response["score"],
+          score: (response as z.infer<typeof scoringSchema>)["score"],
           item
         }
       })
