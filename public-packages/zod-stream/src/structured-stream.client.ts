@@ -70,12 +70,24 @@ export default class ZodStream {
       })
 
       const textEncoder = new TextEncoder()
-      const textDecoder = new TextDecoder()
+      const textDecoder = new TextDecoder(undefined, { fatal: false })
+      let validationAccumulated = ""
 
       const validationStream = new TransformStream({
         transform: async (chunk, controller): Promise<void> => {
           try {
-            const parsedChunk = JSON.parse(textDecoder.decode(chunk))
+            // stream: true prevents flushing incomplete multi-byte UTF-8 sequences
+            validationAccumulated += textDecoder.decode(chunk, { stream: true })
+
+            let parsedChunk: unknown
+            try {
+              parsedChunk = JSON.parse(validationAccumulated)
+              validationAccumulated = "" // reset on successful parse
+            } catch {
+              // Incomplete chunk boundary — accumulate more before parsing
+              return
+            }
+
             const validation = await response_model.schema.safeParseAsync(parsedChunk)
 
             this.log("debug", "Validation result", validation)
@@ -83,7 +95,7 @@ export default class ZodStream {
             controller.enqueue(
               textEncoder.encode(
                 JSON.stringify({
-                  ...parsedChunk,
+                  ...(parsedChunk as Record<string, unknown>),
                   _meta: {
                     _isValid: validation.success,
                     _activePath,
@@ -97,14 +109,39 @@ export default class ZodStream {
             controller.error(e)
           }
         },
-        flush() {}
+        async flush(controller) {
+          const remaining = textDecoder.decode()
+          if (remaining) {
+            validationAccumulated += remaining
+          }
+          if (validationAccumulated) {
+            try {
+              const parsedChunk = JSON.parse(validationAccumulated)
+              const validation = await response_model.schema.safeParseAsync(parsedChunk)
+              controller.enqueue(
+                textEncoder.encode(
+                  JSON.stringify({
+                    ...(parsedChunk as Record<string, unknown>),
+                    _meta: {
+                      _isValid: validation.success,
+                      _activePath,
+                      _completedPaths
+                    }
+                  })
+                )
+              )
+            } catch (e) {
+              controller.error(e)
+            }
+          }
+        }
       })
 
       const stream = await completionPromise(data)
 
       if (!stream) {
         this.log("error", "Completion call returned no data")
-        throw new Error(stream)
+        throw new Error("Completion call returned no data")
       }
 
       stream.pipeThrough(parser)
