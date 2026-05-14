@@ -41,7 +41,7 @@
     "js-tiktoken": "^1.0.7",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "latest",
-    "next": "15.0.3",
+    "next": "15.5.18",
     "next-themes": "^0.2.1",
     "openai": "4.47.1",
     "ramda": "^0.29.0",
