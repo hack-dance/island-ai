@@ -10,10 +10,9 @@
   "module": "./dist/index.js",
   "exports": {
     ".": {
-      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -45,20 +44,17 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.hack.dance",
   "peerDependencies": {
-    "@instructor-ai/instructor": "latest",
-    "openai": "4.47.1",
-    "zod": "^3.23.3"
+    "openai": "^6.46.0",
+    "zod": ">=3.23.8 <5"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@instructor-ai/instructor": "*",
-    "openai": "4.47.1",
-    "@turbo/gen": "^1.11.3",
+    "openai": "^6.46.0",
     "@types/node": "^20.10.6",
     "@types/eslint": "^8.56.1",
     "eslint": "^8.53.0",
-    "tsup": "^8.0.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.3.3",
     "ramda": "^0.29.0",
     "zod": "^3.23.3"

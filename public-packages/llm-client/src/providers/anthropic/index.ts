@@ -7,10 +7,11 @@ import {
   ExtendedCompletionAnthropic,
   ExtendedCompletionChunkAnthropic,
   LogLevel,
-  OpenAILikeClient
+  OpenAILikeClient,
+  ProviderClientOptions
 } from "@/types"
 import Anthropic from "@anthropic-ai/sdk"
-import OpenAI, { ClientOptions } from "openai"
+import OpenAI from "openai"
 
 /**
  * AnthropicProvider is a class that provides an interface for interacting with the Anthropic API.
@@ -27,9 +28,7 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
    * @param opts - An optional ClientOptions object containing the API key.
    */
   constructor(
-    opts?: ClientOptions & {
-      logLevel?: LogLevel
-    }
+    opts?: ProviderClientOptions
   ) {
     const apiKey = opts?.apiKey ?? process.env?.["ANTHROPIC_API_KEY"] ?? null
 
@@ -154,14 +153,20 @@ export class AnthropicProvider extends Anthropic implements OpenAILikeClient<"an
     }
 
     if ("tools" in params && Array.isArray(params.tools) && params.tools.length > 0) {
-      tools = params.tools.map(tool => ({
-        name: tool.function.name ?? "",
-        description: tool.function.description ?? "",
-        input_schema: {
-          type: "object",
-          ...tool.function.parameters
-        }
-      }))
+      tools = params.tools.flatMap(tool => {
+        if (tool.type !== "function") return []
+
+        return [
+          {
+            name: tool.function.name ?? "",
+            description: tool.function.description ?? "",
+            input_schema: {
+              type: "object" as const,
+              ...tool.function.parameters
+            }
+          }
+        ]
+      })
     }
 
     return {

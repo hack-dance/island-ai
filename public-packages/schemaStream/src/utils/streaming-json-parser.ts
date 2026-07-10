@@ -43,8 +43,7 @@ export type SchemaStreamParseOptions = {
 export type SchemaStreamInputChunk = string | Uint8Array
 
 export type SchemaStreamSource<TChunk extends SchemaStreamInputChunk = SchemaStreamInputChunk> =
-  | ReadableStream<TChunk>
-  | AsyncIterable<TChunk>
+  ReadableStream<TChunk> | AsyncIterable<TChunk>
 
 type OpenSource<TChunk extends SchemaStreamInputChunk> = {
   iterator: AsyncIterator<TChunk>

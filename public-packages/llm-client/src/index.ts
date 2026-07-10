@@ -1,18 +1,18 @@
 import { AnthropicProvider } from "@/providers/anthropic"
 import { GoogleProvider } from "@/providers/google"
 import { OpenAIProvider } from "@/providers/openai"
-import { OpenAILikeClient, Providers } from "@/types"
-import { ClientOptions } from "openai"
+import type {
+  LLMClientOptions,
+  OpenAILikeClient,
+  OpenAILLMClientOptions,
+  Providers
+} from "@/types"
 
 export class LLMClient<P extends Providers> {
   private providerInstance: OpenAILikeClient<P>
 
-  constructor(
-    opts: ClientOptions & {
-      provider: P
-    }
-  ) {
-    switch (opts?.provider) {
+  constructor(opts: LLMClientOptions<P>) {
+    switch (opts.provider) {
       case "anthropic":
         this.providerInstance = new AnthropicProvider(opts) as unknown as OpenAILikeClient<P>
         break
@@ -21,7 +21,12 @@ export class LLMClient<P extends Providers> {
         break
       case "openai":
       default:
-        this.providerInstance = new OpenAIProvider(opts) as OpenAILikeClient<P>
+        const { provider: _provider, clientOptions, ...legacyOptions } =
+          opts as OpenAILLMClientOptions
+        this.providerInstance = new OpenAIProvider({
+          ...legacyOptions,
+          ...clientOptions
+        }) as OpenAILikeClient<P>
     }
 
     const proxyHandler: ProxyHandler<OpenAILikeClient<P>> = {
@@ -40,12 +45,17 @@ export class LLMClient<P extends Providers> {
   }
 }
 
+export function createLLMClient(): OpenAILikeClient<"openai">
 export function createLLMClient<P extends Providers>(
-  opts: ClientOptions & {
-    provider: P
-    logLevel?: string
-  } = { provider: "openai" as P }
-): OpenAILikeClient<P> {
+  opts: LLMClientOptions<P>
+): OpenAILikeClient<P>
+export function createLLMClient<P extends Providers>(
+  opts?: LLMClientOptions<P>
+): OpenAILikeClient<P> | OpenAILikeClient<"openai"> {
+  if (!opts) {
+    return new LLMClient({ provider: "openai" }).getProviderInstance()
+  }
+
   const client = new LLMClient<P>(opts)
   return client.getProviderInstance()
 }

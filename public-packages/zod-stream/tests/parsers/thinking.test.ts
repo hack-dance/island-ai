@@ -42,7 +42,10 @@ const ExtractionValuesSchema = z.object({
   _thinking: z.string().optional()
 })
 
-const describeLive = process.env["GROQ_API_KEY"] ? describe : describe.skip
+const describeLive =
+  process.env["RUN_LIVE_TESTS"] === "1" && process.env["GROQ_API_KEY"]
+    ? describe
+    : describe.skip
 
 describeLive("thinking parser - live tests (requires GROQ_API_KEY)", () => {
   test("should parse Groq streaming response with thinking tags", async () => {

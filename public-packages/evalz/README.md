@@ -23,7 +23,7 @@
 
 ## Overview
 
-`evalz` provides structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and integrated with OpenAI and Instructor, it enables both automated evaluation and human-in-the-loop assessment workflows.
+`evalz` provides structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and the OpenAI Responses API, it enables both automated evaluation and human-in-the-loop assessment workflows.
 
 ### Key Capabilities
 
@@ -37,11 +37,11 @@
 Install `evalz` using your preferred package manager:
 
 ```bash
-npm install evalz openai zod @instructor-ai/instructor
+npm install evalz openai zod
 
-bun add evalz openai zod @instructor-ai/instructor
+bun add evalz openai zod
 
-pnpm add evalz openai zod @instructor-ai/instructor
+pnpm add evalz openai zod
 ```
 
 ## When to Use evalz
@@ -837,7 +837,6 @@ Part of the Island AI toolkit:
 - [`zod-stream`](https://www.npmjs.com/package/zod-stream): Structured streaming
 - [`stream-hooks`](https://www.npmjs.com/package/stream-hooks): React streaming hooks
 - [`llm-polyglot`](https://www.npmjs.com/package/llm-polyglot): Universal LLM client
-- [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
 
 ## Contributing
 

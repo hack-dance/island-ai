@@ -3,17 +3,22 @@ import { omit } from "@/lib"
 import Anthropic from "@anthropic-ai/sdk"
 import { describe, expect, test } from "bun:test"
 
+const liveTestsEnabled =
+  process.env["RUN_LIVE_TESTS"] === "1" && Boolean(process.env["ANTHROPIC_API_KEY"])
+const describeLive = liveTestsEnabled ? describe : describe.skip
+const testLive = liveTestsEnabled ? test : test.skip
+const anthropicClient = createLLMClient({
+  provider: "anthropic",
+  apiKey: process.env["ANTHROPIC_API_KEY"] ?? "live-tests-disabled"
+})
+
 for await (const model of ["claude-3-5-sonnet-latest", "claude-3-opus-latest"] as const) {
   await createTestCase(model)
 }
 
-const anthropicClient = createLLMClient({
-  provider: "anthropic"
-})
-
 async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) {
   return new Promise<void>(resolve => {
-    describe(`LLMClient Anthropic Provider - ${model}`, () => {
+    describeLive(`LLMClient Anthropic Provider - ${model}`, () => {
       test("Function Calling standard", async () => {
         const completion = await anthropicClient.chat.completions.create({
           model,
@@ -240,7 +245,7 @@ async function createTestCase(model: Anthropic.CompletionCreateParams["model"]) 
       })
     })
 
-    test("Standard stream - beg for json", async () => {
+    testLive("Standard stream - beg for json", async () => {
       const completion = await anthropicClient.chat.completions.create({
         model,
         stream: true,

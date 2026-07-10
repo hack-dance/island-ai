@@ -9,9 +9,7 @@ import OpenAI from "openai"
  */
 export function OAIResponseFnArgsParser(
   data:
-    | string
-    | OpenAI.Chat.Completions.ChatCompletionChunk
-    | OpenAI.Chat.Completions.ChatCompletion
+    string | OpenAI.Chat.Completions.ChatCompletionChunk | OpenAI.Chat.Completions.ChatCompletion
 ): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
   const text =
@@ -31,9 +29,7 @@ export function OAIResponseFnArgsParser(
  */
 export function OAIResponseToolArgsParser(
   data:
-    | string
-    | OpenAI.Chat.Completions.ChatCompletionChunk
-    | OpenAI.Chat.Completions.ChatCompletion
+    string | OpenAI.Chat.Completions.ChatCompletionChunk | OpenAI.Chat.Completions.ChatCompletion
 ): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
 
@@ -55,9 +51,7 @@ export function OAIResponseToolArgsParser(
  */
 export function OAIResponseJSONParser(
   data:
-    | string
-    | OpenAI.Chat.Completions.ChatCompletionChunk
-    | OpenAI.Chat.Completions.ChatCompletion
+    string | OpenAI.Chat.Completions.ChatCompletionChunk | OpenAI.Chat.Completions.ChatCompletion
 ): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
 
@@ -81,9 +75,7 @@ export function OAIResponseJSONParser(
 
 export function OAIResponseParser(
   data:
-    | string
-    | OpenAI.Chat.Completions.ChatCompletionChunk
-    | OpenAI.Chat.Completions.ChatCompletion
+    string | OpenAI.Chat.Completions.ChatCompletionChunk | OpenAI.Chat.Completions.ChatCompletion
 ): string {
   const parsedData = typeof data === "string" ? JSON.parse(data) : data
 

@@ -8,7 +8,8 @@ import {
   GoogleChatCompletionParamsNonStream,
   GoogleChatCompletionParamsStream,
   LogLevel,
-  OpenAILikeClient
+  OpenAILikeClient,
+  ProviderClientOptions
 } from "@/types"
 import {
   ChatSession,
@@ -27,7 +28,6 @@ import {
   ToolConfig
 } from "@google/generative-ai"
 import { CachedContentUpdateParams, GoogleAICacheManager } from "@google/generative-ai/server"
-import { ClientOptions } from "openai"
 
 interface ExtendedAdditionalProperties {
   cacheName?: string
@@ -100,8 +100,7 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
   private activeChatSessions: Map<string, ChatSession> = new Map()
 
   constructor(
-    opts?: ClientOptions & {
-      logLevel?: LogLevel
+    opts?: ProviderClientOptions & {
       groundingThreshold?: number
     }
   ) {
@@ -235,14 +234,20 @@ export class GoogleProvider extends GoogleGenerativeAI implements OpenAILikeClie
     }
 
     if (params.tools?.length) {
-      const functionDeclarations = params.tools.map(tool => ({
-        name: tool.function.name ?? "",
-        description: tool.function.description ?? "",
-        parameters: {
-          type: "object",
-          ...(tool.function.parameters ? this.cleanSchema(tool.function.parameters) : {})
-        }
-      })) as FunctionDeclaration[]
+      const functionDeclarations = params.tools.flatMap(tool => {
+        if (tool.type !== "function") return []
+
+        return [
+          {
+            name: tool.function.name ?? "",
+            description: tool.function.description ?? "",
+            parameters: {
+              type: "object",
+              ...(tool.function.parameters ? this.cleanSchema(tool.function.parameters) : {})
+            }
+          }
+        ]
+      }) as FunctionDeclaration[]
 
       const toolChoice = params.tool_choice as
         | { type: "function"; function: { name: string } }

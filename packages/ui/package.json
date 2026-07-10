@@ -27,10 +27,10 @@
     "tailwindcss": "^3.4.14"
   },
   "peerDependencies": {
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "lucide-react": "*",
-    "next": "15.0.3"
+    "next": "16.2.10"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -77,8 +77,8 @@
     "next-themes": "^0.4.3",
     "ramda": "*",
     "react-day-picker": "8.10.1",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-email": "latest",
     "react-hook-form": "^7.53.2",
     "react-intersection-observer": "^9.5.2",
@@ -94,12 +94,12 @@
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
     "tippy.js": "^6.3.7",
-    "tsup": "^8.0.1",
+    "tsup": "^8.5.1",
     "use-debounce": "^9.0.4",
     "vaul": "*",
     "zod": "^3.23.8"
   },
   "overrides": {
-    "react-is": "^19.0.0-rc-69d4b800-20241021"
+    "react-is": "19.2.7"
   }
 }

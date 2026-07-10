@@ -6,8 +6,13 @@ import OpenAI from "openai"
 
 import { accuracyData, contextData, data } from "./data"
 
+const liveTestsEnabled =
+  process.env["RUN_LIVE_TESTS"] === "1" && Boolean(process.env["OPENAI_API_KEY"])
+const describeLive = liveTestsEnabled ? describe : describe.skip
+const testLive = liveTestsEnabled ? test : test.skip
+
 const oai = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"] ?? undefined,
+  apiKey: process.env["OPENAI_API_KEY"] ?? "live-tests-disabled",
   organization: process.env["OPENAI_ORG_ID"] ?? undefined
 })
 
@@ -50,7 +55,7 @@ const contextPrecisionEval = () => createContextEvaluator({ type: "precision" })
 const contextRecallEval = () => createContextEvaluator({ type: "recall" })
 const contextRelevanceEval = () => createContextEvaluator({ type: "relevance" })
 
-describe("Should eval", () => {
+describeLive("Should eval", () => {
   test("Basic relevance eval", async () => {
     const evaluator = relevanceEval()
 
@@ -65,7 +70,7 @@ describe("Should eval", () => {
   })
 })
 
-test("Accuracy - distance", async () => {
+testLive("Accuracy - distance", async () => {
   const evaluator = distanceEval()
 
   const result = await evaluator({
@@ -77,7 +82,7 @@ test("Accuracy - distance", async () => {
   expect(result.scoreResults.value).toBeGreaterThan(0.35)
 })
 
-test("Accuracy - semantic", async () => {
+testLive("Accuracy - semantic", async () => {
   const evaluator = semanticEval()
 
   const result = await evaluator({
@@ -89,7 +94,7 @@ test("Accuracy - semantic", async () => {
   expect(result.scoreResults.value).toBeGreaterThan(0.8)
 })
 
-describe("Weighted eval", () => {
+describeLive("Weighted eval", () => {
   test("Weighted", async () => {
     const evaluator = createWeightedEvaluator({
       evaluators: {
@@ -114,7 +119,7 @@ describe("Weighted eval", () => {
   })
 })
 
-describe("Context Evaluators", () => {
+describeLive("Context Evaluators", () => {
   test("Context Entities Recall", async () => {
     const evaluator = contextEntitiesRecallEval()
 
@@ -164,7 +169,7 @@ describe("Context Evaluators", () => {
   })
 })
 
-describe("Composite Evaluators", () => {
+describeLive("Composite Evaluators", () => {
   test("Composite Evaluator", async () => {
     const compositeEvaluator = createWeightedEvaluator({
       evaluators: {

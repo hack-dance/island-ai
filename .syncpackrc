@@ -1,10 +1,9 @@
 {
-  "specifierTypes": ["!workspace-protocol"],
-    "versionGroups": [
+  "versionGroups": [
     {
       "label": "Use workspace protocol when developing local packages",
       "dependencies": ["$LOCAL"],
-      "dependencyTypes": ["dev", "peer", "optional", "prod"],
+      "dependencyTypes": ["dev", "peer", "prod"],
       "pinVersion": "workspace:*"
     }
   ]

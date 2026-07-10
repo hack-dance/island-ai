@@ -20,7 +20,7 @@
   },
   "include": [
     "next-env.d.ts",
-    "next.config.js",
+    "next.config.mjs",
     "src/**/*.ts",
     "src/**/*.tsx",
     ".next/types/**/*.ts",
@@ -29,4 +29,3 @@
   ],
   "exclude": ["node_modules"]
 }
-  

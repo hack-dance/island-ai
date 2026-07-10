@@ -7,7 +7,7 @@ TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 export npm_config_cache="$TEMP_DIR/npm-cache"
 
-mkdir -p "$TEMP_DIR/packages/schema-stream" "$TEMP_DIR/packages/zod-stream" "$TEMP_DIR/packages/stream-hooks" "$TEMP_DIR/tarballs" "$TEMP_DIR/consumer" "$TEMP_DIR/schema-consumer"
+mkdir -p "$TEMP_DIR/packages/schema-stream" "$TEMP_DIR/packages/zod-stream" "$TEMP_DIR/packages/stream-hooks" "$TEMP_DIR/packages/llm-polyglot" "$TEMP_DIR/packages/evalz" "$TEMP_DIR/tarballs" "$TEMP_DIR/consumer" "$TEMP_DIR/schema-consumer" "$TEMP_DIR/sdk-consumer"
 
 for package in schema-stream zod-stream stream-hooks; do
   source_dir="$ROOT/public-packages/$package"
@@ -20,6 +20,15 @@ for package in schema-stream zod-stream stream-hooks; do
   cp -R "$source_dir/dist" "$TEMP_DIR/packages/$package/dist"
 done
 
+for package in llm-polyglot evalz; do
+  source_dir="$ROOT/public-packages/llm-client"
+  if [[ "$package" == "evalz" ]]; then
+    source_dir="$ROOT/public-packages/evalz"
+  fi
+  cp "$source_dir/package.json" "$TEMP_DIR/packages/$package/package.json"
+  cp -R "$source_dir/dist" "$TEMP_DIR/packages/$package/dist"
+done
+
 node -e 'const fs=require("node:fs"); for (const name of ["schema-stream","zod-stream","stream-hooks"]) { const path=process.argv[1]+"/packages/"+name+"/package.json"; const pkg=JSON.parse(fs.readFileSync(path,"utf8")); pkg.version="4.0.0"; if (name === "stream-hooks") pkg.peerDependencies["zod-stream"]="^4.0.0"; delete pkg.devDependencies; fs.writeFileSync(path,JSON.stringify(pkg,null,2)+"\n"); }' "$TEMP_DIR"
 
 npm pack "$TEMP_DIR/packages/schema-stream" --pack-destination "$TEMP_DIR/tarballs" >/dev/null
@@ -27,6 +36,10 @@ SCHEMA_TARBALL="$TEMP_DIR/tarballs/schema-stream-4.0.0.tgz"
 node -e 'const fs=require("node:fs"); const path=process.argv[1]; const pkg=JSON.parse(fs.readFileSync(path,"utf8")); pkg.dependencies["schema-stream"]="file:"+process.argv[2]; fs.writeFileSync(path,JSON.stringify(pkg,null,2)+"\n");' "$TEMP_DIR/packages/zod-stream/package.json" "$SCHEMA_TARBALL"
 npm pack "$TEMP_DIR/packages/zod-stream" --pack-destination "$TEMP_DIR/tarballs" >/dev/null
 npm pack "$TEMP_DIR/packages/stream-hooks" --pack-destination "$TEMP_DIR/tarballs" >/dev/null
+
+node -e 'const fs=require("node:fs"); for (const [name,version] of [["llm-polyglot","3.0.0"],["evalz","1.0.0"]]) { const path=process.argv[1]+"/packages/"+name+"/package.json"; const pkg=JSON.parse(fs.readFileSync(path,"utf8")); pkg.version=version; delete pkg.devDependencies; fs.writeFileSync(path,JSON.stringify(pkg,null,2)+"\n"); }' "$TEMP_DIR"
+npm pack "$TEMP_DIR/packages/llm-polyglot" --pack-destination "$TEMP_DIR/tarballs" >/dev/null
+npm pack "$TEMP_DIR/packages/evalz" --pack-destination "$TEMP_DIR/tarballs" >/dev/null
 
 cp "$FIXTURE/consumer.ts" "$FIXTURE/consumer.cjs" "$FIXTURE/tsconfig.json" "$TEMP_DIR/consumer/"
 node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({name:"packed-consumer",private:true,type:"module"},null,2)+"\n")' "$TEMP_DIR/consumer/package.json"
@@ -56,3 +69,12 @@ cd "$TEMP_DIR/schema-consumer"
 npm install --ignore-scripts --no-audit --no-fund "$SCHEMA_TARBALL" zod@3.25.76 typescript@5.9.3 >/dev/null
 ./node_modules/.bin/tsc -p tsconfig-zod3.json
 node dist/consumer-zod3.js
+
+cd "$TEMP_DIR/sdk-consumer"
+node -e 'require("node:fs").writeFileSync("package.json", JSON.stringify({name:"packed-sdk-consumer",private:true,type:"module"},null,2)+"\n")'
+npm install --ignore-scripts --no-audit --no-fund \
+  "$TEMP_DIR/tarballs/llm-polyglot-3.0.0.tgz" \
+  "$TEMP_DIR/tarballs/evalz-1.0.0.tgz" \
+  @anthropic-ai/sdk@0.33.1 @google/generative-ai@0.21.0 \
+  openai@6.46.0 zod@3.25.76 >/dev/null
+node -e 'const [{createLLMClient}, evalz] = await Promise.all([import("llm-polyglot"), import("evalz")]); if (typeof createLLMClient !== "function" || Object.keys(evalz).length === 0) throw new Error("packed SDK exports mismatch"); console.log("packed llm-polyglot and evalz OpenAI 6 peers passed")'

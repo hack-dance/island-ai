@@ -3,17 +3,32 @@ import {
   CachedContent,
   Content,
   EnhancedGenerateContentResponse,
-  FunctionCall,
-  FunctionDeclaration,
   GenerationConfig,
   GoogleGenerativeAI,
   GroundingMetadata,
   SafetySetting
 } from "@google/generative-ai"
 import OpenAI from "openai"
+import type { ClientOptions as OpenAIClientOptions } from "openai"
 
 export type Providers = "openai" | "anthropic" | "google"
 export type LogLevel = "debug" | "info" | "warn" | "error"
+export type ProviderClientOptions = Omit<
+  OpenAIClientOptions,
+  "apiKey" | "logLevel" | "provider"
+> & {
+  apiKey?: string
+  logLevel?: LogLevel
+}
+export type OpenAILLMClientOptions = Omit<OpenAIClientOptions, "provider"> & {
+  provider: "openai"
+  clientOptions?: OpenAIClientOptions
+}
+export type LLMClientOptions<P extends Providers> = P extends "openai"
+  ? OpenAILLMClientOptions
+  : ProviderClientOptions & {
+      provider: P
+    }
 export type Role = "system" | "user" | "assistant" | "tool"
 
 export type SupportedChatCompletionMessageParam = Omit<
@@ -59,13 +74,12 @@ export type AnthropicChatCompletionParamsNonStream = Omit<
 }
 
 export type AnthropicChatCompletionParams =
-  | AnthropicChatCompletionParamsStream
-  | AnthropicChatCompletionParamsNonStream
+  AnthropicChatCompletionParamsStream | AnthropicChatCompletionParamsNonStream
 
 /** Google types */
 export type GoogleChatCompletionParamsBase = Omit<
   Partial<OpenAI.ChatCompletionCreateParams>,
-  "messages" | "model"
+  "messages" | "model" | "tool_choice" | "tools"
 > & {
   messages: SupportedChatCompletionMessageParam[]
   max_tokens: number
@@ -77,18 +91,8 @@ export type GoogleChatCompletionParamsBase = Omit<
   }
   groundingThreshold?: number
   systemInstruction?: Content | string | undefined
-  tools?: Array<{
-    type: "function"
-    function: Omit<FunctionDeclaration, "parameters"> & {
-      parameters?: Record<string, unknown>
-    }
-  }>
-  tool_choice?: {
-    type: "function"
-    function: {
-      name: string
-    }
-  }
+  tools?: OpenAI.ChatCompletionTool[]
+  tool_choice?: OpenAI.ChatCompletionToolChoiceOption
 }
 
 export type GoogleChatCompletionParamsStream = GoogleChatCompletionParamsBase & {
@@ -102,8 +106,7 @@ export type GoogleChatCompletionParamsNonStream = GoogleChatCompletionParamsBase
 }
 
 export type GoogleChatCompletionParams =
-  | GoogleChatCompletionParamsStream
-  | GoogleChatCompletionParamsNonStream
+  GoogleChatCompletionParamsStream | GoogleChatCompletionParamsNonStream
 
 export interface GoogleGroundingMetadata extends GroundingMetadata {
   search_queries: string[]
@@ -125,7 +128,10 @@ export interface GoogleGroundingMetadata extends GroundingMetadata {
 export interface GoogleToolCall {
   index: number
   id: string
-  function: FunctionCall
+  function: {
+    name: string
+    arguments: string
+  }
   type: string
 }
 

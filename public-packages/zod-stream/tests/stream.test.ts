@@ -77,7 +77,10 @@ async function extractUser() {
   return result
 }
 
-const describeLive = process.env["OPENAI_API_KEY"] ? describe : describe.skip
+const describeLive =
+  process.env["RUN_LIVE_TESTS"] === "1" && process.env["OPENAI_API_KEY"]
+    ? describe
+    : describe.skip
 
 describeLive("OAI structured stream - live (requires OPENAI_API_KEY)", () => {
   test("Generator: Should return extracted users and budget", async () => {

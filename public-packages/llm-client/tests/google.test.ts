@@ -2,12 +2,17 @@ import { createLLMClient } from "@/index"
 import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai"
 import { describe, expect, test } from "bun:test"
 
+const liveTestsEnabled =
+  process.env["RUN_LIVE_TESTS"] === "1" && Boolean(process.env["GEMINI_API_KEY"])
+const describeLive = liveTestsEnabled ? describe : describe.skip
+const testLive = liveTestsEnabled ? test : test.skip
 const googleClient = createLLMClient({
   provider: "google",
+  apiKey: process.env["GEMINI_API_KEY"] ?? "live-tests-disabled",
   logLevel: "error"
 })
 
-describe(`LLMClient Gemini Provider`, () => {
+describeLive(`LLMClient Gemini Provider`, () => {
   test("Simple Chat", async () => {
     const completion = await googleClient.chat.completions.create({
       model: "gemini-1.5-flash-latest",
@@ -431,7 +436,7 @@ describe(`LLMClient Gemini Provider`, () => {
   })
 })
 
-test("Chat with search", async () => {
+testLive("Chat with search", async () => {
   const completion = await googleClient.chat.completions.create({
     model: "gemini-1.5-flash-latest",
     messages: [
