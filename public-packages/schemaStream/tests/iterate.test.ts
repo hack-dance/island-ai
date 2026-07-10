@@ -124,6 +124,15 @@ describe("SchemaStream.iterate", () => {
     expect(finalized).toBe(true)
   })
 
+  test("rejects truncated JSON when the input source ends", async () => {
+    const schema = z.object({ value: z.string() })
+    const source = (async function* () {
+      yield '{"value":"unfinished'
+    })()
+
+    await expect(collect(new SchemaStream(schema).iterate(source))).rejects.toBeInstanceOf(Error)
+  })
+
   test("cancels a ReadableStream when iteration ends early", async () => {
     const schema = z.object({ value: z.string() })
     let cancelled = false

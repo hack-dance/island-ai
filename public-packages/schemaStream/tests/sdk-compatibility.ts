@@ -17,6 +17,7 @@ const schema = z.object({
 export async function openAiAgentsTypeCompatibility(): Promise<void> {
   const agent = new Agent({
     name: "SchemaStream type fixture",
+    model: "gpt-5.5",
     instructions: "Return the requested structured data as JSON."
   })
   const result = await run(agent, "Summarize this input.", { stream: true })
@@ -35,7 +36,7 @@ export async function openAiAgentsTypeCompatibility(): Promise<void> {
 /** Compile-only fixture. It is never called and does not contact a model. */
 export async function aiSdkTypeCompatibility(): Promise<void> {
   const result = streamText({
-    model: "openai/gpt-5.2",
+    model: "openai/gpt-5.5",
     output: Output.object({ schema }),
     prompt: "Summarize this input."
   })

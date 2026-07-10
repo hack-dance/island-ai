@@ -26,7 +26,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 `schema-stream` supports Zod 4 Classic, Zod Mini, and Zod 3.25 or newer. Zod 3.25 is the minimum v3 release because it includes the permanent compatibility subpaths used by library tooling.
 
-The SDK integrations below are structural and add no SDK runtime or peer dependency. Release fixtures compile the packed package against `@openai/agents@0.13.1` and `ai@6.0.222`.
+The SDK integrations below are structural and add no SDK runtime or peer dependency. Release fixtures compile the packed package against `@openai/agents@0.13.1` and `ai@7.0.19`.
 
 ## Basic Usage
 
@@ -81,6 +81,7 @@ const outputSchema = z.object({
 
 const agent = new Agent({
   name: "Analyst",
+  model: "gpt-5.5",
   instructions: "Return a structured analysis.",
   outputType: outputSchema
 })
@@ -97,7 +98,7 @@ const finalOutput = result.finalOutput
 
 No `ts-expect-error`, `TextDecoder`, reader loop, or `JSON.parse` is needed. SchemaStream provides progressive UI snapshots; after `completed` resolves, `finalOutput` is the Agents SDK's authoritative schema-validated result.
 
-## Vercel AI SDK 6
+## Vercel AI SDK 7
 
 ```typescript
 import { Output, streamText } from "ai"
@@ -111,7 +112,7 @@ const outputSchema = z.object({
 })
 
 const result = streamText({
-  model: "openai/gpt-5.2",
+  model: "openai/gpt-5.5",
   output: Output.object({ schema: outputSchema }),
   prompt: input
 })

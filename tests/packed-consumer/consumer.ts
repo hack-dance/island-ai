@@ -86,6 +86,7 @@ void hookContract
 async function openAiAgentsCompatibilityFixture() {
   const agent = new Agent({
     name: "Packed SchemaStream fixture",
+    model: "gpt-5.5",
     instructions: "Return structured data.",
     outputType: schema
   })
@@ -102,7 +103,7 @@ async function openAiAgentsCompatibilityFixture() {
 
 async function aiSdkCompatibilityFixture() {
   const result = streamText({
-    model: "openai/gpt-5.2",
+    model: "openai/gpt-5.5",
     output: Output.object({ schema }),
     prompt: "Extract data."
   })

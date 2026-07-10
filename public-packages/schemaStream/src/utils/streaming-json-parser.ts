@@ -317,6 +317,9 @@ export class SchemaStream<TSchema extends ZodObjectSchema> {
         }
       },
       flush: (): void => {
+        if (!parser.isEnded) {
+          parser.end()
+        }
         this.activePath = []
         this.emitCompletion()
       }

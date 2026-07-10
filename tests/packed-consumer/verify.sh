@@ -36,7 +36,7 @@ npm install --ignore-scripts --no-audit --no-fund \
   "$SCHEMA_TARBALL" \
   "$TEMP_DIR/tarballs/zod-stream-4.0.0.tgz" \
   "$TEMP_DIR/tarballs/stream-hooks-4.0.0.tgz" \
-  zod@4.4.3 openai@6.46.0 @openai/agents@0.13.1 ai@6.0.222 \
+  zod@4.4.3 openai@6.46.0 @openai/agents@0.13.1 ai@7.0.19 \
   react@19.2.7 @types/react@19.2.17 @types/node@24 @types/json-schema@7.0.15 \
   typescript@5.9.3 >/dev/null
 

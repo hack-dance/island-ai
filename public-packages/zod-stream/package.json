@@ -46,7 +46,7 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.hack.dance",
   "dependencies": {
-    "schema-stream": "workspace:^"
+    "schema-stream": "^3.2.2"
   },
   "peerDependencies": {
     "openai": "^6.0.0",

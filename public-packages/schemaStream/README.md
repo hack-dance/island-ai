@@ -40,7 +40,7 @@
 
 Zod 3.25 is the minimum supported v3 release because it provides the permanent `zod/v3` and `zod/v4/core` compatibility subpaths used by library tooling. `schema-stream` traverses Zod 4 through the documented Core definition contract and keeps its Zod 3 adapter isolated for compatibility.
 
-SDK adapters are structural and add no runtime dependency or peer requirement. Release fixtures compile against `@openai/agents@0.13.1` and the latest stable AI SDK 6 release, `ai@6.0.222`, in a clean packed consumer.
+SDK adapters are structural and add no runtime dependency or peer requirement. Release fixtures compile against `@openai/agents@0.13.1` and the latest stable AI SDK 7 release, `ai@7.0.19`, in a clean packed consumer.
 
 Schema-derived stubs cover objects, arrays, records, strings, numbers, booleans, enums, defaults, prefaults, optionals, nullables, readonly/catch wrappers, lazy schemas, and transform/pipe inputs. Ambiguous or non-JSON schema nodes such as unions, intersections, maps, sets, dates, and custom schemas start as `null`; streamed JSON still replaces those placeholders normally. Completion callbacks report completed scalar leaf paths, including array indexes, and emit one final callback with an empty `activePath` when the input closes.
 
@@ -114,6 +114,7 @@ const outputSchema = z.object({
 
 const agent = new Agent({
   name: "Analyst",
+  model: "gpt-5.5",
   instructions: "Return a structured analysis.",
   outputType: outputSchema
 })
@@ -130,7 +131,7 @@ const finalOutput = result.finalOutput
 
 Use SchemaStream chunks for progressive UX. After `completed` resolves, `finalOutput` is the Agents SDK's authoritative, schema-validated result and may be `undefined` if the run did not produce a final output.
 
-### Vercel AI SDK 6
+### Vercel AI SDK 7
 
 Pass `streamText().textStream` to SchemaStream to retain schema-derived stubs and fine-grained nested and in-progress string updates from the raw JSON text:
 
@@ -146,7 +147,7 @@ const outputSchema = z.object({
 })
 
 const result = streamText({
-  model: "openai/gpt-5.2",
+  model: "openai/gpt-5.5",
   output: Output.object({ schema: outputSchema }),
   prompt: input
 })
