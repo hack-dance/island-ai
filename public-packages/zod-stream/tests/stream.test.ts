@@ -1,6 +1,7 @@
 import { OAIStream } from "@/oai/stream"
 import { withResponseModel } from "@/response-model"
 import ZodStream from "@/structured-stream.client"
+import type { ZodStreamValue } from "@/types"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
 import { z } from "zod"
@@ -67,7 +68,7 @@ async function extractUser() {
     response_model: { schema: ExtractionValuesSchema, name: "Extract" }
   })
 
-  let result: Partial<z.infer<typeof ExtractionValuesSchema>> = {}
+  let result: ZodStreamValue<typeof ExtractionValuesSchema> = {}
 
   for await (const data of extractionStream) {
     result = data
@@ -76,7 +77,12 @@ async function extractUser() {
   return result
 }
 
-describe("OAI structured stream - basic", () => {
+const describeLive =
+  process.env["RUN_LIVE_TESTS"] === "1" && process.env["OPENAI_API_KEY"]
+    ? describe
+    : describe.skip
+
+describeLive("OAI structured stream - live (requires OPENAI_API_KEY)", () => {
   test("Generator: Should return extracted users and budget", async () => {
     const extraction = await extractUser()
     expect(extraction?.users).toHaveLength(3)

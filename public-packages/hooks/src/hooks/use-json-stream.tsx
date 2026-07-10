@@ -1,117 +1,70 @@
-import { useCallback, useRef, useState } from "react"
-import type { StartStream, StartStreamArgs, StopStream, UseJsonStreamProps } from "@/types"
-import z from "zod"
-import ZodStream from "zod-stream"
+import { useCallback, useMemo, useState } from "react"
+import type { StartStreamArgs, UseJsonStreamProps, UseJsonStreamResult } from "@/types"
+import type { z } from "zod"
+import type { ZodStreamValue } from "zod-stream"
+
+import { consumeJsonStream, createJsonStreamStub } from "@/lib/consume-json-stream"
 
 import { useStream } from "./use-stream"
 
-/**
- * `useJsonStream` is a custom React hook that extends the `useStream` hook to add JSON parsing functionality.
- * It uses the `SchemaStream` to parse the incoming stream into JSON.
- *
- * @param {UseJsonStreamProps} props - The props for the hook include optional callback
- * functions that will be invoked at different stages of the stream lifecycle, and a schema for the JSON data.
- *
- * @returns {
- * startStream: StartStream,
- * stopStream: StopStream,
- * data: Partial<z.infer<T>>,
- * loading: boolean
- * }
- *
- * @example
- * ```
- * const {
- *   loading,
- *   startStream,
- *   stopStream,
- * } = useJsonStream({ onBeforeStart: ..., onReceive: ..., onStop: ..., schema: ... });
- * ```
- */
+function isAbortError(error: unknown): boolean {
+  return (
+    typeof error === "object" && error !== null && "name" in error && error.name === "AbortError"
+  )
+}
 
-export function useJsonStream<T extends z.AnyZodObject>({
+/** Streams a fetch response into progressive Zod-shaped values and a validated final output. */
+export function useJsonStream<T extends z.ZodObject>({
   onReceive,
   onEnd,
   schema,
   onBeforeStart,
   onStop,
-  defaultData = {}
-}: UseJsonStreamProps<T>): {
-  startStream: StartStream
-  stopStream: StopStream
-  data: Partial<z.infer<T>>
-  loading: boolean
-} {
-  const streamClient = useRef(new ZodStream({}))
-  const stubbedValue = streamClient.current.getSchemaStub({ schema, defaultData })
-
-  const [json, setJson] = useState<Partial<z.infer<T>>>(stubbedValue)
+  defaultData
+}: UseJsonStreamProps<T>): UseJsonStreamResult<T> {
+  const stubbedValue = useMemo(
+    () => createJsonStreamStub({ schema, defaultData }),
+    [defaultData, schema]
+  )
+  const [json, setJson] = useState<ZodStreamValue<T>>(stubbedValue)
   const [loading, setLoading] = useState(false)
   const { startStream: startStreamBase, stopStream: stopStreamBase } = useStream({
     onBeforeStart,
     onStop
   })
 
-  /**
-   * @function stopStream
-   * Stops the stream by aborting the fetch request.
-   *
-   * @example
-   * ```
-   * stopStream();
-   * ```
-   */
   const stopStream = useCallback(() => {
     setLoading(false)
     stopStreamBase()
   }, [stopStreamBase])
 
-  /**
-   * @function startStream
-   * Starts a stream with the provided arguments and parses the incoming stream into JSON.
-   *
-   * @param {StartStreamArgs} args - The arguments for starting the stream, including the URL and optional body.
-   *
-   * @example
-   * ```
-   * startStream();
-   * ```
-   */
   const startStream = useCallback(
-    async (streamProps: StartStreamArgs) => {
+    async (streamProps: StartStreamArgs): Promise<void> => {
       setLoading(true)
 
       try {
-        const extractionStream = await streamClient.current.create({
-          completionPromise: async () => await startStreamBase(streamProps),
-          response_model: { schema }
+        const stream = await startStreamBase(streamProps)
+        const result = await consumeJsonStream({
+          stream,
+          schema,
+          onReceive: chunk => {
+            onReceive?.(chunk)
+            setJson(chunk)
+          }
         })
 
-        let final: z.infer<T> = {}
-        for await (const data of extractionStream) {
-          final = data
-          onReceive && onReceive(data)
-          setJson(data)
+        onEnd?.(result.data)
+      } catch (error: unknown) {
+        if (isAbortError(error)) {
+          return
         }
 
-        setLoading(false)
-        onEnd && onEnd(final)
-      } catch (err: any) {
-        setLoading(false)
-
-        if (err?.name === "AbortError") {
-          console.warn("useJsonStream: aborted", err)
-
-          return null
-        }
-
-        stopStream()
-        throw err
+        throw error
       } finally {
         setLoading(false)
       }
     },
-    [onEnd, onReceive, schema, startStreamBase, stopStream]
+    [onEnd, onReceive, schema, startStreamBase]
   )
 
   return {

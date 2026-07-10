@@ -1,6 +1,6 @@
-import OpenAI from "openai"
-import { z } from "zod"
-import { JsonSchema7Type } from "zod-to-json-schema"
+import type OpenAI from "openai"
+import type { SchemaStreamChunk, SchemaStreamDefaultData } from "schema-stream"
+import type { z } from "zod"
 
 import { MODE } from "@/constants/modes"
 
@@ -13,30 +13,41 @@ export type CompletionMeta = {
   _isValid: boolean
 }
 
+export type ZodStreamChunk<T extends z.ZodObject> = SchemaStreamChunk<T> & {
+  _meta: CompletionMeta
+}
+
+export type ZodStreamValue<T extends z.ZodObject> = SchemaStreamChunk<T>
+
 export type LogLevel = "debug" | "info" | "warn" | "error"
 
 export type ClientConfig = {
   debug?: boolean
 }
 
+export type JsonSchema = z.core.JSONSchema.JSONSchema
+
 export type ParseParams = {
   name: string
   description?: string
-} & JsonSchema7Type
+  schema: JsonSchema
+}
 
 export type Mode = keyof typeof MODE
 
-export type ResponseModel<T extends z.AnyZodObject> = {
+export type ResponseModel<T extends z.ZodObject> = {
   schema: T
   name: string
   description?: string
 }
 
-export type ZodStreamCompletionParams<T extends z.AnyZodObject> = {
-  response_model: { schema: T }
+export type ZodStreamCompletionParams<T extends z.ZodObject> = {
+  response_model: { schema: T; name?: string; description?: string }
   data?: Record<string, unknown>
   completionPromise: (data?: Record<string, unknown>) => Promise<ReadableStream<Uint8Array>>
 }
+
+export type ZodStreamDefaultData<T extends z.ZodObject> = SchemaStreamDefaultData<T>
 
 export type InferStreamType<T extends OpenAI.ChatCompletionCreateParams> = T extends {
   stream: true
@@ -46,7 +57,7 @@ export type InferStreamType<T extends OpenAI.ChatCompletionCreateParams> = T ext
 
 export type FunctionParamsReturnType<T extends OpenAI.ChatCompletionCreateParams> = T & {
   function_call: OpenAI.ChatCompletionFunctionCallOption
-  functions: OpenAI.FunctionDefinition[]
+  functions: OpenAI.ChatCompletionCreateParams.Function[]
 }
 
 export type ToolFunctionParamsReturnType<T extends OpenAI.ChatCompletionCreateParams> = T & {
@@ -65,8 +76,13 @@ export type JsonSchemaParamsReturnType<
   T extends Omit<OpenAI.ChatCompletionCreateParams, "response_format">
 > = T & {
   response_format: {
-    type: "json_object"
-    schema: JsonSchema7Type
+    type: "json_schema"
+    json_schema: {
+      name: string
+      description?: string
+      schema: JsonSchema
+      strict: true
+    }
   }
   messages: OpenAI.ChatCompletionMessageParam[]
 }
@@ -82,6 +98,4 @@ export type ModeParamsReturnType<
       ? JsonModeParamsReturnType<T>
       : M extends typeof MODE.JSON_SCHEMA
         ? JsonSchemaParamsReturnType<T>
-        : M extends typeof MODE.MD_JSON
-          ? MessageBasedParamsReturnType<T>
-          : MessageBasedParamsReturnType<T>
+        : MessageBasedParamsReturnType<T>

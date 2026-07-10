@@ -1,14 +1,16 @@
-import { readableStreamToAsyncGenerator } from "@/oai/stream"
-import {
+import { SchemaStream, type SchemaStreamChunk } from "schema-stream"
+import { z } from "zod"
+
+import type {
   ActivePath,
   ClientConfig,
   CompletedPaths,
   CompletionMeta,
   LogLevel,
-  ZodStreamCompletionParams
+  ZodStreamChunk,
+  ZodStreamCompletionParams,
+  ZodStreamDefaultData
 } from "@/types"
-import { SchemaStream } from "schema-stream"
-import { z } from "zod"
 
 export default class ZodStream {
   readonly debug: boolean = false
@@ -17,8 +19,8 @@ export default class ZodStream {
     this.debug = debug
   }
 
-  private log<T extends unknown[]>(level: LogLevel, ...args: T) {
-    if (!this.debug && level === "debug") {
+  private log<T extends unknown[]>(level: LogLevel, ...args: T): void {
+    if (!this.debug) {
       return
     }
 
@@ -39,15 +41,14 @@ export default class ZodStream {
     }
   }
 
-  private async chatCompletionStream<T extends z.AnyZodObject>({
+  private async *chatCompletionStream<T extends z.ZodObject>({
     completionPromise,
     data,
     response_model
-  }: ZodStreamCompletionParams<T>): Promise<
-    AsyncGenerator<Partial<z.infer<T>> & { _meta: CompletionMeta }, void, unknown>
-  > {
-    let _activePath: ActivePath = []
-    let _completedPaths: CompletedPaths = []
+  }: ZodStreamCompletionParams<T>): AsyncGenerator<ZodStreamChunk<T>, z.output<T>, unknown> {
+    let activePath: ActivePath = []
+    let completedPaths: CompletedPaths = []
+    let finalChunk: SchemaStreamChunk<T> | undefined
 
     this.log("debug", "Starting completion stream")
 
@@ -57,77 +58,55 @@ export default class ZodStream {
         number: null,
         boolean: null
       },
-      onKeyComplete: ({ activePath, completedPaths }) => {
-        this.log("debug", "Key complete", activePath, completedPaths)
-        _activePath = activePath
-        _completedPaths = completedPaths
+      onKeyComplete: completion => {
+        this.log("debug", "Key complete", completion.activePath, completion.completedPaths)
+        activePath = [...completion.activePath]
+        completedPaths = completion.completedPaths.map(path => [...path])
       }
     })
 
+    const source = await completionPromise(data)
+
+    if (!source) {
+      throw new Error("Completion call returned no stream")
+    }
+
     try {
-      const parser = streamParser.parse({
+      for await (const parsedChunk of streamParser.iterate(source, {
         handleUnescapedNewLines: true
-      })
+      })) {
+        finalChunk = parsedChunk
+        const validation = await response_model.schema.safeParseAsync(parsedChunk)
 
-      const textEncoder = new TextEncoder()
-      const textDecoder = new TextDecoder()
+        this.log("debug", "Validation result", validation)
 
-      const validationStream = new TransformStream({
-        transform: async (chunk, controller): Promise<void> => {
-          try {
-            const parsedChunk = JSON.parse(textDecoder.decode(chunk))
-            const validation = await response_model.schema.safeParseAsync(parsedChunk)
+        const meta: CompletionMeta = {
+          _isValid: validation.success,
+          _activePath: [...activePath],
+          _completedPaths: completedPaths.map(path => [...path])
+        }
 
-            this.log("debug", "Validation result", validation)
-
-            controller.enqueue(
-              textEncoder.encode(
-                JSON.stringify({
-                  ...parsedChunk,
-                  _meta: {
-                    _isValid: validation.success,
-                    _activePath,
-                    _completedPaths
-                  }
-                })
-              )
-            )
-          } catch (e) {
-            this.log("error", "Error in the partial stream validation stream", e, chunk)
-            controller.error(e)
-          }
-        },
-        flush() {}
-      })
-
-      const stream = await completionPromise(data)
-
-      if (!stream) {
-        this.log("error", "Completion call returned no data")
-        throw new Error(stream)
+        yield { ...parsedChunk, _meta: meta } as ZodStreamChunk<T>
       }
 
-      stream.pipeThrough(parser)
-      parser.readable.pipeThrough(validationStream)
+      if (finalChunk === undefined) {
+        throw new Error("Completion stream ended without emitting JSON")
+      }
 
-      return readableStreamToAsyncGenerator(validationStream.readable) as AsyncGenerator<
-        Partial<z.infer<T>> & { _meta: CompletionMeta },
-        void,
-        unknown
-      >
+      return await response_model.schema.parseAsync(finalChunk)
     } catch (error) {
-      this.log("error", "Error making completion call")
+      this.log("error", "Error consuming completion stream", error)
       throw error
     }
   }
 
-  public getSchemaStub({
+  public getSchemaStub<T extends z.ZodObject>({
     schema,
     defaultData = {}
   }: {
-    schema: z.AnyZodObject
-    defaultData?: Partial<z.infer<typeof schema>>
-  }): Partial<z.infer<typeof schema>> {
+    schema: T
+    defaultData?: ZodStreamDefaultData<T>
+  }): SchemaStreamChunk<T> {
     const streamParser = new SchemaStream(schema, {
       defaultData,
       typeDefaults: {
@@ -140,15 +119,9 @@ export default class ZodStream {
     return streamParser.getSchemaStub(schema, defaultData)
   }
 
-  public async create<P extends ZodStreamCompletionParams<z.AnyZodObject>>(
-    params: P
-  ): Promise<
-    AsyncGenerator<
-      Partial<z.infer<P["response_model"]["schema"]>> & { _meta: CompletionMeta },
-      void,
-      unknown
-    >
-  > {
+  public async create<T extends z.ZodObject>(
+    params: ZodStreamCompletionParams<T>
+  ): Promise<AsyncGenerator<ZodStreamChunk<T>, z.output<T>, unknown>> {
     return this.chatCompletionStream(params)
   }
 }

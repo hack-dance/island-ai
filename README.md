@@ -39,7 +39,7 @@ Island AI is a collection of low-level utilities and high-level tools for handli
 
 ### 1. schema-stream
 
-A foundational streaming JSON parser that enables immediate data access through structured stubs.
+A foundational streaming JSON parser that enables immediate data access through structured stubs. Supports Zod 4 (including Zod Mini) and Zod 3.25+.
 
 **Key Features:**
 
@@ -49,7 +49,7 @@ A foundational streaming JSON parser that enables immediate data access through 
 - Nested object and array support
 
 ```typescript
-import { SchemaStream } from "schema-stream";
+import { SchemaStream, type SchemaStreamChunk } from "schema-stream";
 import { z } from "zod";
 
 // Define complex nested schemas
@@ -112,7 +112,7 @@ readableStream.pipeThrough(stream);
 // Get typed results
 const reader = stream.readable.getReader();
 const decoder = new TextDecoder()
-let result = {}
+let result: SchemaStreamChunk<typeof schema> = {}
 let complete = false
 
 while (true) {
@@ -121,8 +121,8 @@ while (true) {
   
   if (complete) break;
   
-  result = JSON.parse(decoder.decode(value));
-  // result is fully typed based on schema
+  result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
+  // Validate the completed result with the schema before treating it as Zod output.
 }
 ```
 
@@ -203,7 +203,7 @@ React hooks for consuming streaming JSON data with Zod schema validation.
 import { useJsonStream } from "stream-hooks";
 
 function DataViewer() {
-  const { loading, startStream, data, error } = useJsonStream({
+  const { loading, startStream, data } = useJsonStream({
     schema: ExtractionSchema,
     onReceive: (update) => {
       console.log('Progressive update:', update);
@@ -213,15 +213,20 @@ function DataViewer() {
   return (
     <div>
       {loading && <div>Loading...</div>}
-      {error && <div>Error: {error.message}</div>}
       {data && (
         <pre>{JSON.stringify(data, null, 2)}</pre>
       )}
-      <button onClick={() => startStream({
-        url: "/api/extract",
-        method: "POST",
-        body: { text: "..." }
-      })}>
+      <button onClick={async () => {
+        try {
+          await startStream({
+            url: "/api/extract",
+            method: "POST",
+            body: { text: "..." }
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }}>
         Start Extraction
       </button>
     </div>
@@ -231,7 +236,7 @@ function DataViewer() {
 
 ### 4. evalz
 
-Structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and integrated with OpenAI and Instructor, it enables both automated evaluation and human-in-the-loop assessment workflows.
+Structured evaluation tools for assessing LLM outputs across multiple dimensions. Built with TypeScript and the OpenAI Responses API, it enables both automated evaluation and human-in-the-loop assessment workflows.
 
 **Key Features:**
 

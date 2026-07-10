@@ -4,7 +4,7 @@ description: Streaming partial JSON parser with type safety
 ---
 
 
-`schema-stream` is a foundational streaming JSON parser that enables immediate data access through structured stubs. Built on Zod schema validation, it provides type-safe parsing and progressive data access for JSON streams.
+`schema-stream` is a foundational streaming JSON parser that emits schema-shaped partial values as JSON arrives. It uses Zod schemas to derive typed stubs and path metadata, but intentionally leaves validation to the consumer.
 
 ## Key Features
 
@@ -19,7 +19,7 @@ description: Streaming partial JSON parser with type safety
 
 `schema-stream` is designed as a foundational package that other tools build upon:
 
-- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds validation and OpenAI integration
+- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds Zod 4 validation, native JSON Schema conversion, and OpenAI integration
 
   ```typescript
   // Example of zod-stream using schema-stream

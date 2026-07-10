@@ -123,7 +123,7 @@ export default class Tokenizer {
   constructor(opts?: TokenizerOptions) {
     opts = { ...defaultOpts, ...opts }
 
-    const onIncrementalString = str => {
+    const onIncrementalString = (str: string) => {
       this.onToken({
         token: TokenType.STRING,
         value: str,
@@ -344,17 +344,21 @@ export default class Tokenizer {
             }
 
             break
-          case TokenizerStates.STRING_INCOMPLETE_CHAR:
-            // check for carry over of a multi byte char split between data chunks
-            // & fill temp buffer it with start of this data chunk up to the boundary limit set in the last iteration
-            this.char_split_buffer.set(
-              buffer.subarray(i, i + this.bytes_remaining),
-              this.bytes_in_sequence - this.bytes_remaining
-            )
-            this.bufferedString.appendBuf(this.char_split_buffer, 0, this.bytes_in_sequence)
-            i = this.bytes_remaining - 1
-            this.state = TokenizerStates.STRING_DEFAULT
+          case TokenizerStates.STRING_INCOMPLETE_CHAR: {
+            // Carry a multibyte character across as many input chunks as needed.
+            const availableBytes = Math.min(this.bytes_remaining, buffer.length - i)
+            const targetOffset = this.bytes_in_sequence - this.bytes_remaining
+            this.char_split_buffer.set(buffer.subarray(i, i + availableBytes), targetOffset)
+            this.bytes_remaining -= availableBytes
+            i += availableBytes - 1
+
+            if (this.bytes_remaining === 0) {
+              this.bufferedString.appendBuf(this.char_split_buffer, 0, this.bytes_in_sequence)
+              this.state = TokenizerStates.STRING_DEFAULT
+            }
+
             continue
+          }
           case TokenizerStates.STRING_AFTER_BACKSLASH:
             if (escapedSequences?.[n]) {
               this.bufferedString.appendChar(escapedSequences[n])
@@ -491,14 +495,20 @@ export default class Tokenizer {
             this.state = TokenizerStates.START
             this.emitNumber()
             continue
-          // @ts-expect error fall through case
           case TokenizerStates.NUMBER_AFTER_E:
             if (n === charset.PLUS_SIGN || n === charset.HYPHEN_MINUS) {
               this.bufferedNumber.appendChar(n)
               this.state = TokenizerStates.NUMBER_AFTER_E_AND_SIGN
               continue
             }
-          // @ts-expect error fall through case
+
+            if (n >= charset.DIGIT_ZERO && n <= charset.DIGIT_NINE) {
+              this.bufferedNumber.appendChar(n)
+              this.state = TokenizerStates.NUMBER_AFTER_E_AND_DIGIT
+              continue
+            }
+
+            break
           case TokenizerStates.NUMBER_AFTER_E_AND_SIGN:
             if (n >= charset.DIGIT_ZERO && n <= charset.DIGIT_NINE) {
               this.bufferedNumber.appendChar(n)
@@ -685,8 +695,7 @@ export default class Tokenizer {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public onToken(parsedToken: ParsedTokenInfo): void {
+  public onToken(_parsedToken: ParsedTokenInfo): void {
     // Override me
     throw new TokenizerError('Can\'t emit tokens before the "onToken" callback has been set up.')
   }

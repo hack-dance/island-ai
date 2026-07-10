@@ -1,7 +1,8 @@
-import z from "zod"
+import type { z } from "zod"
+import type { ZodStreamChunk, ZodStreamDefaultData, ZodStreamValue } from "zod-stream"
 
 export interface StartStream {
-  (args: StartStreamArgs): void
+  (args: StartStreamArgs): Promise<void>
 }
 
 export interface StartStreamBase {
@@ -24,9 +25,16 @@ export interface UseStreamProps {
   onStop?: () => void
 }
 
-export interface UseJsonStreamProps<T extends z.ZodType<any, any>> extends UseStreamProps {
-  onReceive?: (data: Partial<z.infer<T>>) => void
-  onEnd?: (data: z.infer<T>) => void
+export interface UseJsonStreamProps<T extends z.ZodObject> extends UseStreamProps {
+  onReceive?: (data: ZodStreamChunk<T>) => void
+  onEnd?: (data: z.output<T>) => void
   schema: T
-  defaultData?: Partial<z.infer<T>>
+  defaultData?: ZodStreamDefaultData<T>
+}
+
+export type UseJsonStreamResult<T extends z.ZodObject> = {
+  startStream: StartStream
+  stopStream: StopStream
+  data: ZodStreamValue<T>
+  loading: boolean
 }

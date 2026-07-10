@@ -1,4 +1,3 @@
-import { omit } from "@/lib"
 import {
   FunctionParamsReturnType,
   JsonModeParamsReturnType,
@@ -13,7 +12,7 @@ export function OAIBuildFunctionParams<T extends OpenAI.ChatCompletionCreatePara
   definition: ParseParams,
   params: T
 ): FunctionParamsReturnType<T> {
-  const { name, description, ...definitionParams } = definition
+  const { name, description, schema } = definition
 
   const function_call: OpenAI.ChatCompletionFunctionCallOption = {
     name
@@ -24,7 +23,7 @@ export function OAIBuildFunctionParams<T extends OpenAI.ChatCompletionCreatePara
     {
       name: name,
       description: description ?? undefined,
-      parameters: definitionParams
+      parameters: schema
     }
   ]
 
@@ -39,7 +38,7 @@ export function OAIBuildToolFunctionParams<T extends OpenAI.ChatCompletionCreate
   definition: ParseParams,
   params: T
 ): ToolFunctionParamsReturnType<T> {
-  const { name, description, ...definitionParams } = definition
+  const { name, description, schema } = definition
 
   const tool_choice: OpenAI.ChatCompletionToolChoiceOption = {
     type: "function",
@@ -52,19 +51,10 @@ export function OAIBuildToolFunctionParams<T extends OpenAI.ChatCompletionCreate
       function: {
         name: name,
         description: description,
-        parameters: definitionParams
+        parameters: schema
       }
     },
-    ...(params.tools?.map(
-      (tool): OpenAI.ChatCompletionTool => ({
-        type: tool.type,
-        function: {
-          name: tool.function.name,
-          description: tool.function.description,
-          parameters: tool.function.parameters
-        }
-      })
-    ) ?? [])
+    ...(params.tools ?? [])
   ]
 
   return {
@@ -89,7 +79,7 @@ export function OAIBuildMessageBasedParams<T extends OpenAI.ChatCompletionCreate
           and return a valid and fully escaped JSON object that matches the schema and those instructions.
 
           description: ${definition.description}
-          json schema: ${JSON.stringify(definition)}
+          json schema: ${JSON.stringify(definition.schema)}
         `
       },
       ...params.messages
@@ -128,7 +118,7 @@ export function OAIBuildThinkingMessageBasedParams<T extends OpenAI.ChatCompleti
           \n\n
 
           description: ${definition.description}
-          json schema: ${JSON.stringify(definition)}
+          json schema: ${JSON.stringify(definition.schema)}
         `
       },
       ...params.messages
@@ -152,7 +142,7 @@ export function OAIBuildJsonModeParams<T extends OpenAI.ChatCompletionCreatePara
           and return a valid and fully escaped JSON object that matches the schema and those instructions.
 
           description: ${definition.description}
-          json schema: ${JSON.stringify(definition)}
+          json schema: ${JSON.stringify(definition.schema)}
         `
       },
       ...params.messages
@@ -167,8 +157,13 @@ export function OAIBuildJsonSchemaParams<T extends OpenAI.ChatCompletionCreatePa
   return {
     ...params,
     response_format: {
-      type: "json_object",
-      schema: omit(["name", "description"], definition)
+      type: "json_schema",
+      json_schema: {
+        name: definition.name,
+        description: definition.description || undefined,
+        schema: definition.schema,
+        strict: true
+      }
     },
     messages: [
       {

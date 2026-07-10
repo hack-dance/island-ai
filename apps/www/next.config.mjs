@@ -21,4 +21,13 @@ const withMDX = createMDX({
   }
 })
 
-export default withMDX(nextConfig)
+const { experimental, webpack: _webpack, ...mdxConfig } = withMDX(nextConfig)
+const { turbo, ...remainingExperiments } = experimental ?? {}
+
+const configuredNext = {
+  ...mdxConfig,
+  ...(Object.keys(remainingExperiments).length > 0 ? { experimental: remainingExperiments } : {}),
+  ...(turbo ? { turbopack: turbo } : {})
+}
+
+export default configuredNext

@@ -84,6 +84,19 @@ const completion = await client.chat.completions.create({
 });
 ```
 
+OpenAI client options can stay at the top level. Use `clientOptions` when an OpenAI 6 option
+collides with llm-polyglot's `provider` selector, including the SDK's third-party provider option:
+
+```typescript
+const client = createLLMClient({
+  provider: "openai",
+  clientOptions: {
+    apiKey: async () => getRotatedApiKey(),
+    logLevel: "off"
+  }
+});
+```
+
 ## Provider-Specific Features
 
 ### Anthropic

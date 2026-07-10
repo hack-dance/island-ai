@@ -16,10 +16,10 @@ export function thinkingJsonParser(data: string | OpenAI.Chat.Completions.ChatCo
     typeof data === "string"
       ? data
       : "choices" in data && data.choices?.[0]
-        ? data.choices[0].message?.content ?? ""
+        ? (data.choices[0].message?.content ?? "")
         : ""
 
-  const thinkingRegex = /<think(?:ing)?>([\s\S]*?)(?:<\/think(?:ing)?>|\Z)/i
+  const thinkingRegex = /<think(?:ing)?>([\s\S]*?)(?:<\/think(?:ing)?>|$)/i
   const thinkingMatch = text.match(thinkingRegex)
   const thinking = thinkingMatch ? thinkingMatch[1].trim() : ""
 

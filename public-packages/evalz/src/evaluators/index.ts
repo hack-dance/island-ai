@@ -1,6 +1,6 @@
 import { EvaluationResponse, Evaluator, ExecuteEvalParams, ResultsType } from "@/types"
-import createInstructor from "@instructor-ai/instructor"
 import OpenAI from "openai"
+import { zodTextFormat } from "openai/helpers/zod"
 import z from "zod"
 
 import { CUSTOM_EVALUATOR_IDENTITY, RESULTS_TYPE_PROMPT } from "@/constants/prompts"
@@ -19,53 +19,65 @@ export function createEvaluator<T extends ResultsType>({
   resultsType?: T
   evaluationDescription: string
   model?: OpenAI.Model["id"]
-  messages?: OpenAI.ChatCompletionMessageParam[]
+  messages?: OpenAI.Responses.ResponseInput
   client: OpenAI
 }): Evaluator<T> {
   if (!evaluationDescription || typeof evaluationDescription !== "string") {
     throw new Error("Evaluation description was not provided.")
   }
 
-  const instructorClient = createInstructor<OpenAI>({
-    client,
-    mode: "TOOLS"
-  })
-
   const execute = async ({ data }: ExecuteEvalParams): Promise<EvaluationResponse<T>> => {
     const evaluationResults = await Promise.all(
       data.map(async item => {
         const { prompt, completion, expectedCompletion } = item
 
-        const response = await instructorClient.chat.completions.create({
-          max_retries: 3,
-          model: model ?? "gpt-4-turbo",
-          response_model: {
-            schema: scoringSchema,
-            name: "Scoring"
+        const input: OpenAI.Responses.ResponseInput = [
+          {
+            role: "system",
+            content: CUSTOM_EVALUATOR_IDENTITY
           },
-          messages: [
-            {
-              role: "system",
-              content: CUSTOM_EVALUATOR_IDENTITY
-            },
-            {
-              role: "system",
-              content: RESULTS_TYPE_PROMPT[resultsType]
-            },
-            {
-              role: "system",
-              content: evaluationDescription
-            },
-            ...(messages ?? []),
-            {
-              role: "system",
-              content: `prompt: ${prompt} \n completion: ${completion}\n  ${expectedCompletion?.length ? `expectedCompletion: ${expectedCompletion}\n` : " "}Please provide your score now:`
-            }
-          ]
-        })
+          {
+            role: "system",
+            content: RESULTS_TYPE_PROMPT[resultsType]
+          },
+          {
+            role: "system",
+            content: evaluationDescription
+          },
+          ...(messages ?? []),
+          {
+            role: "user",
+            content: `prompt: ${prompt} \n completion: ${completion}\n  ${expectedCompletion?.length ? `expectedCompletion: ${expectedCompletion}\n` : " "}Please provide your score now:`
+          }
+        ]
+
+        let score: number | undefined
+        let lastError: unknown
+
+        for (let attempt = 0; attempt <= 3; attempt++) {
+          try {
+            const response = await client.responses.parse({
+              model: model ?? "gpt-5.6-luna",
+              input,
+              text: {
+                format: zodTextFormat(scoringSchema, "Scoring")
+              }
+            })
+            score = scoringSchema.parse(response.output_parsed).score
+            break
+          } catch (error) {
+            lastError = error
+          }
+        }
+
+        if (score === undefined) {
+          throw lastError instanceof Error
+            ? lastError
+            : new Error("Failed to create a valid scoring response")
+        }
 
         return {
-          score: response["score"],
+          score,
           item
         }
       })

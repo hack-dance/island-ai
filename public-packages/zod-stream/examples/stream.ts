@@ -1,6 +1,7 @@
 import OpenAI from "openai"
 import { z } from "zod"
 import ZodStream, { isPathComplete, OAIStream, withResponseModel } from "zod-stream"
+import type { ZodStreamValue } from "@/types"
 
 const textBlock = `
 In our recent online meeting, participants from various backgrounds joined to discuss the upcoming tech conference. The names and contact details of the participants were as follows:
@@ -64,7 +65,7 @@ async function extractUser() {
     response_model: { schema: ExtractionValuesSchema, name: "Extract" }
   })
 
-  let result: Partial<z.infer<typeof ExtractionValuesSchema>> = {}
+  let result: ZodStreamValue<typeof ExtractionValuesSchema> = {}
 
   for await (const data of extractionStream) {
     const locationReady = isPathComplete(["location"], data)

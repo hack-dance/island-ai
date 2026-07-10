@@ -1,3 +1,7 @@
+import type OpenAI from "openai"
+import { z } from "zod"
+
+import { MODE } from "@/constants/modes"
 import {
   OAIBuildFunctionParams,
   OAIBuildJsonModeParams,
@@ -6,16 +10,41 @@ import {
   OAIBuildThinkingMessageBasedParams,
   OAIBuildToolFunctionParams
 } from "@/oai/params"
-import OpenAI from "openai"
-import { z } from "zod"
-import zodToJsonSchema from "zod-to-json-schema"
+import type { JsonSchema, Mode, ModeParamsReturnType, ResponseModel } from "@/types"
 
-import { MODE } from "@/constants/modes"
+function makeOpenAIStrictSchema(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(makeOpenAIStrictSchema)
+  }
 
-import { Mode, ModeParamsReturnType, ResponseModel } from "./types"
+  if (typeof value !== "object" || value === null) {
+    return value
+  }
+
+  const schema = Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [key, makeOpenAIStrictSchema(nestedValue)])
+  )
+
+  if (schema["type"] === "object" && !("additionalProperties" in schema)) {
+    schema["additionalProperties"] = false
+  }
+
+  return schema
+}
+
+/** Converts a Zod 4 input schema to the JSON Schema dialect accepted by Chat Completions. */
+export function responseModelToJsonSchema(schema: z.ZodObject): JsonSchema {
+  const { $schema: _dialect, ...jsonSchema } = z.toJSONSchema(schema, {
+    target: "draft-07",
+    io: "input",
+    unrepresentable: "throw"
+  })
+
+  return makeOpenAIStrictSchema(jsonSchema) as JsonSchema
+}
 
 export function withResponseModel<
-  T extends z.AnyZodObject,
+  T extends z.ZodObject,
   M extends Mode,
   P extends OpenAI.ChatCompletionCreateParams
 >({
@@ -27,22 +56,16 @@ export function withResponseModel<
   mode: M
   params: P
 }): ModeParamsReturnType<P, M> {
-  const safeName = name.replace(/[^a-zA-Z0-9]/g, "_").replace(/\s/g, "_")
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64)
 
-  const { definitions } = zodToJsonSchema(schema, {
-    name: safeName,
-    errorMessages: true
-  })
-
-  if (!definitions || !definitions?.[safeName]) {
-    console.warn("Could not extract json schema definitions from your schema", schema)
-    throw new Error("Could not extract json schema definitions from your schema")
+  if (!safeName) {
+    throw new Error("response_model.name must contain at least one letter, number, underscore, or dash")
   }
 
   const definition = {
     name: safeName,
     description,
-    ...definitions[safeName]
+    schema: responseModelToJsonSchema(schema)
   }
 
   if (mode === MODE.FUNCTIONS) {
@@ -59,10 +82,6 @@ export function withResponseModel<
 
   if (mode === MODE.JSON_SCHEMA) {
     return OAIBuildJsonSchemaParams<P>(definition, params) as ModeParamsReturnType<P, M>
-  }
-
-  if (mode === MODE.MD_JSON) {
-    return OAIBuildMessageBasedParams<P>(definition, params) as ModeParamsReturnType<P, M>
   }
 
   if (mode === MODE.THINKING_MD_JSON) {
