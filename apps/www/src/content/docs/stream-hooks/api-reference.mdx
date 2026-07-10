@@ -1,30 +1,51 @@
 ---
-
 title: API Reference
 ---
 
-## Hook Options
+## `useJsonStream`
 
 ```typescript
-interface UseJsonStreamOptions<T extends z.ZodType> {
-  schema: T;                    // Zod schema for validation
-  onReceive?: (data: any) => void;  // Progressive update handler
-  onComplete?: (data: any) => void; // Stream completion handler
-  onError?: (error: Error) => void; // Error handler
-  debug?: boolean;              // Enable debug logging
+interface UseJsonStreamProps<T extends z.ZodObject> {
+  schema: T
+  defaultData?: ZodStreamDefaultData<T>
+  onBeforeStart?: () => void
+  onStop?: () => void
+  onReceive?: (data: ZodStreamChunk<T>) => void
+  onEnd?: (data: z.output<T>) => void
+}
+
+interface UseJsonStreamResult<T extends z.ZodObject> {
+  data: ZodStreamValue<T>
+  loading: boolean
+  startStream: (options: StartStreamArgs) => Promise<void>
+  stopStream: () => void
 }
 ```
 
+`data` and `onReceive` are progressive input views. `onEnd` is validated output.
 
-## Return Values
+## `consumeJsonStream`
 
 ```typescript
-interface UseJsonStreamReturn<T> {
-  data: T | null;              // Current stream data
-  loading: boolean;            // Stream status
-  error: Error | null;         // Error state
-  startStream: (options: FetchOptions) => Promise<void>; // Start streaming
-  stopStream: () => void;      // Stop streaming
-  reset: () => void;           // Reset hook state
+function consumeJsonStream<T extends z.ZodObject>(params: {
+  stream: ReadableStream<Uint8Array>
+  schema: T
+  onReceive?: (data: ZodStreamChunk<T>) => void
+}): Promise<{
+  data: z.output<T>
+  lastChunk: ZodStreamChunk<T>
+}>
+```
+
+## `useStream`
+
+```typescript
+interface StartStreamArgs {
+  url: string
+  body?: object
+  headers?: Record<string, string>
+  method?: "GET" | "POST"
 }
 ```
+
+Non-2xx responses reject with `StreamRequestError`, which exposes `status` and `statusText`.

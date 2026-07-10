@@ -358,7 +358,7 @@ const stub = parser.getSchemaStub(schema, {
 
 `schema-stream` is designed as a foundational package that other tools build upon:
 
-- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds validation and OpenAI integration. Its current response-model/JSON Schema conversion path remains Zod 3-only; use `schema-stream` directly for Zod 4 streaming.
+- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds Zod 4 validation, native JSON Schema conversion, and OpenAI integration. Use `schema-stream` directly when a Zod 3 boundary is required.
 
   ```typescript
   // Example of zod-stream using schema-stream

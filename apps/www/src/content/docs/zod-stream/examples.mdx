@@ -258,11 +258,7 @@ function AnalysisComponent() {
   const [data, setData] = useState<z.infer<typeof schema>>();
 
   
-  const { 
-    loading, 
-    error,
-    startStream 
-  } = useJsonStream({
+  const { loading, startStream } = useJsonStream({
     schema,
     onReceive: (data) => {
       setData(data)
@@ -273,19 +269,23 @@ function AnalysisComponent() {
   return (
     <div>
       <button 
-        onClick={() => startStream({
-          url: "/api/extract",
-          method: "POST",
-          body: { content: "..." }
-        })}
+        onClick={async () => {
+          try {
+            await startStream({
+              url: "/api/extract",
+              method: "POST",
+              body: { content: "..." }
+            })
+          } catch (error) {
+            console.error(error)
+          }
+        }}
         disabled={loading}
       >
         Start Analysis
       </button>
 
       {loading && <LoadingState paths={data._meta._completedPaths} />}
-      {error && <ErrorDisplay error={error} />}
-      
       <ProgressiveDisplay
         data={data}
         isComplete={data._meta._completedPaths.length > 0}

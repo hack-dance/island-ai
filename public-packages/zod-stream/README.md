@@ -1,760 +1,157 @@
-<div align="center">
-  <h1>zod-stream</h1>
-</div>
-<br />
+# zod-stream
 
-<p align="center"><i>> Type-safe structured extraction from LLM streams with progressive validation</i></p>
+`zod-stream` turns chunked JSON into progressive, schema-shaped values with validation and completion-path metadata. It keeps SchemaStream's early partial emissions while adding Zod 4 validation and OpenAI Chat Completions helpers.
 
-<br />
+## Requirements
 
-<div align="center">
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/zod-stream">
-    <img alt="zod-stream" src="https://img.shields.io/npm/v/zod-stream.svg?style=flat-square&logo=npm&labelColor=000000&label=zod-stream">
-  </a>
-   <a aria-label="Island AI" href="https://github.com/hack-dance/island-ai">
-    <img alt="Island AI" src="https://img.shields.io/badge/Part of Island AI-000000.svg?style=flat-square&labelColor=000000&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTQuNjkgMjU5LjI0Ij4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjZmZmOwogICAgICAgIHN0cm9rZS13aWR0aDogMHB4OwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8ZyBpZD0iTGF5ZXJfMS0yIiBkYXRhLW5hbWU9IkxheWVyIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTEwMC42MSwxNzguNDVoMTMuOTd2LTE5LjYyaC0xMy45N3YxOS42MlptMC0xMDguOTZ2MjMuNzJoMTMuOTd2LTIzLjcyaC0xMy45N1ptLTIuNzksMTg5Ljc1aDE5LjU2bC0yLjc5LTI4LjkyaC0xMy45N2wtMi43OSwyOC45MlptMi43OS0xMzcuNjJoMTMuOTd2LTE5LjYyaC0xMy45N3YxOS42MlptMCwyOC40MWgxMy45N3YtMTkuNjJoLTEzLjk3djE5LjYyWiIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iOTQuNSIgY3k9IjY5LjExIiByPSIxNC4yNCIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy0xIiBjeD0iMTIwLjE5IiBjeT0iNjkuMTEiIHI9IjE0LjI0Ii8+CiAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMjE0LjI1LDYyLjU5Yy0uNzktLjc1LTE4Ljc1LTE3LjQ4LTQ5LjQ2LTE5LjA0bDE1Ljc1LTUuODhjLTEuNjctMi40Ni00LjAxLTQuMTgtNi4zNS02LS4yMy0uMTgtLjAzLS41OC4yMy0uNTcsMy40NS4xNyw2LjgyLDEuNzUsMTAuMTIsMi42OCwxLjA2LjMsMi4wOS43MiwzLjA4LDEuMjRsMTkuNDUtNy4yNmMuNTMtLjIuOS0uNzEuOTEtMS4yOHMtLjMyLTEuMDktLjg1LTEuMzJjLTEuMDQtLjQ0LTI1Ljk2LTEwLjc2LTU3LjM1Ljk2LTEuMTkuNDQtMi4zNy45MS0zLjU0LDEuNDFsMTMuNTEtMTMuMTNjLTIuMTgtLjY3LTQuNC0uOTUtNi42My0xLjQ0LS4zOC0uMDgtLjQxLS43NSwwLS44MSwzLjEyLS40NCw2LjU0LS45OCw5Ljg3LS45MWw5LjEzLTguODdjLjQxLS40LjUzLTEuMDEuMzItMS41My0uMjItLjUzLS44LS43OS0xLjMxLS44Ny0uOTYuMDEtMjMuNy40OS00My45NiwyMC4xOCwwLDAsMCwwLDAsMGwtMjAuMDcsMTkuNzYtMTkuNTgtMTkuNzZDNjcuMjUuNDksNDQuNTEuMDEsNDMuNTUsMGMtLjU2LjA1LTEuMDkuMzQtMS4zMS44Ny0uMjIuNTMtLjA5LDEuMTQuMzIsMS41M2w1LjY3LDUuNTFjNS4xLjIyLDEwLjE0LjcxLDE0LjQzLDQsLjQyLjMyLjIsMS4xMi0uMzkuOTMtMi41OC0uODYtNi4wMi0uODctOS4zOS0uNGwxNS41NiwxNS4xMmMtMS4xNy0uNS0yLjM2LS45Ny0zLjU0LTEuNDEtMzEuNC0xMS43Mi01Ni4zLTEuNDEtNTcuMzUtLjk2LS41Mi4yMi0uODYuNzUtLjg1LDEuMzJzLjM3LDEuMDguOTEsMS4yOGwxMS4wNiw0LjEzYzQuNDYtMS40OCw4LjctMi4zOSwxMC40Mi0yLjU1LjU3LS4wNS41Ni43My4xMi45MS0xLjg2Ljc0LTMuNjEsMi4yOS01LjI3LDMuNjFsMjUuOTQsOS42OEMxOS4xOCw0NS4xMSwxLjIyLDYxLjg0LjQzLDYyLjU5Yy0uNDEuMzktLjU1LDEtLjM0LDEuNTMuMjEuNTMuNzMuODgsMS4zLjg4aDEzLjljLjE1LS4wOS4zMS0uMTkuNDUtLjI4LDUuNzktMy41OCwxMS45NC02LjE5LDE4LjE4LTguODcuNjgtLjI5LDEuMjguNjQuNiwxLjAzLTMuNTQsMi4wMy02LjU0LDUuMS05LjQ5LDguMTNoMTQuNTljNC4yNy0zLjExLDguODItNS43LDEzLjE2LTguNy41OS0uNDEsMS4yMi40OS43NS45Ny0yLjM1LDIuMzgtNC40NCw1LjA2LTYuNTMsNy43NGgxMTYuODNjLS45OS0zLjE5LTIuMDItNi4zNS00LjEzLTkuMDQtLjMzLS40Mi4xOC0uOTYuNTktLjU5LDMuMzYsMy4wMSw3LjM3LDYuMTUsMTEuMDIsOS42M2gxNS4zNGMtMS4zOC0zLjUyLTMuMDUtNi44Mi01LjcxLTguNjctLjU0LS4zNy0uMDgtMS4xNS41MS0uODcsNC40LDIuMDgsOC4yNyw1Ljg2LDExLjY1LDkuNTRoMjAuMmMuNTcsMCwxLjA5LS4zNSwxLjMtLjg4LjIxLS41My4wOC0xLjE0LS4zNC0xLjUzWiIvPgogICAgICA8L2c+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTEwMS4wNiwyMjEuMzNoMTMuOTd2LTMzLjZoLTEzLjk3djMzLjZaIi8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=">
-  </a>
-  <a aria-label="Made by hack.dance" href="https://hack.dance">
-    <img alt="docs" src="https://img.shields.io/badge/MADE%20BY%20HACK.DANCE-000000.svg?style=flat-square&labelColor=000000">
-  </a>
-  <a aria-label="Twitter" href="https://twitter.com/dimitrikennedy">
-    <img alt="follow" src="https://img.shields.io/twitter/follow/dimitrikennedy?style=social&labelColor=000000">
-  </a>
-</div>
-<br />
+- Zod 4 (`zod@^4.0.0`)
+- OpenAI 6 (`openai@^6.0.0`) when using the OpenAI helpers
+- Node.js 20 or newer for the OpenAI 6 client; browser and Bun streams are also supported
 
-`zod-stream` adds structured output validation and streaming capabilities to LLM responses. Built on top of [`schema-stream`](https://www.npmjs.com/package/schema-stream), it enables type-safe extraction with progressive validation.
-
-## Key Features
-
-- 🔄 Stream structured LLM outputs with validation
-- 🎯 Multiple response modes (TOOLS, FUNCTIONS, JSON, etc.)
-- 📝 OpenAI client integration
-- 🌳 Progressive validation with partial results
-- ⚡ Built on schema-stream
-- 🔍 Full TypeScript support
-
-## Why zod-stream?
-
-`zod-stream` solves key challenges in handling streaming LLM responses:
-
-- **Dependency Management**: Process data as soon as dependencies are met, rather than waiting for complete responses
-
-  ```typescript
-  if (isPathComplete(['user', 'preferences'], chunk)) {
-    // Start personalizing immediately, don't wait for content
-    initializeUserExperience(chunk.user.preferences);
-  }
-  ```
-
-- **Type-Safe LLM Integration**: Full TypeScript support for structured outputs from OpenAI and other providers
-
-  ```typescript
-  const params = withResponseModel({
-    response_model: { schema, name: "Extract" },
-    mode: "TOOLS"  // or "FUNCTIONS", "JSON", etc.
-  });
-  ```
-
-- **Progressive Processing**: Built on `schema-stream` for immediate access to partial results
-
-  ```typescript
-  for await (const chunk of stream) {
-    // Safely access partial data with full type inference
-    chunk._meta._completedPaths.forEach(path => {
-      processDependency(path, chunk);
-    });
-  }
-  ```
-
-- **Provider Flexibility**: Consistent interface across different LLM response formats
-
-  ```typescript
-  // Works with various response modes
-  const stream = OAIStream({ res: completion });  // OpenAI tools/functions
-  const stream = JSONStream({ res: completion }); // Direct JSON
-  ```
-
-Think of it as a type-safe pipeline for handling streaming LLM data where you need to:
-
-- Start processing before the full response arrives
-- Ensure type safety throughout the stream
-- Handle complex data dependencies
-- Work with multiple LLM response formats
-
-## Installation
-
-```bash
-# npm
+```sh
 npm install zod-stream zod openai
-
-# pnpm
-pnpm add zod-stream zod openai
-
-# bun
-bun add zod-stream zod openai
 ```
 
-`zod-stream` currently supports Zod 3.25 and newer 3.x releases. Its response-model JSON Schema conversion uses `zod-to-json-schema`, which does not accept Zod 4 schemas. The underlying `schema-stream` package supports both Zod 3 and Zod 4.
+`schema-stream` itself supports Zod 3.25 and Zod 4. `zod-stream` 4 is intentionally Zod 4-only because its response-model conversion uses Zod 4's native `z.toJSONSchema` API and its public types use Zod 4 input/output semantics.
 
-## Core Concepts
+## Progressive streaming
 
-The `ZodStream` client provides real-time validation and metadata for streaming LLM responses:
+```ts
+import ZodStream, { isPathComplete } from "zod-stream"
+import { z } from "zod"
 
-```typescript
-import ZodStream from "zod-stream";
-import { z } from "zod";
-
-const client = new ZodStream({
-  debug: true  // Enable debug logging
-});
-
-// Define your extraction schema
 const schema = z.object({
-  content: z.string(),
-  metadata: z.object({
-    confidence: z.number(),
-    category: z.string()
-  })
-});
+  title: z.string(),
+  details: z.object({ count: z.number() }),
+  items: z.array(z.object({ label: z.string() }))
+})
 
-// Create streaming extraction
+const client = new ZodStream()
 const stream = await client.create({
+  response_model: { schema },
   completionPromise: async () => {
-    const response = await fetch("/api/extract", {
-      method: "POST",
-      body: JSON.stringify({ prompt: "..." })
-    });
-    return response.body;
-  },
-  response_model: {
-    schema,
-    name: "ContentExtraction"
+    const response = await fetch("/api/extract")
+    if (!response.body) throw new Error("Missing response body")
+    return response.body
   }
-});
+})
 
-// Process with validation metadata
 for await (const chunk of stream) {
-  console.log({
-    data: chunk,              // Partial extraction result
-    isValid: chunk._meta._isValid,    // Current validation state
-    activePath: chunk._meta._activePath,    // Currently processing path
-    completedPaths: chunk._meta._completedPaths  // Completed paths
-  });
+  if (isPathComplete(["details", "count"], chunk)) {
+    console.log(chunk.details?.count)
+  }
+
+  console.log(chunk._meta)
 }
 ```
 
-## Progressive Processing
+Each `ZodStreamChunk<T>` is a recursively partial representation of `z.input<T>`. Primitive leaves may be `null` until their JSON arrives, nested object fields may be incomplete, and transforms have not run. This is deliberately not typed as `Partial<z.output<T>>`.
 
-`zod-stream` enables processing dependent data as soon as relevant paths complete, without waiting for the full response:
+The generator validates the completed input before it finishes and rejects with the original parser, source-stream, or `ZodError` failure. Its generator return value is the validated `z.output<T>`; normal `for await` consumers can use `_isValid` and validate or retain their own final value, while `stream-hooks` captures that return value for `onEnd`.
 
-```typescript
-// Define schema for a complex analysis
-const schema = z.object({
-  user: z.object({
-    id: z.string(),
-    preferences: z.object({
-      theme: z.string(),
-      language: z.string()
-    })
-  }),
-  content: z.object({
-    title: z.string(),
-    body: z.string(),
-    metadata: z.object({
-      keywords: z.array(z.string()),
-      category: z.string()
-    })
-  }),
-  recommendations: z.array(z.object({
-    id: z.string(),
-    score: z.number(),
-    reason: z.string()
-  }))
-});
+`_meta` is reserved for stream metadata:
 
-// Process data as it becomes available
-for await (const chunk of stream) {
-  // Start personalizing UI as soon as user preferences are ready
-  if (isPathComplete(['user', 'preferences'], chunk)) {
-    applyUserTheme(chunk.user.preferences.theme);
-    setLanguage(chunk.user.preferences.language);
-  }
-
-  // Begin content indexing once we have title and keywords
-  if (isPathComplete(['content', 'metadata', 'keywords'], chunk) && 
-      isPathComplete(['content', 'title'], chunk)) {
-    indexContent({
-      title: chunk.content.title,
-      keywords: chunk.content.metadata.keywords
-    });
-  }
-
-  // Start fetching recommended content in parallel
-  chunk._meta._completedPaths.forEach(path => {
-    if (path[0] === 'recommendations' && path.length === 2) {
-      const index = path[1] as number;
-      const recommendation = chunk.recommendations[index];
-      
-      if (recommendation?.id) {
-        prefetchContent(recommendation.id);
-      }
-    }
-  });
-}
-```
-
-This approach enables:
-
-- Early UI updates based on user preferences
-- Parallel processing of independent data
-- Optimistic loading of related content
-- Better perceived performance
-- Resource optimization
-
-## Stream Metadata
-
-Every streamed chunk includes metadata about validation state:
-
-```typescript
+```ts
 type CompletionMeta = {
-  _isValid: boolean;           // Schema validation status
-  _activePath: (string | number)[];     // Current parsing path
-  _completedPaths: (string | number)[][]; // All completed paths
-}
-
-// Example chunk
-{
-  content: "partial content...",
-  metadata: {
-    confidence: 0.95
-  },
-  _meta: {
-    _isValid: false,  // Not valid yet
-    _activePath: ["metadata", "category"],
-    _completedPaths: [
-      ["content"],
-      ["metadata", "confidence"]
-    ]
-  }
+  _isValid: boolean
+  _activePath: (string | number | undefined)[]
+  _completedPaths: (string | number | undefined)[][]
 }
 ```
 
-## Schema Stubs
+## Schema stubs
 
-Get typed stub objects for initialization:
-
-```typescript
-const schema = z.object({
-  users: z.array(z.object({
-    name: z.string(),
-    age: z.number()
-  }))
-});
-
-const client = new ZodStream();
+```ts
 const stub = client.getSchemaStub({
   schema,
-  defaultData: {
-    users: [{ name: "loading...", age: 0 }]
-  }
-});
+  defaultData: { details: { count: 0 } }
+})
 ```
 
-## Debug Logging
+Stubs use schema defaults, explicit defaults, nested objects, empty arrays/records, and configurable primitive placeholders from SchemaStream.
 
-Enable detailed logging for debugging:
+## OpenAI response models
 
-```typescript
-const client = new ZodStream({ debug: true });
+```ts
+import OpenAI from "openai"
+import { OAIStream, withResponseModel } from "zod-stream"
 
-// Logs will include:
-// - Stream initialization
-// - Validation results
-// - Path completion
-// - Errors with full context
-```
-
-### Using Response Models
-
-The `withResponseModel` helper configures OpenAI parameters based on your schema and chosen mode:
-
-```typescript
-import { withResponseModel } from "zod-stream";
-import { z } from "zod";
-
-const schema = z.object({
-  sentiment: z.string(),
-  keywords: z.array(z.string()),
-  confidence: z.number()
-});
-
-// Configure for OpenAI tools mode
+const openai = new OpenAI()
 const params = withResponseModel({
   response_model: {
     schema,
-    name: "Analysis",
-    description: "Extract sentiment and keywords"
+    name: "Extract_details",
+    description: "Extract the requested details"
   },
-  mode: "TOOLS",
+  mode: "JSON_SCHEMA",
   params: {
-    messages: [{ role: "user", content: "Analyze this text..." }],
-    model: "gpt-4"
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: "Extract this..." }]
   }
-});
+})
 
-const completion = await oai.chat.completions.create({
-  ...params,
-  stream: true
-});
+const completion = await openai.chat.completions.create({ ...params, stream: true })
+const bytes = OAIStream({ res: completion })
 ```
 
-## Response Modes
+`JSON_SCHEMA` now emits OpenAI's current structured-output shape:
 
-`zod-stream` supports multiple modes for structured LLM responses:
-
-```typescript
-import { MODE } from "zod-stream";
-
-const modes = {
-  FUNCTIONS: "FUNCTIONS",   // OpenAI function calling
-  TOOLS: "TOOLS",          // OpenAI tools API
-  JSON: "JSON",            // Direct JSON response
-  MD_JSON: "MD_JSON",      // JSON in markdown blocks
-  JSON_SCHEMA: "JSON_SCHEMA", // JSON with schema validation
-  THINKING_MD_JSON: "THINKING_MD_JSON" // JSON with thinking in markdown blocks (deepseek r1)
-} as const;
-```
-
-### Mode-Specific Behaviors
-
-#### TOOLS Mode
-
-```typescript
-// Results in OpenAI tool configuration
+```ts
 {
-  tool_choice: {
-    type: "function",
-    function: { name: "Analysis" }
-  },
-  tools: [{
-    type: "function",
-    function: {
-      name: "Analysis",
-      description: "Extract sentiment and keywords",
-      parameters: {/* Generated from schema */}
-    }
-  }]
-}
-```
-
-#### FUNCTIONS Mode (Legacy)
-
-```typescript
-// Results in OpenAI function configuration
-{
-  function_call: { name: "Analysis" },
-  functions: [{
-    name: "Analysis",
-    description: "Extract sentiment and keywords",
-    parameters: {/* Generated from schema */}
-  }]
-}
-```
-
-#### JSON Mode
-
-```typescript
-// Results in direct JSON response configuration
-{
-  response_format: { type: "json_object" },
-  messages: [
-    {
-      role: "system",
-      content: "Return JSON matching schema..."
-    },
-    // ... user messages
-  ]
-}
-```
-
-### Response Parsing
-
-Built-in parsers handle different response formats:
-
-```typescript
-import { 
-  OAIResponseParser,
-  OAIResponseToolArgsParser,
-  OAIResponseFnArgsParser,
-  OAIResponseJSONParser,
-  thinkingJsonParser
-} from "zod-stream";
-
-// Automatic format detection
-const result = OAIResponseParser(response);
-
-// Format-specific parsing
-const toolArgs = OAIResponseToolArgsParser(response);
-const fnArgs = OAIResponseFnArgsParser(response);
-const jsonContent = OAIResponseJSONParser(response);
-const thinkingJson = thinkingJsonParser(response);
-```
-
-### Streaming Utilities
-
-Handle streaming responses with built-in utilities:
-
-```typescript
-import { OAIStream, readableStreamToAsyncGenerator } from "zod-stream";
-
-// Create streaming response
-app.post("/api/stream", async (req, res) => {
-  const completion = await oai.chat.completions.create({
-    ...params,
-    stream: true
-  });
-
-  return new Response(
-    OAIStream({ res: completion })
-  );
-});
-
-// Convert stream to async generator
-const generator = readableStreamToAsyncGenerator(stream);
-for await (const chunk of generator) {
-  console.log(chunk);
-}
-```
-
-### Path Tracking Utilities
-
-Monitor completion status of specific paths:
-
-```typescript
-import { isPathComplete } from "zod-stream";
-
-const activePath = ["analysis", "sentiment"];
-const isComplete = isPathComplete(activePath, {
-  _meta: {
-    _completedPaths: [["analysis", "sentiment"]],
-    _activePath: ["analysis", "keywords"],
-    _isValid: false
-  }
-});
-```
-
-## Error Handling
-
-`zod-stream` provides error handling at multiple levels:
-
-```typescript
-const stream = await client.create({
-  completionPromise: async () => response.body,
-  response_model: { schema }
-});
-
-let finalResult
-
-// Path tracking for progressive updates
-for await (const chunk of stream) {
-  finalResult = chunk
-  // Check which paths are complete
-  console.log("Completed paths:", chunk._meta._completedPaths);
-  console.log("Current path:", chunk._meta._activePath);
-}
-
-// Final validation happens after stream completes
-const isValid = finalResult._meta._isValid
-```
-
-## Real-World Use Cases
-
-### 1. Progressive Data Analysis
-
-```typescript
-const analysisSchema = z.object({
-  marketData: z.object({
-    trends: z.array(z.object({
-      metric: z.string(),
-      value: z.number()
-    })),
-    summary: z.string()
-  }),
-  competitors: z.array(z.object({
-    name: z.string(),
-    strengths: z.array(z.string()),
-    weaknesses: z.array(z.string())
-  })),
-  recommendations: z.object({
-    immediate: z.array(z.string()),
-    longTerm: z.array(z.string()),
-    budget: z.number()
-  })
-});
-
-for await (const chunk of stream) {
-  // Start visualizing market trends immediately
-  if (isPathComplete(['marketData', 'trends'], chunk)) {
-    initializeCharts(chunk.marketData.trends);
-  }
-
-  // Begin competitor analysis in parallel
-  chunk._meta._completedPaths.forEach(path => {
-    if (path[0] === 'competitors' && path.length === 2) {
-      const competitor = chunk.competitors[path[1] as number];
-      fetchCompetitorData(competitor.name);
-    }
-  });
-
-  // Start budget planning once we have immediate recommendations
-  if (isPathComplete(['recommendations', 'immediate'], chunk) && 
-      isPathComplete(['recommendations', 'budget'], chunk)) {
-    planBudgetAllocation({
-      actions: chunk.recommendations.immediate,
-      budget: chunk.recommendations.budget
-    });
+  response_format: {
+    type: "json_schema",
+    json_schema: { name, description, schema, strict: true }
   }
 }
 ```
 
-### 2. Document Processing Pipeline
+The JSON Schema is generated by `z.toJSONSchema(schema, { target: "draft-07", io: "input" })`. Object schemas are recursively closed with `additionalProperties: false` for OpenAI strict mode. Zod types that cannot be represented as JSON Schema, such as `z.date()`, throw during parameter construction. OpenAI strict mode supports only a JSON Schema subset, so provider rejection remains possible for schemas outside that subset.
 
-```typescript
-const documentSchema = z.object({
-  metadata: z.object({
-    title: z.string(),
-    author: z.string(),
-    topics: z.array(z.string())
-  }),
-  sections: z.array(z.object({
-    heading: z.string(),
-    content: z.string(),
-    annotations: z.array(z.object({
-      type: z.string(),
-      text: z.string(),
-      confidence: z.number()
-    }))
-  })),
-  summary: z.object({
-    abstract: z.string(),
-    keyPoints: z.array(z.string()),
-    readingTime: z.number()
-  })
-});
+## Response modes
 
-for await (const chunk of stream) {
-  // Start document indexing as soon as metadata is available
-  if (isPathComplete(['metadata'], chunk)) {
-    indexDocument({
-      title: chunk.metadata.title,
-      topics: chunk.metadata.topics
-    });
+| Mode | Behavior |
+| --- | --- |
+| `JSON_SCHEMA` | Current OpenAI structured outputs with native Zod 4 JSON Schema |
+| `TOOLS` | Forces the generated function tool and preserves existing function/custom tools |
+| `JSON` | Uses legacy `{ type: "json_object" }` plus a schema system message |
+| `MD_JSON` | Requests schema-conforming JSON through a system message |
+| `THINKING_MD_JSON` | Retains the existing thinking-tag/markdown compatibility prompt |
+| `FUNCTIONS` | Retains deprecated OpenAI `functions`/`function_call` compatibility |
+
+Prefer `JSON_SCHEMA` for models that support structured outputs or `TOOLS` where tool calling is required. `FUNCTIONS`, `JSON`, and the markdown modes remain public compatibility surfaces; they are not silently redirected.
+
+## `createAgent`
+
+`createAgent` remains a Chat Completions helper. It now requires an explicit OpenAI 6 client, validates non-streaming JSON through the response schema, and returns `z.output<T>`.
+
+```ts
+import OpenAI from "openai"
+import { createAgent } from "zod-stream"
+
+const agent = createAgent({
+  client: new OpenAI(),
+  mode: "JSON_SCHEMA",
+  response_model: { schema, name: "Extract_details" },
+  defaultClientOptions: {
+    model: "gpt-4o-mini",
+    messages: []
   }
+})
 
-  // Process sections as they complete
-  chunk._meta._completedPaths.forEach(path => {
-    if (path[0] === 'sections' && isPathComplete([...path, 'annotations'], chunk)) {
-      const sectionIndex = path[1] as number;
-      const section = chunk.sections[sectionIndex];
-      
-      // Process annotations for each completed section
-      processAnnotations({
-        heading: section.heading,
-        annotations: section.annotations
-      });
-    }
-  });
-
-  // Generate preview once we have abstract and reading time
-  if (isPathComplete(['summary', 'abstract'], chunk) && 
-      isPathComplete(['summary', 'readingTime'], chunk)) {
-    generatePreview({
-      abstract: chunk.summary.abstract,
-      readingTime: chunk.summary.readingTime
-    });
-  }
-}
+const result = await agent.completion({
+  messages: [{ role: "user", content: "Extract this..." }]
+})
 ```
 
-### 3. E-commerce Product Enrichment
+The Responses API is not used internally in this major so existing Chat Completions streaming and parsing behavior remains available.
 
-```typescript
-const productSchema = z.object({
-  basic: z.object({
-    id: z.string(),
-    name: z.string(),
-    category: z.string()
-  }),
-  pricing: z.object({
-    base: z.number(),
-    discounts: z.array(z.object({
-      type: z.string(),
-      amount: z.number()
-    })),
-    final: z.number()
-  }),
-  inventory: z.object({
-    status: z.string(),
-    locations: z.array(z.object({
-      id: z.string(),
-      quantity: z.number()
-    }))
-  }),
-  enrichment: z.object({
-    seoDescription: z.string(),
-    searchKeywords: z.array(z.string()),
-    relatedProducts: z.array(z.string())
-  })
-});
+## Migrating from 3.x
 
-for await (const chunk of stream) {
-  // Start inventory checks as soon as basic info is available
-  if (isPathComplete(['basic'], chunk)) {
-    initializeProductCard(chunk.basic);
-  }
+1. Upgrade to Zod 4 and OpenAI 6.
+2. Remove `zod-to-json-schema`; it is no longer used.
+3. Treat progressive chunks as `ZodStreamChunk<T>`, not `Partial<z.output<T>>`.
+4. Update `JSON_SCHEMA` snapshots and middleware for the `type: "json_schema"` payload.
+5. Pass `client` explicitly to `createAgent` and handle final `ZodError` failures.
+6. Keep `FUNCTIONS` only for providers that still implement the deprecated fields.
 
-  // Update pricing as soon as final price is calculated
-  if (isPathComplete(['pricing', 'final'], chunk)) {
-    updatePriceDisplay(chunk.pricing.final);
-    
-    // If we also have inventory, update buy button
-    if (isPathComplete(['inventory', 'status'], chunk)) {
-      updateBuyButton({
-        price: chunk.pricing.final,
-        status: chunk.inventory.status
-      });
-    }
-  }
-
-  // Start SEO optimization in parallel
-  if (isPathComplete(['enrichment', 'seoDescription'], chunk) &&
-      isPathComplete(['enrichment', 'searchKeywords'], chunk)) {
-    optimizeProductSEO({
-      description: chunk.enrichment.seoDescription,
-      keywords: chunk.enrichment.searchKeywords
-    });
-  }
-
-  // Prefetch related products as they're identified
-  if (isPathComplete(['enrichment', 'relatedProducts'], chunk)) {
-    prefetchRelatedProducts(chunk.enrichment.relatedProducts);
-  }
-}
-```
-
-### With Next.js API Routes
-
-```typescript
-// pages/api/extract.ts
-import { withResponseModel, OAIStream } from "zod-stream";
-import { z } from "zod";
-
-const schema = z.object({
-  summary: z.string(),
-  topics: z.array(z.string()),
-  sentiment: z.object({
-    score: z.number(),
-    label: z.string()
-  })
-});
-
-export default async function handler(req, res) {
-  const { content } = await req.json();
-
-  const params = withResponseModel({
-    response_model: { 
-      schema,
-      name: "ContentAnalysis"
-    },
-    mode: "TOOLS",
-    params: {
-      messages: [{ 
-        role: "user", 
-        content: `Analyze: ${content}` 
-      }],
-      model: "gpt-4"
-    }
-  });
-
-  const stream = await oai.chat.completions.create({
-    ...params,
-    stream: true
-  });
-
-  return new Response(OAIStream({ res: stream }));
-}
-```
-
-### With React and stream-hooks
-
-```typescript
-import { useJsonStream } from "stream-hooks";
-import { z } from "zod";
-
-const schema = z.object({
-  summary: z.string(),
-  topics: z.array(z.string())
-});
-
-function AnalysisComponent() {
-  const [data, setData] = useState<z.infer<typeof schema>>();
-
-  const { 
-    loading, 
-    error,
-    startStream 
-  } = useJsonStream({
-    schema,
-    onReceive: (data) => {
-      setData(data)
-    }
-  });
-
-  return (
-    <div>
-      <button 
-        onClick={() => startStream({
-          url: "/api/extract",
-          method: "POST",
-          body: { content: "..." }
-        })}
-        disabled={loading}
-      >
-        Start Analysis
-      </button>
-
-      {loading && <LoadingState paths={data._meta._completedPaths} />}
-      {error && <ErrorDisplay error={error} />}
-      
-      <ProgressiveDisplay
-        data={data}
-        isComplete={data._meta._completedPaths.length > 0}
-      />
-    </div>
-  );
-}
-```
-
-## Integration with Island AI
-
-Part of the Island AI toolkit:
-
-- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Structured streaming
-- [`stream-hooks`](https://www.npmjs.com/package/stream-hooks): React streaming hooks
-- [`schema-stream`](https://www.npmjs.com/package/schema-stream): Streaming JSON parser
-- [`evalz`](https://www.npmjs.com/package/evalz): LLM evaluation
-- [`llm-polyglot`](https://www.npmjs.com/package/llm-polyglot): Universal LLM client
-- [`instructor`](https://www.npmjs.com/package/@instructor-ai/instructor): High-level extraction
-
-## Contributing
-
-We welcome contributions! Check out:
-
-- [Island AI Documentation](https://island.hack.dance)
-- [GitHub Issues](https://github.com/hack-dance/island-ai/issues)
-- [Twitter](https://twitter.com/dimitrikennedy)
-
-## License
-
-MIT © [hack.dance](https://hack.dance)
+For Zod 3 progressive parsing without OpenAI response-model conversion, use `schema-stream` 4 directly.

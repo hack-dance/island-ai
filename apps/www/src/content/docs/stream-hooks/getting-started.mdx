@@ -1,5 +1,4 @@
 ---
-
 title: Getting Started
 ---
 
@@ -10,130 +9,87 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 <Tabs items={['bun', 'npm', 'pnpm']} persist>
   <Tab value="bun">
     ```bash
-    bun add stream-hooks zod zod-stream
+    bun add stream-hooks zod zod-stream react
     ```
   </Tab>
   <Tab value="npm">
     ```bash
-    npm install stream-hooks zod zod-stream
+    npm install stream-hooks zod zod-stream react
     ```
   </Tab>
   <Tab value="pnpm">
     ```bash
-    pnpm add stream-hooks zod zod-stream
+    pnpm add stream-hooks zod zod-stream react
     ```
   </Tab>
 </Tabs>
 
-`stream-hooks` follows `zod-stream`'s current Zod 3 boundary and supports Zod 3.25 and newer 3.x releases. Use `schema-stream` directly for Zod 4 schema streaming.
+Version 4 requires Zod 4, `zod-stream` 4, and React 18.3 or React 19. `react-dom` is not required by this package.
 
-## Quick Start
+## Progressive hook
 
-```typescript
+```tsx
 import { useJsonStream } from "stream-hooks"
 import { z } from "zod"
 
-export function ChatComponent() {
-  const { loading, startStream, stopStream, data } = useJsonStream({
-    schema: z.object({
-      content: z.string()
-    }),
-    onReceive: data => {
-      console.log("incremental update to final response model", data)
+const schema = z.object({
+  title: z.string(),
+  details: z.object({ count: z.coerce.number() })
+})
+
+export function ExtractButton() {
+  const { data, loading, startStream, stopStream } = useJsonStream({
+    schema,
+    onReceive(chunk) {
+      console.log(chunk.title, chunk._meta._completedPaths)
+    },
+    onEnd(output) {
+      console.log(output.details.count)
     }
   })
 
-  const submit = async () => {
+  const start = async () => {
     try {
       await startStream({
-        url: "/api/ai/chat",
+        url: "/api/extract",
         method: "POST",
-        body: {
-          messages: [
-            {
-              content: "yo",
-              role: "user"
-            }
-          ]
-        }
+        body: { prompt: "Extract this" }
       })
-    } catch (e) {
-      console.error(e)
+    } catch (error) {
+      console.error(error)
     }
   }
 
   return (
-    <div>
-      {data?.content}
-
-      <button onClick={submit} disabled={loading}>
-        Start
-      </button>
-
-      <button onClick={stopStream}>
-        Stop
-      </button>
-    </div>
+    <>
+      <button disabled={loading} onClick={start}>{data.title ?? "Start"}</button>
+      <button onClick={stopStream}>Stop</button>
+    </>
   )
 }
 ```
 
-## Progressive Updates
+`onReceive` gets progressive raw input plus completion metadata. `onEnd` runs only after final Zod validation and receives `z.output<T>`, including completed coercions and transforms. `startStream` rejects on HTTP, parser, source-stream, or validation errors. Aborted streams do not call `onEnd`.
 
-The hook provides real-time updates as data streams in:
-
-```typescript
-const AnalysisComponent = () => {
-  const { data } = useJsonStream({
-    schema: z.object({
-      user: z.object({
-        preferences: z.object({
-          theme: z.string(),
-          language: z.string()
-        })
-      }),
-      content: z.object({
-        title: z.string(),
-        body: z.string()
-      })
-    }),
-    onReceive: (chunk) => {
-      // Start personalizing as soon as preferences are available
-      if (isPathComplete(['user', 'preferences'], chunk)) {
-        applyTheme(chunk.user.preferences.theme);
-      }
-
-      // Begin content rendering when title is ready
-      if (isPathComplete(['content', 'title'], chunk)) {
-        updateTitle(chunk.content.title);
-      }
-    }
-  });
-
-  return <div>{/* Your UI */}</div>;
-};
-```
-
-## Error Handling
+## Framework-independent consumption
 
 ```typescript
-function StreamComponent() {
-  const { error, reset } = useJsonStream({
-    schema,
-    onError: (err) => {
-      console.error("Stream error:", err);
-    }
-  });
+import { consumeJsonStream } from "stream-hooks"
 
-  if (error) {
-    return (
-      <div>
-        <p>Error: {error.message}</p>
-        <button onClick={reset}>Retry</button>
-      </div>
-    );
+const { data, lastChunk } = await consumeJsonStream({
+  stream: response.body!,
+  schema,
+  onReceive(chunk) {
+    renderPartial(chunk)
   }
-
-  return <div>{/* Your UI */}</div>;
-}
+})
 ```
+
+This utility has the same progressive and final-validation behavior without requiring a mounted React component.
+
+## Migration from 3.x
+
+1. Upgrade to Zod 4 and `zod-stream` 4.
+2. Use React 18.3+ or React 19.
+3. Await `startStream` and handle rejection at the call site.
+4. Use `onEnd` for validated completion; undocumented `onComplete`/`onError` options are not part of the API.

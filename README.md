@@ -203,7 +203,7 @@ React hooks for consuming streaming JSON data with Zod schema validation.
 import { useJsonStream } from "stream-hooks";
 
 function DataViewer() {
-  const { loading, startStream, data, error } = useJsonStream({
+  const { loading, startStream, data } = useJsonStream({
     schema: ExtractionSchema,
     onReceive: (update) => {
       console.log('Progressive update:', update);
@@ -213,15 +213,20 @@ function DataViewer() {
   return (
     <div>
       {loading && <div>Loading...</div>}
-      {error && <div>Error: {error.message}</div>}
       {data && (
         <pre>{JSON.stringify(data, null, 2)}</pre>
       )}
-      <button onClick={() => startStream({
-        url: "/api/extract",
-        method: "POST",
-        body: { text: "..." }
-      })}>
+      <button onClick={async () => {
+        try {
+          await startStream({
+            url: "/api/extract",
+            method: "POST",
+            body: { text: "..." }
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }}>
         Start Extraction
       </button>
     </div>
