@@ -1,7 +1,6 @@
 import { SchemaStream, type SchemaStreamChunk } from "schema-stream"
 import { z } from "zod"
 
-import { readableStreamToAsyncGenerator } from "@/oai/stream"
 import type {
   ActivePath,
   ClientConfig,
@@ -66,7 +65,6 @@ export default class ZodStream {
       }
     })
 
-    const parser = streamParser.parse({ handleUnescapedNewLines: true })
     const source = await completionPromise(data)
 
     if (!source) {
@@ -74,11 +72,9 @@ export default class ZodStream {
     }
 
     try {
-      const parsedStream = source.pipeThrough(parser)
-
-      for await (const parsedChunk of readableStreamToAsyncGenerator<SchemaStreamChunk<T>>(
-        parsedStream
-      )) {
+      for await (const parsedChunk of streamParser.iterate(source, {
+        handleUnescapedNewLines: true
+      })) {
         finalChunk = parsedChunk
         const validation = await response_model.schema.safeParseAsync(parsedChunk)
 

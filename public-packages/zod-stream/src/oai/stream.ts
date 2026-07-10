@@ -36,22 +36,37 @@ export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
   })
 }
 
-/** Converts a byte stream containing one complete JSON value per chunk into an async generator. */
+/** Converts a byte stream of sequential JSON values into an async generator. */
 export async function* readableStreamToAsyncGenerator<T = unknown>(
   stream: ReadableStream<Uint8Array>
 ): AsyncGenerator<T, void, unknown> {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
+  let buffer = ""
 
   try {
     while (true) {
       const { done, value } = await reader.read()
 
       if (done) {
-        return
+        break
       }
 
-      yield JSON.parse(decoder.decode(value)) as T
+      buffer += decoder.decode(value, { stream: true })
+
+      try {
+        yield JSON.parse(buffer) as T
+        buffer = ""
+      } catch (error) {
+        if (!(error instanceof SyntaxError)) {
+          throw error
+        }
+      }
+    }
+
+    buffer += decoder.decode()
+    if (buffer.trim().length > 0) {
+      yield JSON.parse(buffer) as T
     }
   } finally {
     reader.releaseLock()
