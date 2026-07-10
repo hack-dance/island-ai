@@ -1,5 +1,13 @@
 # evalz
 
+## 1.0.0
+
+### Major Changes
+
+- [#103](https://github.com/hack-dance/island-ai/pull/103) [`f5f8bc1`](https://github.com/hack-dance/island-ai/commit/f5f8bc1bec3cb8dcea0db5f23853a8a4f727eaa3) Thanks [@roodboi](https://github.com/roodboi)! - Upgrade `llm-polyglot` to the OpenAI 6 client contract, including provider-safe option types, the `clientOptions` escape hatch for the SDK's own provider option, and function-tool handling. Correct package export conditions and require live provider tests to be explicitly enabled.
+
+  Move `evalz` model grading from Instructor and Chat Completions to native OpenAI 6 Responses structured outputs, with bounded validation retries and no transitive OpenAI 4 dependency. Correct package export conditions and make its model-backed test suite opt-in.
+
 ## 0.2.2
 
 ### Patch Changes
