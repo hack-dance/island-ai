@@ -45,9 +45,6 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Update npm
-        run: npm install --global npm@latest
-
       - name: Publish packages & create release
         id: changesets
         uses: changesets/action@v1
