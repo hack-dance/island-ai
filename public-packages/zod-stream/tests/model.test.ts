@@ -1,7 +1,7 @@
 import { withResponseModel } from "@/response-model"
 import { Mode } from "@/types"
 import { describe, expect, test } from "bun:test"
-import z from "zod"
+import z from "zod/v3"
 
 const ExtractionValuesSchema = z.object({
   users: z

@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import { z } from "zod"
+import { z } from "zod/v3"
 
 import { OAIResponseParser } from "./oai/parser"
 import { OAIStream } from "./oai/stream"

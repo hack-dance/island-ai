@@ -47,13 +47,14 @@
     "ramda": "^0.29.0",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
-    "typescript": "^5.3.3",
-    "tsup": "^8.0.1"
+    "typescript": "^5.5.4",
+    "tsup": "^8.0.1",
+    "zod": "^3.25.0"
   },
   "peerDependencies": {
     "zod-stream": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zod": "^3.23.3"
+    "zod": "^3.25.0"
   }
 }

@@ -3,7 +3,7 @@ import { withResponseModel } from "@/response-model"
 import ZodStream from "@/structured-stream.client"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
-import { z } from "zod"
+import { z } from "zod/v3"
 
 const textBlock = `
 In our recent online meeting, participants from various backgrounds joined to discuss the upcoming tech conference. The names and contact details of the participants were as follows:

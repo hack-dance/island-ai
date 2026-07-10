@@ -123,7 +123,7 @@ export default class Tokenizer {
   constructor(opts?: TokenizerOptions) {
     opts = { ...defaultOpts, ...opts }
 
-    const onIncrementalString = str => {
+    const onIncrementalString = (str: string) => {
       this.onToken({
         token: TokenType.STRING,
         value: str,
@@ -491,14 +491,20 @@ export default class Tokenizer {
             this.state = TokenizerStates.START
             this.emitNumber()
             continue
-          // @ts-expect error fall through case
           case TokenizerStates.NUMBER_AFTER_E:
             if (n === charset.PLUS_SIGN || n === charset.HYPHEN_MINUS) {
               this.bufferedNumber.appendChar(n)
               this.state = TokenizerStates.NUMBER_AFTER_E_AND_SIGN
               continue
             }
-          // @ts-expect error fall through case
+
+            if (n >= charset.DIGIT_ZERO && n <= charset.DIGIT_NINE) {
+              this.bufferedNumber.appendChar(n)
+              this.state = TokenizerStates.NUMBER_AFTER_E_AND_DIGIT
+              continue
+            }
+
+            break
           case TokenizerStates.NUMBER_AFTER_E_AND_SIGN:
             if (n >= charset.DIGIT_ZERO && n <= charset.DIGIT_NINE) {
               this.bufferedNumber.appendChar(n)
@@ -685,8 +691,7 @@ export default class Tokenizer {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public onToken(parsedToken: ParsedTokenInfo): void {
+  public onToken(_parsedToken: ParsedTokenInfo): void {
     // Override me
     throw new TokenizerError('Can\'t emit tokens before the "onToken" callback has been set up.')
   }

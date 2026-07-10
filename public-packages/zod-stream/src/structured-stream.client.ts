@@ -8,7 +8,7 @@ import {
   ZodStreamCompletionParams
 } from "@/types"
 import { SchemaStream } from "schema-stream"
-import { z } from "zod"
+import { z } from "zod/v3"
 
 export default class ZodStream {
   readonly debug: boolean = false

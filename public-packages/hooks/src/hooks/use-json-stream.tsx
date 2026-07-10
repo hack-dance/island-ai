@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react"
 import type { StartStream, StartStreamArgs, StopStream, UseJsonStreamProps } from "@/types"
-import z from "zod"
 import ZodStream from "zod-stream"
+import z from "zod/v3"
 
 import { useStream } from "./use-stream"
 

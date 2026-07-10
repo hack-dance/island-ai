@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import { z } from "zod"
+import { z } from "zod/v3"
 import ZodStream, { isPathComplete, OAIStream, withResponseModel } from "zod-stream"
 
 const textBlock = `

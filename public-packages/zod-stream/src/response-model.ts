@@ -7,12 +7,21 @@ import {
   OAIBuildToolFunctionParams
 } from "@/oai/params"
 import OpenAI from "openai"
-import { z } from "zod"
-import zodToJsonSchema from "zod-to-json-schema"
+import zodToJsonSchema, { JsonSchema7Type } from "zod-to-json-schema"
+import { z } from "zod/v3"
 
 import { MODE } from "@/constants/modes"
 
 import { Mode, ModeParamsReturnType, ResponseModel } from "./types"
+
+type Zod3JsonSchemaResult = JsonSchema7Type & {
+  definitions?: Record<string, JsonSchema7Type>
+}
+
+const convertZod3ToJsonSchema = zodToJsonSchema as unknown as (
+  schema: z.ZodTypeAny,
+  options: { name: string; errorMessages: boolean }
+) => Zod3JsonSchemaResult
 
 export function withResponseModel<
   T extends z.AnyZodObject,
@@ -29,7 +38,7 @@ export function withResponseModel<
 }): ModeParamsReturnType<P, M> {
   const safeName = name.replace(/[^a-zA-Z0-9]/g, "_").replace(/\s/g, "_")
 
-  const { definitions } = zodToJsonSchema(schema, {
+  const { definitions } = convertZod3ToJsonSchema(schema, {
     name: safeName,
     errorMessages: true
   })
