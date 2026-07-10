@@ -9,6 +9,14 @@ const scoringSchema = z.object({
   score: z.number()
 })
 
+type InstructorScoringParams = OpenAI.ChatCompletionCreateParamsNonStreaming & {
+  max_retries: number
+  response_model: {
+    schema: typeof scoringSchema
+    name: string
+  }
+}
+
 export function createEvaluator<T extends ResultsType>({
   resultsType = "score" as T,
   evaluationDescription,
@@ -36,7 +44,10 @@ export function createEvaluator<T extends ResultsType>({
       data.map(async item => {
         const { prompt, completion, expectedCompletion } = item
 
-        const response = await instructorClient.chat.completions.create({
+        const createScoringCompletion = instructorClient.chat.completions.create as unknown as (
+          params: InstructorScoringParams
+        ) => Promise<unknown>
+        const response = await createScoringCompletion({
           max_retries: 3,
           model: model ?? "gpt-4-turbo",
           response_model: {
@@ -65,7 +76,7 @@ export function createEvaluator<T extends ResultsType>({
         })
 
         return {
-          score: response["score"],
+          score: scoringSchema.parse(response).score,
           item
         }
       })

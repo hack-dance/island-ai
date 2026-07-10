@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BrandGithub, BrandLinkedin, BrandTwitter } from "@mynaui/icons-react"
+import { Github, Linkedin, XTwitter } from "@mynaui/icons-react"
 
 export const Footer = () => {
   return (
@@ -18,13 +18,13 @@ export const Footer = () => {
 
           <nav className="text-muted-foreground flex items-center gap-4">
             <Link href="https://www.linkedin.com/company/hack-dance" target="_blank">
-              <BrandLinkedin className="size-5" />
+              <Linkedin className="size-5" />
             </Link>
             <Link href="https://www.github.com/hack-dance/island-ai" target="_blank">
-              <BrandGithub className="size-5" />
+              <Github className="size-5" />
             </Link>
             <Link href="https://www.twitter.com/dimitrikennedy/" target="_blank">
-              <BrandTwitter className="size-5" />
+              <XTwitter className="size-5" />
             </Link>
           </nav>
         </div>

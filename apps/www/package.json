@@ -14,7 +14,7 @@
     "@content-collections/mdx": "^0.2.0",
     "@content-collections/next": "^0.2.4",
     "@fumadocs/content-collections": "^1.1.5",
-    "@mynaui/icons-react": "latest",
+    "@mynaui/icons-react": "^0.4.8",
     "@next/eslint-plugin-next": "^14.0.2",
     "@repo/eslint-config": "workspace:*",
     "@repo/tailwind-config": "workspace:*",

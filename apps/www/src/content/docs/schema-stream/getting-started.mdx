@@ -96,8 +96,6 @@ await result.completed
 const finalOutput = result.finalOutput
 ```
 
-No `ts-expect-error`, `TextDecoder`, reader loop, or `JSON.parse` is needed. SchemaStream provides progressive UI snapshots; after `completed` resolves, `finalOutput` is the Agents SDK's authoritative schema-validated result.
-
 ## Vercel AI SDK 7
 
 ```typescript
