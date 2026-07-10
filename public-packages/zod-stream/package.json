@@ -1,6 +1,6 @@
 {
   "name": "zod-stream",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "A client for node or the browser to generate and consume streaming json",
   "publishConfig": {
     "access": "public"
@@ -46,7 +46,7 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.hack.dance",
   "dependencies": {
-    "schema-stream": "^3.2.2"
+    "schema-stream": "^4.0.0"
   },
   "peerDependencies": {
     "openai": "^6.0.0",
