@@ -1,9 +1,9 @@
 import ZodStream from "@/structured-stream.client"
 import { describe, expect, test } from "bun:test"
-import { z } from "zod/v3"
+import { z } from "zod"
 
-describe("schema-stream 4 compatibility", () => {
-  test("preserves progressive and final emissions through the Zod 3 client", async () => {
+describe("schema-stream compatibility", () => {
+  test("preserves progressive and final emissions through the Zod 4 client", async () => {
     const schema = z.object({
       title: z.string(),
       details: z.object({ count: z.number() }),

@@ -1,4 +1,4 @@
-import OpenAI from "openai"
+import type OpenAI from "openai"
 
 import { OAIResponseParser } from "./parser"
 
@@ -6,85 +6,54 @@ interface OaiStreamArgs {
   res: AsyncIterable<OpenAI.ChatCompletionChunk>
 }
 
-function stripControlCharacters(str: string): string {
-  // eslint-disable-next-line no-control-regex
-  return str.replace(/[\x00-\x1F\x7F-\x9F]/g, "")
-}
-
-/**
- * `OaiStream` creates a ReadableStream that parses the SSE response from OAI
- * and returns a parsed string from the response.
- *
- * @param {OaiStreamArgs} args - The arguments for the function.
- * @returns {ReadableStream<string>} - The created ReadableStream.
- */
+/** Converts OpenAI Chat Completion deltas into a backpressure-aware byte stream. */
 export function OAIStream({ res }: OaiStreamArgs): ReadableStream<Uint8Array> {
-  let cancelGenerator: () => void
   const encoder = new TextEncoder()
+  const iterator = res[Symbol.asyncIterator]()
 
-  async function* generateStream(
-    res: AsyncIterable<OpenAI.ChatCompletionChunk>
-  ): AsyncGenerator<string> {
-    let cancel = false
-    cancelGenerator = () => {
-      cancel = true
-      return
-    }
+  return new ReadableStream<Uint8Array>({
+    async pull(controller): Promise<void> {
+      try {
+        let next = await iterator.next()
+        while (!next.done) {
+          const parsedData = OAIResponseParser(next.value)
+          if (parsedData) {
+            controller.enqueue(encoder.encode(parsedData))
+            return
+          }
 
-    for await (const part of res) {
-      if (cancel) {
-        break
+          next = await iterator.next()
+        }
+
+        controller.close()
+      } catch (error) {
+        controller.error(error)
       }
-
-      if (!OAIResponseParser(part)) {
-        continue
-      }
-
-      yield OAIResponseParser(part)
-    }
-  }
-
-  const generator = generateStream(res)
-
-  return new ReadableStream({
-    async start(controller) {
-      for await (const parsedData of generator) {
-        controller.enqueue(encoder.encode(stripControlCharacters(parsedData)))
-      }
-
-      controller.close()
     },
-    cancel() {
-      if (cancelGenerator) {
-        cancelGenerator()
-      }
+    async cancel(): Promise<void> {
+      await iterator.return?.()
     }
   })
 }
 
-/**
- * `readableStreamToAsyncGenerator` converts a ReadableStream to an AsyncGenerator.
- *
- * @param {ReadableStream<Uint8Array>} stream - The ReadableStream to convert.
- * @returns {AsyncGenerator<unknown>} - The converted AsyncGenerator.
- */
-export async function* readableStreamToAsyncGenerator(
+/** Converts a byte stream containing one complete JSON value per chunk into an async generator. */
+export async function* readableStreamToAsyncGenerator<T = unknown>(
   stream: ReadableStream<Uint8Array>
-): AsyncGenerator<unknown> {
+): AsyncGenerator<T, void, unknown> {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
 
-  while (true) {
-    const { done, value } = await reader.read()
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
 
-    if (done) {
-      break
+      if (done) {
+        return
+      }
+
+      yield JSON.parse(decoder.decode(value)) as T
     }
-
-    // stripping a second time to be safe.
-    const decodedString = stripControlCharacters(decoder.decode(value))
-    yield JSON.parse(decodedString)
+  } finally {
+    reader.releaseLock()
   }
-
-  return
 }

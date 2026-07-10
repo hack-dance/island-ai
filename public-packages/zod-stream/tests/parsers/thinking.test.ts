@@ -2,7 +2,7 @@ import { thinkingJsonParser } from "@/parsers/thinking"
 import { withResponseModel } from "@/response-model"
 import { describe, expect, test } from "bun:test"
 import OpenAI from "openai"
-import { z } from "zod/v3"
+import { z } from "zod"
 
 const textBlock = `
 In our recent online meeting, participants from various backgrounds joined to discuss the upcoming tech conference. The names and contact details of the participants were as follows:
@@ -42,7 +42,9 @@ const ExtractionValuesSchema = z.object({
   _thinking: z.string().optional()
 })
 
-describe("thinking parser - live tests", () => {
+const describeLive = process.env["GROQ_API_KEY"] ? describe : describe.skip
+
+describeLive("thinking parser - live tests (requires GROQ_API_KEY)", () => {
   test("should parse Groq streaming response with thinking tags", async () => {
     const groq = new OpenAI({
       apiKey: process.env["GROQ_API_KEY"] ?? undefined,

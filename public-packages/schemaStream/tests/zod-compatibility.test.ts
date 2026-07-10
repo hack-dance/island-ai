@@ -169,6 +169,10 @@ describe("supported Zod major streaming matrix", () => {
     expect(emissions.some(value => value.items?.[1]?.label === "sec")).toBe(true)
     expect(emissions.at(-1)).toEqual(expectedData)
     expect(completions.at(-1)?.activePath).toEqual([])
-    expect(completions.at(-1)?.completedPaths).toContainEqual(["items", 1, "label"])
+    expect(
+      completions
+        .at(-1)
+        ?.completedPaths.some(path => JSON.stringify(path) === JSON.stringify(["items", 1, "label"]))
+    ).toBe(true)
   })
 })

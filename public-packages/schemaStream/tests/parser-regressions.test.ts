@@ -50,14 +50,17 @@ describe("stream parser regressions", () => {
     const schema = z.object({ value: z.number() })
     const parser = new SchemaStream(schema)
     const encoder = new TextEncoder()
-    const input = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(encoder.encode('{"value": nope}'))
-        controller.close()
-      }
-    })
-    const reader = input.pipeThrough(parser.parse()).getReader()
+    const transform = parser.parse()
+    const reader = transform.readable.getReader()
+    const writer = transform.writable.getWriter()
+    const readResult = reader.read().then(
+      () => undefined,
+      (error: unknown) => error
+    )
 
-    expect(reader.read()).rejects.toThrow()
+    await writer.write(encoder.encode('{"value": nope}'))
+    const streamError = await readResult
+
+    expect(streamError).toBeInstanceOf(Error)
   })
 })

@@ -1,54 +1,36 @@
-import OpenAI from "openai"
-import { z } from "zod/v3"
+import type OpenAI from "openai"
+import { z } from "zod"
 
 import { OAIResponseParser } from "./oai/parser"
 import { OAIStream } from "./oai/stream"
 import { withResponseModel } from "./response-model"
-import { Mode } from "./types"
+import type { Mode } from "./types"
 
-export type CreateAgentParams = {
+export type CreateAgentParams<T extends z.ZodObject> = {
   defaultClientOptions: Partial<OpenAI.ChatCompletionCreateParams> & {
     model: OpenAI.ChatCompletionCreateParams["model"]
     messages: OpenAI.ChatCompletionMessageParam[]
   }
-  /**
-   * Mode to use
-   * @default "TOOLS"
-   *
-   * @type {Mode}
-   * */
+  /** @default "TOOLS" */
   mode?: Mode
-  /**
-   * OpenAI client instance
-   * @default new OpenAI()
-   *
-   * @type {OpenAI}
-   * */
-  client?: OpenAI
+  client: OpenAI
   response_model: {
-    schema: z.AnyZodObject
+    schema: T
     name: string
+    description?: string
   }
 }
 
-export type AgentInstance = ReturnType<typeof createAgent>
+export type AgentInstance<T extends z.ZodObject> = ReturnType<typeof createAgent<T>>
 export type ConfigOverride = Partial<OpenAI.ChatCompletionCreateParams>
 
-/**
- * Create a pre-configured "agent" that can be used to generate completions
- * Messages that are passed at initialization will be pre-pended to all completions
- * all other configuration can be overriden in the completion call.
- *
- * @param {CreateAgentParams} params
- *
- * @returns {AgentInstance}
- */
-export function createAgent({
+/** Creates a pre-configured Chat Completions client with schema-aware response parsing. */
+export function createAgent<T extends z.ZodObject>({
   defaultClientOptions,
   response_model,
   mode = "TOOLS",
   client
-}: CreateAgentParams) {
+}: CreateAgentParams<T>) {
   const defaultAgentParams = {
     temperature: 0.7,
     top_p: 1,
@@ -58,25 +40,13 @@ export function createAgent({
     ...defaultClientOptions
   }
 
-  if (!client) {
-    throw new Error("an OpenAI-like client is required")
-  }
-
-  const oai = client
-
   return {
-    /**
-     * Generate a single stream completion
-     * @param {ConfigOverride}
-     *
-     * @returns {Promise<ReadableStream<Uint8Array>> }
-     */
     completionStream: async (
-      configOverride: ConfigOverride
+      configOverride: ConfigOverride = {}
     ): Promise<ReadableStream<Uint8Array>> => {
       const messages = [
         ...(defaultAgentParams.messages ?? []),
-        ...(configOverride?.messages ?? [])
+        ...(configOverride.messages ?? [])
       ] as OpenAI.ChatCompletionMessageParam[]
 
       const params = withResponseModel({
@@ -90,24 +60,14 @@ export function createAgent({
         }
       })
 
-      const extractionStream = await oai.chat.completions.create(params)
+      const extractionStream = await client.chat.completions.create(params)
 
-      return OAIStream({
-        res: extractionStream
-      })
+      return OAIStream({ res: extractionStream })
     },
-    /**
-     * Generate a standard completion
-     * @param {ConfigOverride}
-     *
-     * @returns {Promise<z.infer<typeof response_model.schema>> }
-     */
-    completion: async (
-      configOverride: ConfigOverride
-    ): Promise<z.infer<typeof response_model.schema>> => {
+    completion: async (configOverride: ConfigOverride = {}): Promise<z.output<T>> => {
       const messages = [
         ...(defaultAgentParams.messages ?? []),
-        ...(configOverride?.messages ?? [])
+        ...(configOverride.messages ?? [])
       ] as OpenAI.ChatCompletionMessageParam[]
 
       const params = withResponseModel({
@@ -121,10 +81,11 @@ export function createAgent({
         }
       })
 
-      const res = await oai.chat.completions.create(params)
-      const extractedResponse = OAIResponseParser(res)
+      const response = await client.chat.completions.create(params)
+      const extractedResponse = OAIResponseParser(response)
+      const parsedResponse: unknown = JSON.parse(extractedResponse)
 
-      return JSON.parse(extractedResponse)
+      return response_model.schema.parseAsync(parsedResponse)
     }
   }
 }

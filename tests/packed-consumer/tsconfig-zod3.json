@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "strict": true,
+    "target": "ES2022"
+  },
+  "include": ["consumer-zod3.ts"]
+}
