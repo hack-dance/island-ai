@@ -26,23 +26,27 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 `schema-stream` supports Zod 4 Classic, Zod Mini, and Zod 3.25 or newer. Zod 3.25 is the minimum v3 release because it includes the permanent compatibility subpaths used by library tooling.
 
+The SDK integrations below are structural and add no SDK runtime or peer dependency. Release fixtures compile the packed package against `@openai/agents@0.13.1` and `ai@6.0.222`.
+
 ## Basic Usage
 
 ```typescript
-import { SchemaStream, type SchemaStreamChunk } from 'schema-stream';
-import { z } from 'zod';
+import { SchemaStream, type SchemaStreamChunk } from "schema-stream"
+import { z } from "zod"
 
 // Define your schema
 const schema = z.object({
-  users: z.array(z.object({
-    name: z.string(),
-    age: z.number()
-  })),
+  users: z.array(
+    z.object({
+      name: z.string(),
+      age: z.number()
+    })
+  ),
   metadata: z.object({
     total: z.number(),
     page: z.number()
   })
-});
+})
 
 // Create parser with optional defaults
 const parser = new SchemaStream(schema, {
@@ -50,26 +54,77 @@ const parser = new SchemaStream(schema, {
     metadata: { total: 0, page: 1 }
   },
   onKeyComplete({ completedPaths }) {
-    console.log('Completed:', completedPaths);
+    console.log("Completed:", completedPaths)
   }
-});
+})
 
-// Parse streaming data
-const stream = parser.parse();
-response.body.pipeThrough(stream);
-
-// Read typed partial results
-const reader = stream.readable.getReader();
-while (true) {
-  const { value, done } = await reader.read();
-  if (done) break;
-  
-  const result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
-  // Validate the final value before treating it as a Zod output.
-  console.log(result);
+// Consume a ReadableStream or AsyncIterable of string or Uint8Array chunks.
+for await (const partial of parser.iterate(response.body)) {
+  console.log(partial)
 }
 ```
 
+Each emission is an independent `SchemaStreamChunk<typeof schema>` snapshot. Iteration preserves backpressure, propagates source and parser errors, and cancels or closes the source when a consumer stops early. Use `parse()` when a lower-level `TransformStream<Uint8Array, Uint8Array>` is needed.
+
+## OpenAI Agents SDK
+
+```typescript
+import { Agent, run } from "@openai/agents"
+import { SchemaStream } from "schema-stream"
+import { z } from "zod"
+
+const outputSchema = z.object({
+  summary: z.string(),
+  details: z.object({ score: z.number() }),
+  tags: z.array(z.string())
+})
+
+const agent = new Agent({
+  name: "Analyst",
+  instructions: "Return a structured analysis.",
+  outputType: outputSchema
+})
+const result = await run(agent, input, { stream: true })
+const parser = new SchemaStream(outputSchema)
+
+for await (const partial of parser.iterate(result.toTextStream())) {
+  renderProgress(partial)
+}
+
+await result.completed
+const finalOutput = result.finalOutput
+```
+
+No `ts-expect-error`, `TextDecoder`, reader loop, or `JSON.parse` is needed. SchemaStream provides progressive UI snapshots; after `completed` resolves, `finalOutput` is the Agents SDK's authoritative schema-validated result.
+
+## Vercel AI SDK 6
+
+```typescript
+import { Output, streamText } from "ai"
+import { SchemaStream } from "schema-stream"
+import { z } from "zod"
+
+const outputSchema = z.object({
+  summary: z.string(),
+  details: z.object({ score: z.number() }),
+  tags: z.array(z.string())
+})
+
+const result = streamText({
+  model: "openai/gpt-5.2",
+  output: Output.object({ schema: outputSchema }),
+  prompt: input
+})
+const parser = new SchemaStream(outputSchema)
+
+for await (const partial of parser.iterate(result.textStream)) {
+  renderProgress(partial)
+}
+
+const finalOutput = await result.output
+```
+
+AI SDK's `partialOutputStream` remains useful for its built-in partial-object semantics. SchemaStream consumes raw JSON `textStream` chunks to preserve schema stubs and richer updates inside nested values and incomplete strings. Use `result.output` as the authoritative final, AI SDK-validated value.
 
 ## Validation and Error Handling
 

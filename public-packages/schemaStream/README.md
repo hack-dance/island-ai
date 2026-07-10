@@ -31,6 +31,7 @@
 - 🌳 Deep nested object and array support
 - ⚡ Zero dependencies except Zod
 - 🔍 TypeScript types inferred from schema
+- 🔌 Direct async iteration over Web streams and async iterables
 
 ## Zod compatibility
 
@@ -38,6 +39,8 @@
 - Zod 3: `zod@^3.25.0`
 
 Zod 3.25 is the minimum supported v3 release because it provides the permanent `zod/v3` and `zod/v4/core` compatibility subpaths used by library tooling. `schema-stream` traverses Zod 4 through the documented Core definition contract and keeps its Zod 3 adapter isolated for compatibility.
+
+SDK adapters are structural and add no runtime dependency or peer requirement. Release fixtures compile against `@openai/agents@0.13.1` and the latest stable AI SDK 6 release, `ai@6.0.222`, in a clean packed consumer.
 
 Schema-derived stubs cover objects, arrays, records, strings, numbers, booleans, enums, defaults, prefaults, optionals, nullables, readonly/catch wrappers, lazy schemas, and transform/pipe inputs. Ambiguous or non-JSON schema nodes such as unions, intersections, maps, sets, dates, and custom schemas start as `null`; streamed JSON still replaces those placeholders normally. Completion callbacks report completed scalar leaf paths, including array indexes, and emit one final callback with an empty `activePath` when the input closes.
 
@@ -57,20 +60,22 @@ bun add schema-stream zod
 ## Basic Usage
 
 ```typescript
-import { SchemaStream, type SchemaStreamChunk } from 'schema-stream';
-import { z } from 'zod';
+import { SchemaStream, type SchemaStreamChunk } from "schema-stream"
+import { z } from "zod"
 
 // Define your schema
 const schema = z.object({
-  users: z.array(z.object({
-    name: z.string(),
-    age: z.number()
-  })),
+  users: z.array(
+    z.object({
+      name: z.string(),
+      age: z.number()
+    })
+  ),
   metadata: z.object({
     total: z.number(),
     page: z.number()
   })
-});
+})
 
 // Create parser with optional defaults
 const parser = new SchemaStream(schema, {
@@ -78,23 +83,95 @@ const parser = new SchemaStream(schema, {
     metadata: { total: 0, page: 1 }
   },
   onKeyComplete({ completedPaths }) {
-    console.log('Completed:', completedPaths);
+    console.log("Completed:", completedPaths)
   }
-});
+})
 
-// Parse streaming data
-const stream = parser.parse();
-response.body.pipeThrough(stream);
+// Consume string or Uint8Array chunks with backpressure.
+for await (const partial of parser.iterate(response.body)) {
+  // partial is SchemaStreamChunk<typeof schema> and is safe to retain or mutate;
+  // every emission is an independent snapshot.
+  console.log(partial)
+}
+```
 
-// Read typed partial results
-const reader = stream.readable.getReader();
-while (true) {
-  const { value, done } = await reader.read();
-  if (done) break;
-  
-  const result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
-  // result describes partial input JSON; validate the final value before treating it as z.output
-  console.log(result);
+`iterate()` accepts `ReadableStream<string | Uint8Array>` and `AsyncIterable<string | Uint8Array>`. Source errors and parser errors reject iteration. Ending iteration early cancels a Web stream or calls `return()` on an async iterator.
+
+### OpenAI Agents SDK
+
+The Agents SDK text stream can be passed directly to `iterate()` without stream casts, manual readers, decoding, or `JSON.parse`:
+
+```typescript
+import { Agent, run } from "@openai/agents"
+import { SchemaStream } from "schema-stream"
+import { z } from "zod"
+
+const outputSchema = z.object({
+  summary: z.string(),
+  details: z.object({ score: z.number() }),
+  tags: z.array(z.string())
+})
+
+const agent = new Agent({
+  name: "Analyst",
+  instructions: "Return a structured analysis.",
+  outputType: outputSchema
+})
+const result = await run(agent, input, { stream: true })
+const parser = new SchemaStream(outputSchema)
+
+for await (const partial of parser.iterate(result.toTextStream())) {
+  renderProgress(partial)
+}
+
+await result.completed
+const finalOutput = result.finalOutput
+```
+
+Use SchemaStream chunks for progressive UX. After `completed` resolves, `finalOutput` is the Agents SDK's authoritative, schema-validated result and may be `undefined` if the run did not produce a final output.
+
+### Vercel AI SDK 6
+
+Pass `streamText().textStream` to SchemaStream to retain schema-derived stubs and fine-grained nested and in-progress string updates from the raw JSON text:
+
+```typescript
+import { Output, streamText } from "ai"
+import { SchemaStream } from "schema-stream"
+import { z } from "zod"
+
+const outputSchema = z.object({
+  summary: z.string(),
+  details: z.object({ score: z.number() }),
+  tags: z.array(z.string())
+})
+
+const result = streamText({
+  model: "openai/gpt-5.2",
+  output: Output.object({ schema: outputSchema }),
+  prompt: input
+})
+const parser = new SchemaStream(outputSchema)
+
+for await (const partial of parser.iterate(result.textStream)) {
+  renderProgress(partial)
+}
+
+const finalOutput = await result.output
+```
+
+AI SDK's `partialOutputStream` is useful when its partial-object semantics are sufficient. SchemaStream intentionally consumes the raw `textStream`, so it can emit schema-shaped defaults and updates inside incomplete strings and nested values on each text chunk. `result.output` remains the authoritative final, AI SDK-validated value.
+
+### Low-level byte transform
+
+`parse()` remains available for stream pipelines that need serialized JSON snapshots:
+
+```typescript
+const transform = parser.parse()
+const readable = response.body.pipeThrough(transform)
+
+for await (const bytes of readable) {
+  const partial = JSON.parse(new TextDecoder().decode(bytes)) as SchemaStreamChunk<typeof schema>
+  console.log(partial)
 }
 ```
 
@@ -235,22 +312,28 @@ const parser = new SchemaStream(schema, {
 
 ```typescript
 class SchemaStream<TSchema extends ZodObjectSchema> {
-  constructor(
-    schema: TSchema,
-    options?: SchemaStreamOptions<TSchema>
-  )
+  constructor(schema: TSchema, options?: SchemaStreamOptions<TSchema>)
 
   // Create a stub instance of the schema with defaults
   getSchemaStub<TStubSchema extends ZodObjectSchema>(
     schema: TStubSchema,
     defaultData?: SchemaStreamDefaultData<TStubSchema>
-  ): SchemaStreamChunk<TStubSchema>;
+  ): SchemaStreamChunk<TStubSchema>
 
   // Parse streaming JSON data
   parse(options?: {
-    stringBufferSize?: number;
-    handleUnescapedNewLines?: boolean;
-  }): TransformStream<Uint8Array, Uint8Array>;
+    stringBufferSize?: number
+    handleUnescapedNewLines?: boolean
+  }): TransformStream<Uint8Array, Uint8Array>
+
+  // Iterate typed snapshots from SDK or application streams
+  iterate<TChunk extends string | Uint8Array>(
+    source: ReadableStream<TChunk> | AsyncIterable<TChunk>,
+    options?: {
+      stringBufferSize?: number
+      handleUnescapedNewLines?: boolean
+    }
+  ): AsyncGenerator<SchemaStreamChunk<TSchema>, void, void>
 }
 ```
 

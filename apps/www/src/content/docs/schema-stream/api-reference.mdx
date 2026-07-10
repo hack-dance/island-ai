@@ -23,12 +23,23 @@ class SchemaStream<TSchema extends ZodObjectSchema> {
     stringBufferSize?: number;
     handleUnescapedNewLines?: boolean;
   }): TransformStream<Uint8Array, Uint8Array>;
+
+  // Iterate immutable typed snapshots from text or byte sources
+  iterate<TChunk extends string | Uint8Array>(
+    source: ReadableStream<TChunk> | AsyncIterable<TChunk>,
+    options?: {
+      stringBufferSize?: number;
+      handleUnescapedNewLines?: boolean;
+    }
+  ): AsyncGenerator<SchemaStreamChunk<TSchema>, void, void>;
 }
 ```
 
 `SchemaStreamChunk<TSchema>` represents partial schema input with nullable primitive stubs. It does not claim validated Zod output. Validate the completed value with the schema to obtain its output type.
 
 Structural stubs cover objects, arrays, records, primitives, defaults/prefaults, optionals, readonly/catch wrappers, lazy schemas, and transform/pipe inputs. Ambiguous or non-JSON nodes such as unions, intersections, maps, sets, dates, and custom schemas start as `null` until streamed JSON replaces them. Completion callbacks report scalar leaf paths and finish with an empty `activePath`.
+
+`iterate()` accepts Web `ReadableStream` and pure `AsyncIterable` sources containing strings, bytes, or a mixture of both. It yields one independent snapshot per input chunk, applies backpressure, propagates errors, and closes the source on early return. `parse()` is the compatible low-level byte transform and continues to emit serialized JSON snapshots.
 
 ### Constructor Options
 
