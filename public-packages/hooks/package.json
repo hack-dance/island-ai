@@ -57,7 +57,7 @@
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "zod-stream": "^4.0.0",
+    "zod-stream": "^3.0.0",
     "react": "^18.3.0 || ^19.0.0",
     "zod": "^4.0.0"
   }

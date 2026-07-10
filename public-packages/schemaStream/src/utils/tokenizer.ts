@@ -344,17 +344,21 @@ export default class Tokenizer {
             }
 
             break
-          case TokenizerStates.STRING_INCOMPLETE_CHAR:
-            // check for carry over of a multi byte char split between data chunks
-            // & fill temp buffer it with start of this data chunk up to the boundary limit set in the last iteration
-            this.char_split_buffer.set(
-              buffer.subarray(i, i + this.bytes_remaining),
-              this.bytes_in_sequence - this.bytes_remaining
-            )
-            this.bufferedString.appendBuf(this.char_split_buffer, 0, this.bytes_in_sequence)
-            i = this.bytes_remaining - 1
-            this.state = TokenizerStates.STRING_DEFAULT
+          case TokenizerStates.STRING_INCOMPLETE_CHAR: {
+            // Carry a multibyte character across as many input chunks as needed.
+            const availableBytes = Math.min(this.bytes_remaining, buffer.length - i)
+            const targetOffset = this.bytes_in_sequence - this.bytes_remaining
+            this.char_split_buffer.set(buffer.subarray(i, i + availableBytes), targetOffset)
+            this.bytes_remaining -= availableBytes
+            i += availableBytes - 1
+
+            if (this.bytes_remaining === 0) {
+              this.bufferedString.appendBuf(this.char_split_buffer, 0, this.bytes_in_sequence)
+              this.state = TokenizerStates.STRING_DEFAULT
+            }
+
             continue
+          }
           case TokenizerStates.STRING_AFTER_BACKSLASH:
             if (escapedSequences?.[n]) {
               this.bufferedString.appendChar(escapedSequences[n])

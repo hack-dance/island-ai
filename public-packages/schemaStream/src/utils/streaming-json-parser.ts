@@ -40,6 +40,17 @@ export type SchemaStreamParseOptions = {
   handleUnescapedNewLines?: boolean
 }
 
+export type SchemaStreamInputChunk = string | Uint8Array
+
+export type SchemaStreamSource<TChunk extends SchemaStreamInputChunk = SchemaStreamInputChunk> =
+  | ReadableStream<TChunk>
+  | AsyncIterable<TChunk>
+
+type OpenSource<TChunk extends SchemaStreamInputChunk> = {
+  iterator: AsyncIterator<TChunk>
+  finish(cancel: boolean): Promise<void>
+}
+
 type JsonContainer = Record<string | number, unknown>
 
 function hasOwn(value: object, key: PropertyKey): boolean {
@@ -84,6 +95,53 @@ function setPathValue(target: Record<string, unknown>, path: SchemaPath, value: 
 
 function pathsEqual(left: SchemaPath, right: SchemaPath): boolean {
   return left.length === right.length && left.every((segment, index) => segment === right[index])
+}
+
+function openSource<TChunk extends SchemaStreamInputChunk>(
+  source: SchemaStreamSource<TChunk>
+): OpenSource<TChunk> {
+  const asyncIterable = source as AsyncIterable<TChunk>
+  if (typeof asyncIterable[Symbol.asyncIterator] === "function") {
+    const iterator = asyncIterable[Symbol.asyncIterator]()
+
+    return {
+      iterator,
+      async finish(cancel): Promise<void> {
+        if (cancel) {
+          await iterator.return?.()
+        }
+      }
+    }
+  }
+
+  const readable = source as ReadableStream<TChunk>
+  if (typeof readable.getReader !== "function") {
+    throw new TypeError("SchemaStream.iterate() requires a ReadableStream or AsyncIterable")
+  }
+
+  const reader = readable.getReader()
+  let released = false
+
+  return {
+    iterator: {
+      async next(): Promise<IteratorResult<TChunk>> {
+        const next = await reader.read()
+        return next.done ? { done: true, value: undefined } : { done: false, value: next.value }
+      }
+    },
+    async finish(cancel): Promise<void> {
+      try {
+        if (cancel) {
+          await reader.cancel()
+        }
+      } finally {
+        if (!released) {
+          released = true
+          reader.releaseLock()
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -263,5 +321,60 @@ export class SchemaStream<TSchema extends ZodObjectSchema> {
         this.emitCompletion()
       }
     })
+  }
+
+  /**
+   * Consumes streamed JSON text or bytes and yields immutable schema-shaped snapshots.
+   * The completed value is still unvalidated; use the producing SDK's settled output or
+   * validate the final snapshot with the schema.
+   */
+  public async *iterate<TChunk extends SchemaStreamInputChunk>(
+    source: SchemaStreamSource<TChunk>,
+    options: SchemaStreamParseOptions = {}
+  ): AsyncGenerator<SchemaStreamChunk<TSchema>, void, void> {
+    const sourceHandle = openSource(source)
+    const transform = this.parse(options)
+    const reader = transform.readable.getReader()
+    const writer = transform.writable.getWriter()
+    const encoder = new TextEncoder()
+    const decoder = new TextDecoder()
+    let sourceDone = false
+    let parserDone = false
+
+    try {
+      while (true) {
+        const next = await sourceHandle.iterator.next()
+        if (next.done) {
+          sourceDone = true
+          break
+        }
+
+        const input: SchemaStreamInputChunk = next.value
+        const bytes = typeof input === "string" ? encoder.encode(input) : input
+        const [, output] = await Promise.all([writer.write(bytes), reader.read()])
+
+        if (output.done) {
+          throw new Error("SchemaStream parser ended before its input source")
+        }
+
+        yield JSON.parse(decoder.decode(output.value)) as SchemaStreamChunk<TSchema>
+      }
+
+      const [, output] = await Promise.all([writer.close(), reader.read()])
+      if (!output.done) {
+        throw new Error("SchemaStream parser emitted an unexpected final chunk")
+      }
+      parserDone = true
+    } finally {
+      const cleanup: Promise<unknown>[] = [sourceHandle.finish(!sourceDone)]
+
+      if (!parserDone) {
+        cleanup.push(writer.abort(), reader.cancel())
+      }
+
+      await Promise.allSettled(cleanup)
+      writer.releaseLock()
+      reader.releaseLock()
+    }
   }
 }
