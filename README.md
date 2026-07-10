@@ -39,7 +39,7 @@ Island AI is a collection of low-level utilities and high-level tools for handli
 
 ### 1. schema-stream
 
-A foundational streaming JSON parser that enables immediate data access through structured stubs.
+A foundational streaming JSON parser that enables immediate data access through structured stubs. Supports Zod 4 (including Zod Mini) and Zod 3.25+.
 
 **Key Features:**
 
@@ -49,7 +49,7 @@ A foundational streaming JSON parser that enables immediate data access through 
 - Nested object and array support
 
 ```typescript
-import { SchemaStream } from "schema-stream";
+import { SchemaStream, type SchemaStreamChunk } from "schema-stream";
 import { z } from "zod";
 
 // Define complex nested schemas
@@ -112,7 +112,7 @@ readableStream.pipeThrough(stream);
 // Get typed results
 const reader = stream.readable.getReader();
 const decoder = new TextDecoder()
-let result = {}
+let result: SchemaStreamChunk<typeof schema> = {}
 let complete = false
 
 while (true) {
@@ -121,8 +121,8 @@ while (true) {
   
   if (complete) break;
   
-  result = JSON.parse(decoder.decode(value));
-  // result is fully typed based on schema
+  result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
+  // Validate the completed result with the schema before treating it as Zod output.
 }
 ```
 

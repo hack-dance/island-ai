@@ -21,7 +21,7 @@
   </a>
 </div>
 
-`schema-stream` is a foundational streaming JSON parser that enables immediate data access through structured stubs. Built on Zod schema validation, it provides type-safe parsing and progressive data access for JSON streams.
+`schema-stream` is a foundational streaming JSON parser that emits schema-shaped partial values as JSON arrives. It uses Zod schemas to derive typed stubs and path metadata, but intentionally leaves validation to the consumer.
 
 ## Key Features
 
@@ -31,6 +31,15 @@
 - 🌳 Deep nested object and array support
 - ⚡ Zero dependencies except Zod
 - 🔍 TypeScript types inferred from schema
+
+## Zod compatibility
+
+- Zod 4 Classic and Zod Mini: `zod@^4.0.0`
+- Zod 3: `zod@^3.25.0`
+
+Zod 3.25 is the minimum supported v3 release because it provides the permanent `zod/v3` and `zod/v4/core` compatibility subpaths used by library tooling. `schema-stream` traverses Zod 4 through the documented Core definition contract and keeps its Zod 3 adapter isolated for compatibility.
+
+Schema-derived stubs cover objects, arrays, records, strings, numbers, booleans, enums, defaults, prefaults, optionals, nullables, readonly/catch wrappers, lazy schemas, and transform/pipe inputs. Ambiguous or non-JSON schema nodes such as unions, intersections, maps, sets, dates, and custom schemas start as `null`; streamed JSON still replaces those placeholders normally. Completion callbacks report completed scalar leaf paths, including array indexes, and emit one final callback with an empty `activePath` when the input closes.
 
 ## Installation
 
@@ -48,7 +57,7 @@ bun add schema-stream zod
 ## Basic Usage
 
 ```typescript
-import { SchemaStream } from 'schema-stream';
+import { SchemaStream, type SchemaStreamChunk } from 'schema-stream';
 import { z } from 'zod';
 
 // Define your schema
@@ -65,26 +74,26 @@ const schema = z.object({
 
 // Create parser with optional defaults
 const parser = new SchemaStream(schema, {
-  metadata: { total: 0, page: 1 }
-});
-
-// Track completion paths
-parser.onKeyComplete(({ completedPaths }) => {
-  console.log('Completed:', completedPaths);
+  defaultData: {
+    metadata: { total: 0, page: 1 }
+  },
+  onKeyComplete({ completedPaths }) {
+    console.log('Completed:', completedPaths);
+  }
 });
 
 // Parse streaming data
 const stream = parser.parse();
 response.body.pipeThrough(stream);
 
-// Read results with full type inference
+// Read typed partial results
 const reader = stream.readable.getReader();
 while (true) {
   const { value, done } = await reader.read();
   if (done) break;
   
-  const result = JSON.parse(decoder.decode(value));
-  // result is fully typed as z.infer<typeof schema>
+  const result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
+  // result describes partial input JSON; validate the final value before treating it as z.output
   console.log(result);
 }
 ```
@@ -203,20 +212,19 @@ const schema = z.object({
   }))
 });
 
-const parser = new SchemaStream(schema);
+const parser = new SchemaStream(schema, {
+  onKeyComplete({ activePath }) {
+    const path = activePath.join('.');
 
-// Track specific paths for business logic
-parser.onKeyComplete(({ activePath, completedPaths }) => {
-  const path = activePath.join('.');
-  
-  // Process user profiles as they complete
-  if (path.match(/users\.\d+\.profile$/)) {
-    processUserProfile(/* ... */);
-  }
-  
-  // Process activity logs in batches
-  if (path.match(/users\.\d+\.activity\.\d+$/)) {
-    batchActivityLog(/* ... */);
+    // Process a profile when its final field completes
+    if (path.match(/users\.\d+\.profile\.email$/)) {
+      processUserProfile(/* ... */);
+    }
+
+    // Process an activity item when its final field completes
+    if (path.match(/users\.\d+\.activity\.\d+\.action$/)) {
+      batchActivityLog(/* ... */);
+    }
   }
 });
 ```
@@ -226,36 +234,27 @@ parser.onKeyComplete(({ activePath, completedPaths }) => {
 ### `SchemaStream`
 
 ```typescript
-class SchemaStream<T extends ZodObject<any>> {
+class SchemaStream<TSchema extends ZodObjectSchema> {
   constructor(
-    schema: T,
-    options?: {
-      defaultData?: NestedObject;
-      typeDefaults?: {
-        string?: string | null | undefined;
-        number?: number | null | undefined;
-        boolean?: boolean | null | undefined;
-      };
-      onKeyComplete?: (info: {
-        activePath: (string | number | undefined)[];
-        completedPaths: (string | number | undefined)[][];
-      }) => void;
-    }
+    schema: TSchema,
+    options?: SchemaStreamOptions<TSchema>
   )
 
   // Create a stub instance of the schema with defaults
-  getSchemaStub<T extends ZodRawShape>(
-    schema: SchemaType<T>, 
-    defaultData?: NestedObject
-  ): z.infer<typeof schema>;
+  getSchemaStub<TStubSchema extends ZodObjectSchema>(
+    schema: TStubSchema,
+    defaultData?: SchemaStreamDefaultData<TStubSchema>
+  ): SchemaStreamChunk<TStubSchema>;
 
   // Parse streaming JSON data
   parse(options?: {
     stringBufferSize?: number;
     handleUnescapedNewLines?: boolean;
-  }): TransformStream;
+  }): TransformStream<Uint8Array, Uint8Array>;
 }
 ```
+
+`SchemaStreamChunk<TSchema>` is recursively partial and includes `null` at primitive leaves because schema stubs and in-flight JSON are not necessarily valid schema outputs. It is based on the schema input type so transforms and codecs are represented honestly. Validate the completed value with `schema.parse` or `schema.safeParse` to obtain the schema output type.
 
 ### Constructor Options
 
@@ -352,14 +351,14 @@ const parser = new SchemaStream(schema);
 const stub = parser.getSchemaStub(schema, {
   users: [{ name: "default", age: 0 }]
 });
-// stub is fully typed as z.infer<typeof schema>
+// stub is typed as SchemaStreamChunk<typeof schema>
 ```
 
 ## Integration with Island AI
 
 `schema-stream` is designed as a foundational package that other tools build upon:
 
-- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds validation and OpenAI integration
+- [`zod-stream`](https://www.npmjs.com/package/zod-stream): Adds validation and OpenAI integration. Its current response-model/JSON Schema conversion path remains Zod 3-only; use `schema-stream` directly for Zod 4 streaming.
 
   ```typescript
   // Example of zod-stream using schema-stream

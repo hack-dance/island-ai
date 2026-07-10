@@ -95,6 +95,8 @@ pnpm add zod-stream zod openai
 bun add zod-stream zod openai
 ```
 
+`zod-stream` currently supports Zod 3.25 and newer 3.x releases. Its response-model JSON Schema conversion uses `zod-to-json-schema`, which does not accept Zod 4 schemas. The underlying `schema-stream` package supports both Zod 3 and Zod 4.
+
 ## Core Concepts
 
 The `ZodStream` client provides real-time validation and metadata for streaming LLM responses:

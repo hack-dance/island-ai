@@ -24,10 +24,12 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
   </Tab>
 </Tabs>
 
+`schema-stream` supports Zod 4 Classic, Zod Mini, and Zod 3.25 or newer. Zod 3.25 is the minimum v3 release because it includes the permanent compatibility subpaths used by library tooling.
+
 ## Basic Usage
 
 ```typescript
-import { SchemaStream } from 'schema-stream';
+import { SchemaStream, type SchemaStreamChunk } from 'schema-stream';
 import { z } from 'zod';
 
 // Define your schema
@@ -44,26 +46,26 @@ const schema = z.object({
 
 // Create parser with optional defaults
 const parser = new SchemaStream(schema, {
-  metadata: { total: 0, page: 1 }
-});
-
-// Track completion paths
-parser.onKeyComplete(({ completedPaths }) => {
-  console.log('Completed:', completedPaths);
+  defaultData: {
+    metadata: { total: 0, page: 1 }
+  },
+  onKeyComplete({ completedPaths }) {
+    console.log('Completed:', completedPaths);
+  }
 });
 
 // Parse streaming data
 const stream = parser.parse();
 response.body.pipeThrough(stream);
 
-// Read results with full type inference
+// Read typed partial results
 const reader = stream.readable.getReader();
 while (true) {
   const { value, done } = await reader.read();
   if (done) break;
   
-  const result = JSON.parse(decoder.decode(value));
-  // result is fully typed as z.infer<typeof schema>
+  const result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
+  // Validate the final value before treating it as a Zod output.
   console.log(result);
 }
 ```
@@ -182,20 +184,19 @@ const schema = z.object({
   }))
 });
 
-const parser = new SchemaStream(schema);
+const parser = new SchemaStream(schema, {
+  onKeyComplete({ activePath }) {
+    const path = activePath.join('.');
 
-// Track specific paths for business logic
-parser.onKeyComplete(({ activePath, completedPaths }) => {
-  const path = activePath.join('.');
-  
-  // Process user profiles as they complete
-  if (path.match(/users\.\d+\.profile$/)) {
-    processUserProfile(/* ... */);
-  }
-  
-  // Process activity logs in batches
-  if (path.match(/users\.\d+\.activity\.\d+$/)) {
-    batchActivityLog(/* ... */);
+    // Process a profile when its final field completes
+    if (path.match(/users\.\d+\.profile\.email$/)) {
+      processUserProfile(/* ... */);
+    }
+
+    // Process an activity item when its final field completes
+    if (path.match(/users\.\d+\.activity\.\d+\.action$/)) {
+      batchActivityLog(/* ... */);
+    }
   }
 });
 ```

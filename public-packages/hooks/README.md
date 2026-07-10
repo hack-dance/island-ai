@@ -30,6 +30,8 @@ npm install stream-hooks zod zod-stream
 bun add stream-hooks zod zod-stream
 ```
 
+`stream-hooks` currently follows `zod-stream`'s Zod 3 boundary and supports Zod 3.25 and newer 3.x releases. Use `schema-stream` directly when consuming Zod 4 schemas.
+
 ## Quick Start
 
 ```typescript

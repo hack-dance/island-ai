@@ -6,36 +6,29 @@ title:   API Reference
 ### `SchemaStream`
 
 ```typescript
-class SchemaStream<T extends ZodObject<any>> {
+class SchemaStream<TSchema extends ZodObjectSchema> {
   constructor(
-    schema: T,
-    options?: {
-      defaultData?: NestedObject;
-      typeDefaults?: {
-        string?: string | null | undefined;
-        number?: number | null | undefined;
-        boolean?: boolean | null | undefined;
-      };
-      onKeyComplete?: (info: {
-        activePath: (string | number | undefined)[];
-        completedPaths: (string | number | undefined)[][];
-      }) => void;
-    }
+    schema: TSchema,
+    options?: SchemaStreamOptions<TSchema>
   )
 
   // Create a stub instance of the schema with defaults
-  getSchemaStub<T extends ZodRawShape>(
-    schema: SchemaType<T>, 
-    defaultData?: NestedObject
-  ): z.infer<typeof schema>;
+  getSchemaStub<TStubSchema extends ZodObjectSchema>(
+    schema: TStubSchema,
+    defaultData?: SchemaStreamDefaultData<TStubSchema>
+  ): SchemaStreamChunk<TStubSchema>;
 
   // Parse streaming JSON data
   parse(options?: {
     stringBufferSize?: number;
     handleUnescapedNewLines?: boolean;
-  }): TransformStream;
+  }): TransformStream<Uint8Array, Uint8Array>;
 }
 ```
+
+`SchemaStreamChunk<TSchema>` represents partial schema input with nullable primitive stubs. It does not claim validated Zod output. Validate the completed value with the schema to obtain its output type.
+
+Structural stubs cover objects, arrays, records, primitives, defaults/prefaults, optionals, readonly/catch wrappers, lazy schemas, and transform/pipe inputs. Ambiguous or non-JSON nodes such as unions, intersections, maps, sets, dates, and custom schemas start as `null` until streamed JSON replaces them. Completion callbacks report scalar leaf paths and finish with an empty `activePath`.
 
 ### Constructor Options
 
@@ -132,5 +125,5 @@ const parser = new SchemaStream(schema);
 const stub = parser.getSchemaStub(schema, {
   users: [{ name: "default", age: 0 }]
 });
-// stub is fully typed as z.infer<typeof schema>
+// stub is typed as SchemaStreamChunk<typeof schema>
 ```
