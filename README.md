@@ -22,7 +22,7 @@
   <a aria-label="NPM version" href="https://www.npmjs.com/package/stream-hooks">
     <img alt="stream-hooks" src="https://img.shields.io/npm/v/stream-hooks.svg?style=flat-square&logo=npm&labelColor=000000&label=stream-hooks">
   </a>
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/schema-stream">
+  <a aria-label="Schema Stream repository" href="https://github.com/hack-dance/schema-stream">
     <img alt="schema-stream" src="https://img.shields.io/npm/v/schema-stream.svg?style=flat-square&logo=npm&labelColor=000000&label=schema-stream">
   </a>
   <a aria-label="Made by hack.dance" href="https://hack.dance">
@@ -37,94 +37,12 @@ Island AI is a collection of low-level utilities and high-level tools for handli
 
 ## Core Packages
 
-### 1. schema-stream
+### 1. schema-stream (moved)
 
-A foundational streaming JSON parser that enables immediate data access through structured stubs. Supports Zod 4 (including Zod Mini) and Zod 3.25+.
-
-**Key Features:**
-
-- Streaming JSON parser with typed outputs
-- Default value support
-- Path completion tracking
-- Nested object and array support
-
-```typescript
-import { SchemaStream, type SchemaStreamChunk } from "schema-stream";
-import { z } from "zod";
-
-// Define complex nested schemas
-const schema = z.object({
-  layer1: z.object({
-    layer2: z.object({
-      value: z.string(),
-      layer3: z.object({
-        layer4: z.object({
-          layer5: z.string()
-        })
-      })
-    })
-  }),
-  someArray: z.array(z.object({
-    someString: z.string(),
-    someNumber: z.number()
-  }))
-});
-
-// Get a readable stream of json (from an api or otherwise)
-async function getSomeStreamOfJson(
-  jsonString: string
-): Promise<{ body: ReadableStream }> {
-  const stream = new ReadableStream({
-    start(controller) {
-      const encoder = new TextEncoder()
-      const jsonBytes = encoder.encode(jsonString)
-
-      for (let i = 0; i < jsonBytes.length; ) {
-        const chunkSize = Math.floor(Math.random() * 5) + 2
-        const chunk = jsonBytes.slice(i, i + chunkSize)
-        controller.enqueue(chunk)
-        i += chunkSize
-      }
-      controller.close()
-    },
-  })
-
-  return { body: stream }
-}
-
-
-// Create parser with completion tracking
-const parser = new SchemaStream(schema, {
-  onKeyComplete({ completedPaths }) {
-    console.log('Completed paths:', completedPaths);
-  }
-});
-
-// Get the readabale stream to parse
-const readableStream = await getSomeStreamOfJson(
-  `{"someString": "Hello schema-stream", "someNumber": 42000000}`
-)
-
-// Parse streaming data
-const stream = parser.parse();
-readableStream.pipeThrough(stream);
-
-// Get typed results
-const reader = stream.readable.getReader();
-const decoder = new TextDecoder()
-let result: SchemaStreamChunk<typeof schema> = {}
-let complete = false
-
-while (true) {
-  const { value, done } = await reader.read();
-  complete = done
-  
-  if (complete) break;
-  
-  result = JSON.parse(decoder.decode(value)) as SchemaStreamChunk<typeof schema>;
-  // Validate the completed result with the schema before treating it as Zod output.
-}
-```
+`schema-stream` now lives in the standalone
+[`hack-dance/schema-stream`](https://github.com/hack-dance/schema-stream) repository. Its source,
+documentation, tests, and releases are maintained there. The npm package name remains
+[`schema-stream`](https://www.npmjs.com/package/schema-stream).
 
 ### 2. zod-stream
 
