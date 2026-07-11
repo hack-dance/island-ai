@@ -6,94 +6,10 @@ description: Island AI is a collection of low-level utilities and high-level too
 
 ## Core Packages
 
-### 1. schema-stream [⇨](/docs/schema-stream)
+### 1. schema-stream (moved) [⇨](https://github.com/hack-dance/schema-stream)
 
-A foundational streaming JSON parser that enables immediate data access through structured stubs.
-
-**Key Features:**
-
-- Streaming JSON parser with typed outputs
-- Default value support
-- Path completion tracking
-- Nested object and array support
-
-```typescript
-import { SchemaStream } from "schema-stream";
-import { z } from "zod";
-
-// Define complex nested schemas
-const schema = z.object({
-  layer1: z.object({
-    layer2: z.object({
-      value: z.string(),
-      layer3: z.object({
-        layer4: z.object({
-          layer5: z.string()
-        })
-      })
-    })
-  }),
-  someArray: z.array(z.object({
-    someString: z.string(),
-    someNumber: z.number()
-  }))
-});
-
-// Get a readable stream of json (from an api or otherwise)
-async function getSomeStreamOfJson(
-  jsonString: string
-): Promise<{ body: ReadableStream }> {
-  const stream = new ReadableStream({
-    start(controller) {
-      const encoder = new TextEncoder()
-      const jsonBytes = encoder.encode(jsonString)
-
-      for (let i = 0; i < jsonBytes.length; ) {
-        const chunkSize = Math.floor(Math.random() * 5) + 2
-        const chunk = jsonBytes.slice(i, i + chunkSize)
-        controller.enqueue(chunk)
-        i += chunkSize
-      }
-      controller.close()
-    },
-  })
-
-  return { body: stream }
-}
-
-
-// Create parser with completion tracking
-const parser = new SchemaStream(schema, {
-  onKeyComplete({ completedPaths }) {
-    console.log('Completed paths:', completedPaths);
-  }
-});
-
-// Get the readabale stream to parse
-const readableStream = await getSomeStreamOfJson(
-  `{"someString": "Hello schema-stream", "someNumber": 42000000}`
-)
-
-// Parse streaming data
-const stream = parser.parse();
-readableStream.pipeThrough(stream);
-
-// Get typed results
-const reader = stream.readable.getReader();
-const decoder = new TextDecoder()
-let result = {}
-let complete = false
-
-while (true) {
-  const { value, done } = await reader.read();
-  complete = done
-  
-  if (complete) break;
-  
-  result = JSON.parse(decoder.decode(value));
-  // result is fully typed based on schema
-}
-```
+`schema-stream` is now maintained in its standalone repository, including its source,
+documentation, tests, and releases. The npm package name is unchanged.
 
 ### 2. zod-stream [⇨](/docs/zod-stream)
 

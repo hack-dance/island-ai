@@ -5,7 +5,16 @@ import remarkGfm from "remark-gfm"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@repo/ui"]
+  transpilePackages: ["@repo/ui"],
+  async redirects() {
+    return [
+      {
+        source: "/docs/schema-stream/:path*",
+        destination: "https://github.com/hack-dance/schema-stream",
+        permanent: true
+      }
+    ]
+  }
 }
 
 const options = {
