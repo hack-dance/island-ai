@@ -1,5 +1,12 @@
 # stream-hooks
 
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies [[`e9ab677`](https://github.com/hack-dance/island-ai/commit/e9ab677e27fc11952984d38eacaa44ad054b6683)]:
+  - zod-stream@5.0.0
+
 ## 4.0.0
 
 ### Major Changes

@@ -1,6 +1,6 @@
 {
   "name": "zod-stream",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "A client for node or the browser to generate and consume streaming json",
   "publishConfig": {
     "access": "public"
