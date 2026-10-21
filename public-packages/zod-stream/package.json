@@ -19,7 +19,7 @@
     "dist/**"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=24.22.1"
   },
   "typings": "./dist/index.d.ts",
   "scripts": {
