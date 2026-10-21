@@ -1,5 +1,11 @@
 # zod-stream
 
+## 5.0.0
+
+### Major Changes
+
+- [#114](https://github.com/hack-dance/island-ai/pull/114) [`e9ab677`](https://github.com/hack-dance/island-ai/commit/e9ab677e27fc11952984d38eacaa44ad054b6683) Thanks [@roodboi](https://github.com/roodboi)! - Require Node.js >=24.22.1. The `engines.node` field now pins the Node 24.22.1 security release as the minimum, dropping support for Node 20 and 22. Upgrade your runtime to Node 24.22.1 or newer before installing this version; browser and Bun usage is unchanged.
+
 ## 4.0.0
 
 ### Major Changes
