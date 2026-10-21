@@ -6,7 +6,7 @@
 
 - Zod 4 (`zod@^4.0.0`)
 - OpenAI 6 (`openai@^6.0.0`) when using the OpenAI helpers
-- Node.js 20 or newer for the OpenAI 6 client; browser and Bun streams are also supported
+- Node.js 24.22.1 or newer (security release; `engines.node` is `>=24.22.1`); browser and Bun streams are also supported
 
 ```sh
 npm install zod-stream zod openai
