@@ -48,7 +48,8 @@
     "yaml": "2.9.1",
     "next": "16.4.2",
     "esbuild": "0.28.2",
-    "postcss-selector-parser": "7.1.6"
+    "postcss-selector-parser": "7.1.6",
+    "serialize-javascript": "7.0.5"
   },
   "engines": {
     "bun": ">=1.3.14",
