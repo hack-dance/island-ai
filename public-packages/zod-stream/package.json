@@ -46,7 +46,7 @@
   "author": "Dimitri Kennedy <dimitri@sick.email> (https://hack.dance)",
   "homepage": "https://island.hack.dance",
   "dependencies": {
-    "schema-stream": "^4.0.0"
+    "schema-stream": "^4.2.0"
   },
   "peerDependencies": {
     "openai": "^6.0.0",
@@ -55,12 +55,12 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.10.6",
-    "@types/eslint": "^8.56.1",
-    "eslint": "^8.53.0",
+    "@types/node": "^20.19.43",
+    "@types/eslint": "^8.56.12",
+    "eslint": "^8.57.1",
     "tsup": "^8.5.1",
-    "openai": "^6.46.0",
+    "openai": "^6.49.0",
     "typescript": "^5.9.3",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   }
 }
