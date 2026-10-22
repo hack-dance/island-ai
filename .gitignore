@@ -44,3 +44,5 @@ tsconfig.tsbuildinfo
 .turbo
 
 .npmrc
+# Fumadocs generates machine-specific source during install/build.
+/apps/www/.source/
