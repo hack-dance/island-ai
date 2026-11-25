@@ -67,10 +67,19 @@ npm install --ignore-scripts --no-audit --no-fund "schema-stream@$SCHEMA_STREAM_
 node dist/consumer-zod3.js
 
 cd "$TEMP_DIR/sdk-consumer"
+cp "$FIXTURE/consumer-evalz-zod3.ts" .
 node -e 'require("node:fs").writeFileSync("package.json", JSON.stringify({name:"packed-sdk-consumer",private:true,type:"module"},null,2)+"\n")'
 npm install --ignore-scripts --no-audit --no-fund \
   "$TEMP_DIR/tarballs/llm-polyglot-3.0.0.tgz" \
   "$TEMP_DIR/tarballs/evalz-1.0.0.tgz" \
   @anthropic-ai/sdk@0.33.1 @google/generative-ai@0.21.0 \
-  openai@6.49.0 zod@3.25.76 >/dev/null
-node -e 'const [{createLLMClient}, evalz] = await Promise.all([import("llm-polyglot"), import("evalz")]); if (typeof createLLMClient !== "function" || Object.keys(evalz).length === 0) throw new Error("packed SDK exports mismatch"); console.log("packed llm-polyglot and evalz OpenAI 6 peers passed")'
+  openai@6.49.0 zod@3.25.76 typescript@5.9.3 @types/node@24 >/dev/null
+./node_modules/.bin/tsc --module NodeNext --target ES2022 --strict --types node --noEmit consumer-evalz-zod3.ts
+node consumer-evalz-zod3.ts
+node --input-type=module <<'JS'
+import { strictEqual } from "node:assert/strict"
+import { createLLMClient } from "llm-polyglot"
+
+strictEqual(typeof createLLMClient, "function")
+console.log("packed llm-polyglot OpenAI 6 peers passed")
+JS

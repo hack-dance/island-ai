@@ -1,26 +1,35 @@
 import { z } from "zod"
 
-export const BaseEvaluationDataItemSchema = z.object({
+// Preserve the object type of the consumer's Zod version in the emitted declarations.
+type ObjectSchema<Shape extends z.ZodRawShape> = ReturnType<typeof z.object<Shape>>
+
+const evaluationDataItemShape = {
   prompt: z.string().optional(),
   completion: z.string(),
   expectedCompletion: z.string().optional(),
   contexts: z.array(z.string()).optional(),
   groundTruth: z.string().optional()
-})
+}
 
-export const EvaluationDataItemSchema = BaseEvaluationDataItemSchema
+export const BaseEvaluationDataItemSchema: ObjectSchema<typeof evaluationDataItemShape> =
+  z.object(evaluationDataItemShape)
 
-export const EvaluationDataItemResultSchema = z.object({
+export const EvaluationDataItemSchema: typeof BaseEvaluationDataItemSchema =
+  BaseEvaluationDataItemSchema
+
+const evaluationScoreShape = {
   score: z.number(),
-  scores: z
-    .array(
-      z.object({
-        score: z.number(),
-        evaluator: z.string(),
-        evaluatorType: z.string()
-      })
-    )
-    .optional(),
+  evaluator: z.string(),
+  evaluatorType: z.string()
+}
+
+export const EvaluationDataItemResultSchema: ObjectSchema<{
+  score: z.ZodNumber
+  scores: z.ZodOptional<z.ZodArray<ObjectSchema<typeof evaluationScoreShape>>>
+  item: typeof EvaluationDataItemSchema
+}> = z.object({
+  score: z.number(),
+  scores: z.array(z.object(evaluationScoreShape)).optional(),
   item: EvaluationDataItemSchema
 })
 
