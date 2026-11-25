@@ -96,8 +96,7 @@
     "tippy.js": "^6.3.7",
     "tsup": "^8.5.1",
     "use-debounce": "^9.0.4",
-    "vaul": "0.7.9",
-    "zod": "^3.25.76"
+    "vaul": "0.7.9"
   },
   "overrides": {
     "react-is": "19.2.7"

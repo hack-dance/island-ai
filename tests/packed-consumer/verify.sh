@@ -45,7 +45,7 @@ npm install --ignore-scripts --no-audit --no-fund \
   "schema-stream@$SCHEMA_STREAM_VERSION" \
   "$TEMP_DIR/tarballs/zod-stream-4.0.0.tgz" \
   "$TEMP_DIR/tarballs/stream-hooks-4.0.0.tgz" \
-  zod@4.4.3 openai@6.46.0 @openai/agents@0.13.1 ai@7.0.19 \
+  zod@4.6.7 openai@6.46.0 @openai/agents@0.13.1 ai@7.0.19 \
   react@19.2.7 @types/react@19.2.17 @types/node@24 @types/json-schema@7.0.15 \
   typescript@5.9.3 >/dev/null
 
@@ -72,5 +72,5 @@ npm install --ignore-scripts --no-audit --no-fund \
   "$TEMP_DIR/tarballs/llm-polyglot-3.0.0.tgz" \
   "$TEMP_DIR/tarballs/evalz-1.0.0.tgz" \
   @anthropic-ai/sdk@0.33.1 @google/generative-ai@0.21.0 \
-  openai@6.46.0 zod@3.25.76 >/dev/null
+  openai@6.49.0 zod@3.25.76 >/dev/null
 node -e 'const [{createLLMClient}, evalz] = await Promise.all([import("llm-polyglot"), import("evalz")]); if (typeof createLLMClient !== "function" || Object.keys(evalz).length === 0) throw new Error("packed SDK exports mismatch"); console.log("packed llm-polyglot and evalz OpenAI 6 peers passed")'
