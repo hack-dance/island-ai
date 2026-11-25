@@ -1,5 +1,11 @@
 # evalz
 
+## 1.0.1
+
+### Patch Changes
+
+- [#120](https://github.com/hack-dance/island-ai/pull/120) [`357385b`](https://github.com/hack-dance/island-ai/commit/357385b52965878b1d386ce772a3fbe5cab00d5e) Thanks [@roodboi](https://github.com/roodboi)! - Update the workspace to Zod 4.6.7 for GHSA-mrhx-c7xc-m3w5. Preserve evalz's public types for both supported Zod peer majors and remove llm-polyglot's unused Zod development dependency.
+
 ## 1.0.0
 
 ### Major Changes
